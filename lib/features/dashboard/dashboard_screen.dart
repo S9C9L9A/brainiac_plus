@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../file_manager/file_manager_screen.dart';
+import '../terminal/terminal_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 
@@ -124,7 +125,12 @@ class DashboardScreen extends ConsumerWidget {
                           Icons.terminal,
                           AppColors.systemBlue,
                           () {
-                            // TODO: Navigate to terminal
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TerminalScreen(),
+                              ),
+                            );
                           },
                         ),
                         _buildActionButton(
