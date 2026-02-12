@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
+import '../file_manager/file_manager_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 
@@ -132,7 +133,12 @@ class DashboardScreen extends ConsumerWidget {
                           Icons.folder,
                           AppColors.systemOrange,
                           () {
-                            // TODO: Navigate to file manager
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FileManagerScreen(),
+                              ),
+                            );
                           },
                         ),
                         _buildActionButton(
