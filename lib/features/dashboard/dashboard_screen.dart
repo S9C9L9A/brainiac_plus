@@ -5,6 +5,7 @@ import '../../core/theme/colors.dart';
 import '../file_manager/file_manager_screen.dart';
 import '../terminal/terminal_screen.dart';
 import '../packages/packages_screen.dart';
+import '../automation/automation_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 
