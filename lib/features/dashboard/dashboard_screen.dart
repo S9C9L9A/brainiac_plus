@@ -168,9 +168,12 @@ class DashboardScreen extends ConsumerWidget {
                           'Automation',
                           Icons.autorenew,
                           AppColors.systemPurple,
-                          () {
-                            // TODO: Navigate to automation
-                          },
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AutomationScreen(),
+                            ),
+                          ),
                         ),
                       ],
                     ),
