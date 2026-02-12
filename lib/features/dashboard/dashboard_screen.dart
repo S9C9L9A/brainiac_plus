@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../file_manager/file_manager_screen.dart';
 import '../terminal/terminal_screen.dart';
+import '../packages/packages_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 
@@ -153,7 +154,12 @@ class DashboardScreen extends ConsumerWidget {
                           Icons.apps,
                           AppColors.systemGreen,
                           () {
-                            // TODO: Navigate to packages
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PackagesScreen(),
+                              ),
+                            );
                           },
                         ),
                         _buildActionButton(
