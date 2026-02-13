@@ -1,7 +1,7 @@
-import 'dart:io';
 import '../utils/platform_helper.dart';
 import '../../features/automation/models/automation.dart';
 import '../../features/automation/models/automation_enums.dart';
+import 'browser_actions_service.dart';
 
 /// Core automation engine with platform-aware execution
 class AutomationEngine {
@@ -113,7 +113,15 @@ class AutomationEngine {
       throw UnsupportedError('Browser automation not supported on ${PlatformHelper.platformName}');
     }
 
-    // This will be implemented using process_run to launch Chrome with automation
+    // Use BrowserActionsService for browser-based actions
+    final actionType = automation.config['actionType'] as String?;
+    
+    if (actionType != null && ['searchFlights', 'openUrl', 'googleSearch'].contains(actionType)) {
+      final browserService = BrowserActionsService();
+      return await browserService.executeAction(automation);
+    }
+
+    // For other services, fall back to platform-specific browser automation
     throw UnimplementedError('Browser automation not yet implemented for ${automation.service.label}');
   }
 

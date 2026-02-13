@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_routes.dart';
+import '../features/automation/models/automation_enums.dart';
+import '../features/settings/screens/service_config_screen.dart';
 
 /// Advanced route generator with parameter support and error handling
 class RouteGenerator {
@@ -39,6 +41,16 @@ class RouteGenerator {
           // TODO: Create AutomationEditScreen with automationId parameter
           return MaterialPageRoute(
             builder: (context) => routes[AppRoutes.automation]!(context),
+            settings: settings,
+          );
+        }
+        return _errorRoute(settings);
+
+      // Service configuration with ServiceProvider parameter
+      case AppRoutes.serviceConfig:
+        if (args is ServiceProvider) {
+          return MaterialPageRoute(
+            builder: (context) => ServiceConfigScreen(serviceType: args),
             settings: settings,
           );
         }

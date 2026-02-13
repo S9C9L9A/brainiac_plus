@@ -1,3 +1,4 @@
+import 'package:brainiac_plus/features/settings/screens/modern_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';

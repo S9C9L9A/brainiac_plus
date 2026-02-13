@@ -64,6 +64,9 @@ class AppRoutes {
   static const String settingsApiKeys = '/settings/api-keys';
   static const String settingsAutomation = '/settings/automation';
   static const String settingsAppearance = '/settings/appearance';
+  
+  /// Service configuration
+  static const String serviceConfig = '/service-config';
 
   /// About & Help
   static const String about = '/about';

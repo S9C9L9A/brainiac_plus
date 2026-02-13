@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
+import '../../../routes/app_routes.dart';
 import '../../dashboard/dashboard_screen.dart';
 import '../../automation/models/automation_enums.dart';
 import '../models/extended_settings.dart';
-import '../widgets/service_details_bottom_sheet.dart';
 
 // Mock provider - replace with real implementation
 final extendedSettingsProvider = StateProvider<ExtendedAppSettings>(
@@ -18,7 +17,8 @@ class ModernSettingsScreen extends ConsumerStatefulWidget {
   const ModernSettingsScreen({super.key});
 
   @override
-  ConsumerState<ModernSettingsScreen> createState() => _ModernSettingsScreenState();
+  ConsumerState<ModernSettingsScreen> createState() =>
+      _ModernSettingsScreenState();
 }
 
 class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen>
@@ -80,11 +80,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen>
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.settings,
-              color: Colors.white,
-              size: 28,
-            ),
+            child: const Icon(Icons.settings, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 16),
           const Column(
@@ -100,10 +96,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen>
               ),
               Text(
                 'Configure your integrations',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),
@@ -122,19 +115,14 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen>
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Colors.purple, Colors.blue],
-          ),
+          gradient: const LinearGradient(colors: [Colors.purple, Colors.blue]),
           borderRadius: BorderRadius.circular(20),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white60,
-        labelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         tabs: const [
           Tab(text: 'Services'),
           Tab(text: 'AI'),
@@ -153,7 +141,7 @@ class ConnectedServicesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(extendedSettingsProvider);
-    
+
     final socialServices = [
       ServiceProvider.instagram,
       ServiceProvider.facebook,
@@ -162,41 +150,50 @@ class ConnectedServicesTab extends ConsumerWidget {
       ServiceProvider.linkedin,
       ServiceProvider.youtube,
     ];
-    
+
     final productivityServices = [
       ServiceProvider.notion,
       ServiceProvider.google,
     ];
-    
+
     final communicationServices = [
       ServiceProvider.slack,
       ServiceProvider.discord,
       ServiceProvider.telegram,
     ];
-    
-    final devServices = [
-      ServiceProvider.github,
-    ];
+
+    final devServices = [ServiceProvider.github];
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, kBottomNavHeight),
       children: [
-        _buildServiceGroup('Social Media', socialServices, settings),
+        _buildServiceGroup(context, 'Social Media', socialServices, settings),
         const SizedBox(height: 24),
-        _buildServiceGroup('Productivity', productivityServices, settings),
+        _buildServiceGroup(context, 'Productivity', productivityServices, settings),
         const SizedBox(height: 24),
-        _buildServiceGroup('Communication', communicationServices, settings),
+        _buildServiceGroup(context, 'Communication', communicationServices, settings),
         const SizedBox(height: 24),
-        _buildServiceGroup('Development', devServices, settings),
+        _buildServiceGroup(context, 'Development', devServices, settings),
       ],
     );
   }
 
   Widget _buildServiceGroup(
+    BuildContext context,
     String title,
     List<ServiceProvider> services,
     ExtendedAppSettings settings,
   ) {
+    final serviceCards = <Widget>[];
+    for (final service in services) {
+      serviceCards.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildServiceCard(context, service, settings),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -211,23 +208,28 @@ class ConnectedServicesTab extends ConsumerWidget {
             ),
           ),
         ),
-        ...services.map((service) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildServiceCard(service, settings),
-            )),
+        ...serviceCards,
       ],
     );
   }
 
-  Widget _buildServiceCard(ServiceProvider service, ExtendedAppSettings settings) {
+  Widget _buildServiceCard(
+    BuildContext context,
+    ServiceProvider service,
+    ExtendedAppSettings settings,
+  ) {
     final isConnected = settings.isServiceConfigured(service);
-    
-    return GlassCard(
-      child: InkWell(
-        onTap: () {
-          // TODO: Navigate to service configuration
-        },
-        borderRadius: BorderRadius.circular(20),
+
+    return GestureDetector(
+      onTap: () {
+        debugPrint('[ServiceConfig] Tapping ${service.label}');
+        AppRoutes.navigateTo(
+          context,
+          AppRoutes.serviceConfig,
+          arguments: service,
+        );
+      },
+      child: GlassCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -236,17 +238,14 @@ class ConnectedServicesTab extends ConsumerWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: isConnected
-                      ? LinearGradient(
-                          colors: _getServiceGradient(service),
-                        )
+                      ? LinearGradient(colors: _getServiceGradient(service))
                       : null,
-                  color: isConnected ? null : Colors.white.withValues(alpha: 0.1),
+                  color: isConnected
+                      ? null
+                      : Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  service.icon,
-                  style: const TextStyle(fontSize: 28),
-                ),
+                child: Text(service.icon, style: const TextStyle(fontSize: 28)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -292,7 +291,9 @@ class ConnectedServicesTab extends ConsumerWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.systemBlue.withValues(alpha: 0.2),
+                              color: AppColors.systemBlue.withValues(
+                                alpha: 0.2,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Text(
@@ -360,6 +361,7 @@ class AIServicesTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(20, 20, 20, kBottomNavHeight),
       children: [
         _buildAIServiceCard(
+          context: context,
           title: 'OpenAI',
           icon: '🤖',
           description: 'GPT-4, DALL-E, and more',
@@ -368,6 +370,7 @@ class AIServicesTab extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _buildAIServiceCard(
+          context: context,
           title: 'Higgsfield',
           icon: '🎬',
           description: 'AI video generation',
@@ -376,6 +379,7 @@ class AIServicesTab extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         _buildAIServiceCard(
+          context: context,
           title: 'Ollama (Local)',
           icon: '🦙',
           description: 'Run AI models locally',
@@ -387,6 +391,7 @@ class AIServicesTab extends ConsumerWidget {
   }
 
   Widget _buildAIServiceCard({
+    required BuildContext context,
     required String title,
     required String icon,
     required String description,
@@ -404,10 +409,7 @@ class AIServicesTab extends ConsumerWidget {
                 gradient: LinearGradient(colors: gradient),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                icon,
-                style: const TextStyle(fontSize: 32),
-              ),
+              child: Text(icon, style: const TextStyle(fontSize: 32)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -425,10 +427,7 @@ class AIServicesTab extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -460,7 +459,12 @@ class AIServicesTab extends ConsumerWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // TODO: Configure
+                // Navigate to service configuration screen
+                AppRoutes.navigateTo(
+                  context,
+                  AppRoutes.serviceConfig,
+                  arguments: ServiceProvider.custom,
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: isConnected
@@ -577,10 +581,7 @@ class PreferencesTab extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
                 ),
               ],
             ),
@@ -588,7 +589,7 @@ class PreferencesTab extends ConsumerWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.systemGreen,
+            activeThumbColor: AppColors.systemGreen,
           ),
         ],
       ),
@@ -636,10 +637,7 @@ class AboutTab extends ConsumerWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Version 2.0.0',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 24),
                 const Text(
