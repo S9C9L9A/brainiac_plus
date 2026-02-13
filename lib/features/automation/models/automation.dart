@@ -57,6 +57,20 @@ class Automation {
   bool get isPaused => status == AutomationStatus.paused;
   bool get isScheduled => status == AutomationStatus.scheduled;
 
+  /// Get human-readable trigger description
+  String get trigger {
+    switch (triggerType) {
+      case TriggerType.manual:
+        return 'Manual';
+      case TriggerType.scheduled:
+        return cronSchedule ?? 'Scheduled';
+      case TriggerType.event:
+        return 'Event-based';
+      case TriggerType.condition:
+        return 'Conditional';
+    }
+  }
+
   Automation copyWith({
     String? id,
     String? name,

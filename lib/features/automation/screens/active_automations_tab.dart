@@ -4,6 +4,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../dashboard/dashboard_screen.dart';
 import '../controllers/automation_controller.dart';
+import 'automation_detail_screen.dart';
 import '../models/automation.dart';
 import '../models/automation_enums.dart';
 

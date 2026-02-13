@@ -6,7 +6,7 @@ import '../../dashboard/dashboard_screen.dart';
 import '../../settings/screens/modern_settings_screen.dart';
 import '../models/automation_templates.dart';
 import '../models/automation_enums.dart';
-import '../widgets/available_templates_widget.dart';
+import '../widgets/template_details_bottom_sheet.dart';
 
 class TemplatesTab extends ConsumerStatefulWidget {
   const TemplatesTab({super.key});
@@ -134,7 +134,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
         children: [
           GlassCard(
             child: InkWell(
-              onTap: isLocked ? null : () => _showTemplateDetails(template),
+              onTap: () => _showTemplateDetails(template),
               borderRadius: BorderRadius.circular(20),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -161,13 +161,24 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                template.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    template.category.icon,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      template.name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -203,8 +214,8 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
                           )
                         else
                           ElevatedButton.icon(
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Use Template'),
+                            icon: const Icon(Icons.info_outline, size: 18),
+                            label: const Text('View Details'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.systemBlue,
                               foregroundColor: Colors.white,
@@ -212,7 +223,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            onPressed: () => _useTemplate(template),
+                            onPressed: () => _showTemplateDetails(template),
                           ),
                       ],
                     ),
@@ -269,7 +280,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
   }
 
   void _showTemplateDetails(AutomationTemplate template) {
-    // TODO: Show details modal
+    TemplateDetailsBottomSheet.show(context, template);
   }
 
   void _useTemplate(AutomationTemplate template) {
