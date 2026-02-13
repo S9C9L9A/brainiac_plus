@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/platform/file_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/app_icons.dart';
 import 'file_icon.dart';
 import 'package:intl/intl.dart';
 
@@ -59,7 +60,7 @@ class FileListItem extends StatelessWidget {
               ),
             ),
             if (file.isDirectory)
-              Icon(Icons.chevron_right, color: Colors.white54),
+              Icon(AppIcons.chevronRight, color: Colors.white54, size: AppIcons.smallSize),
           ],
         ),
       ),

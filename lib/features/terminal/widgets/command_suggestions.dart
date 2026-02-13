@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_icons.dart';
 
 class CommandSuggestions {
   static final List<String> commonCommands = [
@@ -94,7 +95,7 @@ class SuggestionsList extends StatelessWidget {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.arrow_forward,
+                    AppIcons.chevronRight,
                     color: Colors.green,
                     size: 16,
                   ),

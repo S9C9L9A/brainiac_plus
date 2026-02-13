@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
+import '../../core/theme/app_icons.dart';
 import '../../core/platform/package_service.dart';
 import 'controllers/package_controller.dart';
 
@@ -56,10 +57,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
               onPressed: () => Navigator.pop(context),
             ),
-            const Icon(Icons.apps, color: Colors.white),
+            const Icon(AppIcons.apps, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -68,7 +69,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
+              icon: const Icon(AppIcons.moreVert, color: Colors.white, size: AppIcons.defaultSize),
               onSelected: (value) {
                 switch (value) {
                   case 'update':
@@ -87,7 +88,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   value: 'update',
                   child: Row(
                     children: [
-                      Icon(Icons.update),
+                      Icon(AppIcons.update),
                       SizedBox(width: 12),
                       Text('Update Lists'),
                     ],
@@ -97,7 +98,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   value: 'upgrade',
                   child: Row(
                     children: [
-                      Icon(Icons.upgrade),
+                      Icon(AppIcons.upgrade),
                       SizedBox(width: 12),
                       Text('Upgrade All'),
                     ],
@@ -107,7 +108,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   value: 'refresh',
                   child: Row(
                     children: [
-                      Icon(Icons.refresh),
+                      Icon(AppIcons.refresh),
                       SizedBox(width: 12),
                       Text('Refresh'),
                     ],
@@ -133,7 +134,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
             hintText: 'Search packages...',
             hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
             border: InputBorder.none,
-            icon: const Icon(Icons.search, color: Colors.white70),
+            icon: const Icon(AppIcons.search, color: Colors.white70, size: AppIcons.defaultSize),
           ),
           onChanged: (value) {
             ref.read(packageProvider.notifier).setFilter(value);
@@ -289,7 +290,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   Navigator.pop(context);
                   ref.read(packageProvider.notifier).removePackage(package.name, package.source);
                 },
-                icon: const Icon(Icons.delete),
+                icon: const Icon(AppIcons.delete),
                 label: const Text('Remove'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.systemRed,
@@ -302,7 +303,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                   Navigator.pop(context);
                   ref.read(packageProvider.notifier).installPackage(package.name, package.source);
                 },
-                icon: const Icon(Icons.download),
+                icon: const Icon(AppIcons.download),
                 label: const Text('Install'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.systemGreen,
@@ -317,9 +318,9 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
 
   IconData _getSourceIcon(String source) {
     switch (source) {
-      case 'apt': return Icons.inventory_2;
-      case 'snap': return Icons.widgets;
-      default: return Icons.apps;
+      case 'apt': return AppIcons.aptPackage;
+      case 'snap': return AppIcons.snapPackage;
+      default: return AppIcons.apps;
     }
   }
 

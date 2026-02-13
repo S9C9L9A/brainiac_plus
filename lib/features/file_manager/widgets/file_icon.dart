@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/platform/file_service.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/app_icons.dart';
 
 class FileIcon extends StatelessWidget {
   final FileItem file;
@@ -11,7 +12,7 @@ class FileIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (file.isDirectory) {
-      return Icon(Icons.folder, color: AppColors.systemYellow, size: size);
+      return Icon(AppIcons.folder, color: AppColors.systemYellow, size: size);
     }
 
     final icon = _getIconForExtension(file.extension);
@@ -21,15 +22,15 @@ class FileIcon extends StatelessWidget {
 
   IconData _getIconForExtension(String ext) {
     switch (ext) {
-      case 'png': case 'jpg': case 'jpeg': case 'gif': case 'svg': return Icons.image;
-      case 'mp4': case 'avi': case 'mov': return Icons.video_file;
-      case 'mp3': case 'wav': return Icons.audio_file;
-      case 'pdf': return Icons.picture_as_pdf;
-      case 'doc': case 'docx': return Icons.description;
-      case 'txt': case 'md': return Icons.text_snippet;
-      case 'dart': case 'java': case 'py': case 'js': return Icons.code;
-      case 'zip': case 'tar': case 'gz': return Icons.archive;
-      default: return Icons.insert_drive_file;
+      case 'png': case 'jpg': case 'jpeg': case 'gif': case 'svg': return AppIcons.fileImage;
+      case 'mp4': case 'avi': case 'mov': return AppIcons.fileVideo;
+      case 'mp3': case 'wav': return AppIcons.fileAudio;
+      case 'pdf': return AppIcons.filePdf;
+      case 'doc': case 'docx': return AppIcons.fileText;
+      case 'txt': case 'md': return AppIcons.fileText;
+      case 'dart': case 'java': case 'py': case 'js': return AppIcons.fileCode;
+      case 'zip': case 'tar': case 'gz': return AppIcons.fileArchive;
+      default: return AppIcons.file;
     }
   }
 

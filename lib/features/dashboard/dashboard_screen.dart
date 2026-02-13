@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
+import '../../core/theme/app_icons.dart';
 import '../file_manager/file_manager_screen.dart';
 import '../terminal/terminal_screen.dart';
 import '../packages/packages_screen.dart';
@@ -33,7 +34,7 @@ class DashboardScreen extends ConsumerWidget {
                 elevation: 0,
                 title: Row(
                   children: [
-                    const Icon(Icons.psychology, color: Colors.white),
+                    const Icon(AppIcons.brain, color: Colors.white, size: AppIcons.defaultSize),
                     const SizedBox(width: 12),
                     Text(
                       'BrainiacPlus',
@@ -46,7 +47,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
+                    icon: const Icon(AppIcons.settings, color: Colors.white, size: AppIcons.defaultSize),
                     onPressed: () {
                       // TODO: Navigate to settings
                     },
@@ -127,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
                         _buildActionButton(
                           context,
                           'Terminal',
-                          Icons.terminal,
+                          AppIcons.terminal,
                           AppColors.systemBlue,
                           () {
                             Navigator.push(
@@ -141,7 +142,7 @@ class DashboardScreen extends ConsumerWidget {
                         _buildActionButton(
                           context,
                           'Files',
-                          Icons.folder,
+                          AppIcons.folder,
                           AppColors.systemOrange,
                           () {
                             Navigator.push(
@@ -155,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
                         _buildActionButton(
                           context,
                           'Packages',
-                          Icons.apps,
+                          AppIcons.apps,
                           AppColors.systemGreen,
                           () {
                             Navigator.push(
@@ -169,7 +170,7 @@ class DashboardScreen extends ConsumerWidget {
                         _buildActionButton(
                           context,
                           'Automation',
-                          Icons.autorenew,
+                          AppIcons.automation,
                           AppColors.systemPurple,
                           () => Navigator.push(
                             context,
@@ -205,7 +206,7 @@ class DashboardScreen extends ConsumerWidget {
         title: 'CPU Usage',
         value: '${stats.cpuUsage.toStringAsFixed(1)}%',
         subtitle: 'Processor activity',
-        icon: Icons.memory,
+        icon: AppIcons.cpu,
         percentage: stats.cpuUsage,
         color: AppColors.systemBlue,
       ),
@@ -231,7 +232,7 @@ class DashboardScreen extends ConsumerWidget {
         title: 'Memory',
         value: '${ramPercent.toStringAsFixed(1)}%',
         subtitle: '$usedGB GB / $totalGB GB',
-        icon: Icons.storage,
+        icon: AppIcons.memory,
         percentage: ramPercent,
         color: AppColors.systemPurple,
       ),
@@ -257,7 +258,7 @@ class DashboardScreen extends ConsumerWidget {
         title: 'Disk Space',
         value: '$diskPercent%',
         subtitle: '$used / $size',
-        icon: Icons.sd_storage,
+        icon: AppIcons.disk,
         percentage: diskPercent.toDouble(),
         color: AppColors.systemOrange,
       ),

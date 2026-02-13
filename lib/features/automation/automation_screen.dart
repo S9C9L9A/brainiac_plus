@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
+import '../../core/theme/app_icons.dart';
 import '../../core/database/automation_database.dart';
 import 'controllers/automation_controller.dart';
 
@@ -37,7 +38,7 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateTaskDialog(),
-        icon: const Icon(Icons.add),
+        icon: const Icon(AppIcons.add),
         label: const Text('New Task'),
         backgroundColor: AppColors.systemBlue,
       ),
@@ -52,10 +53,10 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
               onPressed: () => Navigator.pop(context),
             ),
-            const Icon(Icons.auto_awesome, color: Colors.white),
+            const Icon(AppIcons.automation, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -75,7 +76,7 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.auto_awesome_outlined, size: 64, color: Colors.white38),
+            const Icon(AppIcons.automation, size: 64, color: Colors.white38),
             const SizedBox(height: 16),
             const Text(
               'No automated tasks',
@@ -139,7 +140,7 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
           Row(
             children: [
               if (task.schedule != null) ...[
-                const Icon(Icons.schedule, size: 16, color: Colors.white60),
+                const Icon(AppIcons.schedule, size: 16, color: Colors.white60),
                 const SizedBox(width: 4),
                 Text(
                   task.schedule!,
@@ -155,12 +156,12 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
                 const SizedBox(width: 8),
               ],
               IconButton(
-                icon: const Icon(Icons.play_arrow, color: Colors.white),
+                icon: const Icon(AppIcons.play, color: Colors.white, size: AppIcons.defaultSize),
                 onPressed: () => ref.read(automationProvider.notifier).executeTask(task.id!),
                 tooltip: 'Run now',
               ),
               IconButton(
-                icon: const Icon(Icons.delete, color: AppColors.systemRed),
+                icon: const Icon(AppIcons.delete, color: AppColors.systemRed, size: AppIcons.defaultSize),
                 onPressed: () => _confirmDelete(task),
                 tooltip: 'Delete',
               ),

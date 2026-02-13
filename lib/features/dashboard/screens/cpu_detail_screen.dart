@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
+import '../../../core/theme/app_icons.dart';
 import '../controllers/process_controller.dart';
 
 class CpuDetailScreen extends ConsumerStatefulWidget {
@@ -36,7 +37,7 @@ class _CpuDetailScreenState extends ConsumerState<CpuDetailScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 8),
@@ -46,7 +47,7 @@ class _CpuDetailScreenState extends ConsumerState<CpuDetailScreen> {
                         color: AppColors.systemBlue.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.memory, color: AppColors.systemBlue, size: 24),
+                      child: const Icon(AppIcons.cpu, color: AppColors.systemBlue, size: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -70,7 +71,7 @@ class _CpuDetailScreenState extends ConsumerState<CpuDetailScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
                       onPressed: () {
                         ref.read(processControllerProvider.notifier).loadTopCpuProcesses();
                       },
@@ -108,7 +109,7 @@ class _CpuDetailScreenState extends ConsumerState<CpuDetailScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, color: AppColors.systemRed, size: 48),
+                        Icon(AppIcons.error, color: AppColors.systemRed, size: 48),
                         const SizedBox(height: 16),
                         Text(
                           'Error loading processes',
@@ -168,7 +169,7 @@ class _CpuDetailScreenState extends ConsumerState<CpuDetailScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.systemRed),
+                  icon: const Icon(AppIcons.close, color: AppColors.systemRed, size: AppIcons.defaultSize),
                   onPressed: () => _confirmKillProcess(context, process),
                   tooltip: 'Kill process',
                 ),

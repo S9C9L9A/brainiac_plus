@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
+import '../../core/theme/app_icons.dart';
 import 'controllers/terminal_controller.dart';
 import 'widgets/terminal_output.dart';
 import 'widgets/command_suggestions.dart';
@@ -203,10 +204,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
               onPressed: () => Navigator.pop(context),
             ),
-            const Icon(Icons.terminal, color: Colors.white),
+            const Icon(AppIcons.terminal, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -219,21 +220,21 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.history, color: Colors.white),
+              icon: const Icon(AppIcons.history, color: Colors.white, size: AppIcons.defaultSize),
               tooltip: 'Command History',
               onPressed: () {
                 _showCommandHistory(context);
               },
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.white),
+              icon: const Icon(AppIcons.clear, color: Colors.white, size: AppIcons.defaultSize),
               tooltip: 'Clear Output',
               onPressed: () {
                 ref.read(terminalProvider.notifier).clearOutput();
               },
             ),
             IconButton(
-              icon: const Icon(Icons.stop, color: AppColors.systemRed),
+              icon: const Icon(AppIcons.stop, color: AppColors.systemRed, size: AppIcons.defaultSize),
               tooltip: 'Kill Process',
               onPressed: () {
                 ref.read(terminalProvider.notifier).killProcess();
@@ -312,8 +313,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             ),
             IconButton(
               icon: Icon(
-                Icons.send,
+                AppIcons.send,
                 color: isRunning ? AppColors.systemGray : AppColors.systemBlue,
+                size: AppIcons.defaultSize,
               ),
               onPressed: isRunning ? null : _executeCommand,
             ),

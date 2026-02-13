@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
+import '../../../core/theme/app_icons.dart';
 import '../controllers/process_controller.dart';
 
 class DiskDetailScreen extends ConsumerStatefulWidget {
@@ -36,7 +37,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 8),
@@ -46,7 +47,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                         color: AppColors.systemOrange.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.sd_storage, color: AppColors.systemOrange, size: 24),
+                      child: const Icon(AppIcons.disk, color: AppColors.systemOrange, size: 24),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -70,7 +71,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
                       onPressed: () {
                         ref.read(diskControllerProvider.notifier).loadTopDirectories();
                       },
@@ -113,7 +114,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, color: AppColors.systemRed, size: 48),
+                        Icon(AppIcons.error, color: AppColors.systemRed, size: 48),
                         const SizedBox(height: 16),
                         Text(
                           'Error loading disk usage',
@@ -231,16 +232,16 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
   }
 
   IconData _getIconForPath(String path) {
-    if (path.contains('home')) return Icons.home;
-    if (path.contains('usr')) return Icons.apps;
-    if (path.contains('var')) return Icons.folder_special;
-    if (path.contains('tmp')) return Icons.delete_outline;
-    if (path.contains('opt')) return Icons.category;
-    if (path.contains('lib')) return Icons.library_books;
-    if (path.contains('bin')) return Icons.code;
-    if (path.contains('etc')) return Icons.settings;
-    if (path.contains('root')) return Icons.shield;
-    if (path.contains('snap')) return Icons.apps;
-    return Icons.folder;
+    if (path.contains('home')) return AppIcons.home;
+    if (path.contains('usr')) return AppIcons.apps;
+    if (path.contains('var')) return AppIcons.folder;
+    if (path.contains('tmp')) return AppIcons.delete;
+    if (path.contains('opt')) return AppIcons.apps;
+    if (path.contains('lib')) return AppIcons.fileCode;
+    if (path.contains('bin')) return AppIcons.fileCode;
+    if (path.contains('etc')) return AppIcons.settings;
+    if (path.contains('root')) return AppIcons.folder;
+    if (path.contains('snap')) return AppIcons.apps;
+    return AppIcons.folder;
   }
 }

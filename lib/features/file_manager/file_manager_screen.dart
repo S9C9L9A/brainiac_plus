@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
+import '../../core/theme/app_icons.dart';
 import 'controllers/file_controller.dart';
 import 'widgets/file_list_item.dart';
 
@@ -56,11 +57,11 @@ class FileManagerScreen extends ConsumerWidget {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
               onPressed: () => Navigator.pop(context),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.folder_open, color: Colors.white),
+            const Icon(AppIcons.folderOpen, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -73,15 +74,16 @@ class FileManagerScreen extends ConsumerWidget {
             ),
             IconButton(
               icon: Icon(
-                state.showHidden ? Icons.visibility : Icons.visibility_off,
+                state.showHidden ? AppIcons.visibilityOn : AppIcons.visibilityOff,
                 color: Colors.white,
+                size: AppIcons.defaultSize,
               ),
               onPressed: () {
                 ref.read(fileManagerProvider.notifier).toggleShowHidden();
               },
             ),
             IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
+              icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
               onPressed: () {
                 ref.read(fileManagerProvider.notifier).loadFiles();
               },
@@ -106,7 +108,7 @@ class FileManagerScreen extends ConsumerWidget {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 20),
+              icon: const Icon(AppIcons.arrowUp, color: Colors.white, size: 20),
               onPressed: () {
                 ref.read(fileManagerProvider.notifier).navigateUp();
               },
@@ -121,7 +123,7 @@ class FileManagerScreen extends ConsumerWidget {
                       ref.read(fileManagerProvider.notifier).navigateTo('/');
                     }),
                     for (int i = 0; i < parts.length; i++) ...[
-                      const Icon(Icons.chevron_right, color: Colors.white70, size: 16),
+                      const Icon(AppIcons.chevronRight, color: Colors.white70, size: 16),
                       _buildPathSegment(context, parts[i], () {
                         final path = '/${parts.sublist(0, i + 1).join('/')}';
                         ref.read(fileManagerProvider.notifier).navigateTo(path);
@@ -164,7 +166,7 @@ class FileManagerScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.folder_open, color: Colors.white70, size: 64),
+            const Icon(AppIcons.folderOpen, color: Colors.white70, size: 64),
             const SizedBox(height: 16),
             Text(
               'Empty directory',
@@ -212,7 +214,7 @@ class FileManagerScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, color: AppColors.systemRed, size: 48),
+              const Icon(AppIcons.error, color: AppColors.systemRed, size: 48),
               const SizedBox(height: 16),
               Text(
                 'Error',
@@ -238,7 +240,7 @@ class FileManagerScreen extends ConsumerWidget {
     return FloatingActionButton(
       onPressed: () => _showCreateDialog(context, ref),
       backgroundColor: AppColors.systemBlue,
-      child: const Icon(Icons.create_new_folder),
+      child: const Icon(AppIcons.createFolder),
     );
   }
 
@@ -286,7 +288,7 @@ class FileManagerScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit),
+              leading: const Icon(AppIcons.edit),
               title: const Text('Rename'),
               onTap: () {
                 Navigator.pop(context);
@@ -294,7 +296,7 @@ class FileManagerScreen extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: AppColors.systemRed),
+              leading: const Icon(AppIcons.delete, color: AppColors.systemRed),
               title: const Text('Delete'),
               onTap: () {
                 Navigator.pop(context);
