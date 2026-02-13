@@ -8,6 +8,9 @@ import '../packages/packages_screen.dart';
 import '../automation/automation_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
+import 'screens/cpu_detail_screen.dart';
+import 'screens/ram_detail_screen.dart';
+import 'screens/disk_detail_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -83,22 +86,22 @@ class DashboardScreen extends ConsumerWidget {
                           return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(child: _buildCpuCard(stats)),
+                              Expanded(child: _buildCpuCard(context, stats)),
                               const SizedBox(width: 16),
-                              Expanded(child: _buildRamCard(stats)),
+                              Expanded(child: _buildRamCard(context, stats)),
                               const SizedBox(width: 16),
-                              Expanded(child: _buildDiskCard(stats)),
+                              Expanded(child: _buildDiskCard(context, stats)),
                             ],
                           );
                         } else {
                           // Mobile layout - stacked
                           return Column(
                             children: [
-                              _buildCpuCard(stats),
+                              _buildCpuCard(context, stats),
                               const SizedBox(height: 16),
-                              _buildRamCard(stats),
+                              _buildRamCard(context, stats),
                               const SizedBox(height: 16),
-                              _buildDiskCard(stats),
+                              _buildDiskCard(context, stats),
                             ],
                           );
                         }
@@ -187,44 +190,77 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCpuCard(SystemStats stats) {
-    return MetricCard(
-      title: 'CPU Usage',
-      value: '${stats.cpuUsage.toStringAsFixed(1)}%',
-      subtitle: 'Processor activity',
-      icon: Icons.memory,
-      percentage: stats.cpuUsage,
-      color: AppColors.systemBlue,
+  Widget _buildCpuCard(BuildContext context, SystemStats stats) {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CpuDetailScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: MetricCard(
+        title: 'CPU Usage',
+        value: '${stats.cpuUsage.toStringAsFixed(1)}%',
+        subtitle: 'Processor activity',
+        icon: Icons.memory,
+        percentage: stats.cpuUsage,
+        color: AppColors.systemBlue,
+      ),
     );
   }
 
-  Widget _buildRamCard(SystemStats stats) {
+  Widget _buildRamCard(BuildContext context, SystemStats stats) {
     final ramPercent = stats.ramUsage['percentage'] as double;
     final usedGB = stats.ramUsage['usedGB'] as String;
     final totalGB = stats.ramUsage['totalGB'] as String;
 
-    return MetricCard(
-      title: 'Memory',
-      value: '${ramPercent.toStringAsFixed(1)}%',
-      subtitle: '$usedGB GB / $totalGB GB',
-      icon: Icons.storage,
-      percentage: ramPercent,
-      color: AppColors.systemPurple,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const RamDetailScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: MetricCard(
+        title: 'Memory',
+        value: '${ramPercent.toStringAsFixed(1)}%',
+        subtitle: '$usedGB GB / $totalGB GB',
+        icon: Icons.storage,
+        percentage: ramPercent,
+        color: AppColors.systemPurple,
+      ),
     );
   }
 
-  Widget _buildDiskCard(SystemStats stats) {
+  Widget _buildDiskCard(BuildContext context, SystemStats stats) {
     final diskPercent = stats.diskUsage['percentage'] as int;
     final used = stats.diskUsage['used'] as String;
     final size = stats.diskUsage['size'] as String;
 
-    return MetricCard(
-      title: 'Disk Space',
-      value: '$diskPercent%',
-      subtitle: '$used / $size',
-      icon: Icons.sd_storage,
-      percentage: diskPercent.toDouble(),
-      color: AppColors.systemOrange,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DiskDetailScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: MetricCard(
+        title: 'Disk Space',
+        value: '$diskPercent%',
+        subtitle: '$used / $size',
+        icon: Icons.sd_storage,
+        percentage: diskPercent.toDouble(),
+        color: AppColors.systemOrange,
+      ),
     );
   }
 
