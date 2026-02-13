@@ -73,26 +73,88 @@ class LinuxPlatform {
     };
   }
 
-  /// Get disk usage for home directory
+  /// Get disk usage for all mounted partitions
   Future<Map<String, dynamic>> getDiskUsage() async {
     try {
-      final result = await Process.run('df', ['-h', Platform.environment['HOME'] ?? '/']);
-      final lines = result.stdout.toString().split('\n');
+      final result = await Process.run('bash', [
+        '-c',
+        'df -h --output=source,fstype,size,used,avail,pcent,target | grep -E "^/dev/"'
+      ]);
       
-      if (lines.length > 1) {
-        final parts = lines[1].split(RegExp(r'\s+'));
+      final lines = result.stdout.toString().split('\n');
+      final partitions = <Map<String, dynamic>>[];
+      
+      double totalSizeGB = 0.0;
+      double totalUsedGB = 0.0;
+      int totalPercentage = 0;
+      int validPartitions = 0;
+      
+      for (final line in lines) {
+        if (line.trim().isEmpty) continue;
         
+        final parts = line.trim().split(RegExp(r'\s+'));
+        if (parts.length >= 7) {
+          final sizeStr = parts[2];
+          final usedStr = parts[3];
+          final percentStr = parts[5].replaceAll('%', '');
+          
+          // Convert to GB for aggregation
+          final sizeGB = _convertToGB(sizeStr);
+          final usedGB = _convertToGB(usedStr);
+          
+          totalSizeGB += sizeGB;
+          totalUsedGB += usedGB;
+          totalPercentage += int.tryParse(percentStr) ?? 0;
+          validPartitions++;
+          
+          partitions.add({
+            'filesystem': parts[0],
+            'fstype': parts[1],
+            'size': parts[2],
+            'used': parts[3],
+            'available': parts[4],
+            'percentage': int.tryParse(percentStr) ?? 0,
+            'mountpoint': parts[6],
+          });
+        }
+      }
+      
+      // Return aggregated info for dashboard card
+      if (validPartitions > 0) {
+        final avgPercentage = totalPercentage ~/ validPartitions;
         return {
-          'filesystem': parts[0],
-          'size': parts[1],
-          'used': parts[2],
-          'available': parts[3],
-          'percentage': int.parse(parts[4].replaceAll('%', '')),
-          'mountpoint': parts[5],
+          'filesystem': '${validPartitions} device(s)',
+          'size': '${totalSizeGB.toStringAsFixed(1)}G',
+          'used': '${totalUsedGB.toStringAsFixed(1)}G',
+          'available': '${(totalSizeGB - totalUsedGB).toStringAsFixed(1)}G',
+          'percentage': avgPercentage,
+          'mountpoint': 'multiple',
+          'partitions': partitions,
+          'totalGB': totalSizeGB,
+          'usedGB': totalUsedGB,
         };
       }
     } catch (e) {
-      // Fallback
+      // Fallback to single partition
+      try {
+        final result = await Process.run('df', ['-h', Platform.environment['HOME'] ?? '/']);
+        final lines = result.stdout.toString().split('\n');
+        
+        if (lines.length > 1) {
+          final parts = lines[1].split(RegExp(r'\s+'));
+          
+          return {
+            'filesystem': parts[0],
+            'size': parts[1],
+            'used': parts[2],
+            'available': parts[3],
+            'percentage': int.parse(parts[4].replaceAll('%', '')),
+            'mountpoint': parts[5],
+          };
+        }
+      } catch (e2) {
+        // Ignore
+      }
     }
     
     return {
@@ -103,6 +165,19 @@ class LinuxPlatform {
       'percentage': 0,
       'mountpoint': '/',
     };
+  }
+
+  /// Helper to convert size string to GB
+  double _convertToGB(String value) {
+    if (value.isEmpty) return 0.0;
+    final numStr = value.replaceAll(RegExp(r'[^0-9.]'), '');
+    final num = double.tryParse(numStr) ?? 0.0;
+    
+    if (value.contains('T')) return num * 1024;
+    if (value.contains('G')) return num;
+    if (value.contains('M')) return num / 1024;
+    if (value.contains('K')) return num / (1024 * 1024);
+    return num;
   }
 
   /// Get all system stats

@@ -7,11 +7,28 @@ import '../../core/theme/app_icons.dart';
 import 'controllers/file_controller.dart';
 import 'widgets/file_list_item.dart';
 
-class FileManagerScreen extends ConsumerWidget {
-  const FileManagerScreen({super.key});
+class FileManagerScreen extends ConsumerStatefulWidget {
+  final String? initialPath;
+  
+  const FileManagerScreen({super.key, this.initialPath});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FileManagerScreen> createState() => _FileManagerScreenState();
+}
+
+class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialPath != null) {
+      Future.microtask(() {
+        ref.read(fileManagerProvider.notifier).navigateTo(widget.initialPath!);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = ref.watch(fileManagerProvider);
 

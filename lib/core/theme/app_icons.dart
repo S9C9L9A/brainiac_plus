@@ -17,6 +17,12 @@ class AppIcons {
   /// Disk/Storage icon
   static const disk = LucideIcons.hardDrive;
   
+  /// USB icon
+  static const usb = LucideIcons.usb;
+  
+  /// Network icon  
+  static const network = LucideIcons.network;
+  
   /// Settings icon
   static const settings = LucideIcons.settings;
   

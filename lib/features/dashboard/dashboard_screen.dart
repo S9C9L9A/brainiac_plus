@@ -243,6 +243,7 @@ class DashboardScreen extends ConsumerWidget {
     final diskPercent = stats.diskUsage['percentage'] as int;
     final used = stats.diskUsage['used'] as String;
     final size = stats.diskUsage['size'] as String;
+    final filesystem = stats.diskUsage['filesystem'] as String? ?? '/';
 
     return InkWell(
       onTap: () {
@@ -257,7 +258,9 @@ class DashboardScreen extends ConsumerWidget {
       child: MetricCard(
         title: 'Disk Space',
         value: '$diskPercent%',
-        subtitle: '$used / $size',
+        subtitle: filesystem.contains('device') 
+            ? '$used / $size total'
+            : '$used / $size',
         icon: AppIcons.disk,
         percentage: diskPercent.toDouble(),
         color: AppColors.systemOrange,
