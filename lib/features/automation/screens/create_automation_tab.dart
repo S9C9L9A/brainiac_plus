@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../dashboard/dashboard_screen.dart';
+import '../models/automation.dart';
 import '../models/automation_enums.dart';
+import '../controllers/automation_controller.dart';
 
 class CreateAutomationTab extends ConsumerStatefulWidget {
   const CreateAutomationTab({super.key});
@@ -495,22 +497,52 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
     }
   }
 
-  void _createAutomation() {
-    // TODO: Create automation
+  void _createAutomation() async {
+    // Create automation object
+    final automation = Automation(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _name,
+      description: _description,
+      category: _selectedCategory!,
+      service: _selectedService!,
+      preferredMode: _selectedMode,
+      triggerType: _triggerType,
+      status: _triggerType == TriggerType.scheduled 
+          ? AutomationStatus.scheduled 
+          : AutomationStatus.idle,
+      config: {},
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isActive: true,
+      isTemplate: false,
+    );
+
+    // Save via controller
+    final success = await ref.read(automationControllerProvider.notifier).createAutomation(automation);
+    
+    if (!mounted) return;
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Automation created successfully!'),
-        backgroundColor: AppColors.systemGreen,
+      SnackBar(
+        content: Text(
+          success 
+              ? 'Automation created successfully! 🎉' 
+              : 'Failed to create automation'
+        ),
+        backgroundColor: success ? AppColors.systemGreen : AppColors.systemRed,
+        duration: const Duration(seconds: 3),
       ),
     );
     
-    // Reset form
-    setState(() {
-      _currentStep = 0;
-      _name = '';
-      _description = '';
-      _selectedService = null;
-      _selectedCategory = null;
-    });
+    if (success) {
+      // Reset form
+      setState(() {
+        _currentStep = 0;
+        _name = '';
+        _description = '';
+        _selectedService = null;
+        _selectedCategory = null;
+      });
+    }
   }
 }
