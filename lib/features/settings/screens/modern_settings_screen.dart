@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../dashboard/dashboard_screen.dart';
 import '../../automation/models/automation_enums.dart';
 import '../models/extended_settings.dart';
+import '../widgets/service_details_bottom_sheet.dart';
 
 // Mock provider - replace with real implementation
 final extendedSettingsProvider = StateProvider<ExtendedAppSettings>(
