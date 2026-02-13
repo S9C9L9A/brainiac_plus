@@ -67,9 +67,53 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                 style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.white),
-              onPressed: () => ref.read(packageProvider.notifier).loadPackages(),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) {
+                switch (value) {
+                  case 'update':
+                    ref.read(packageProvider.notifier).updateLists();
+                    break;
+                  case 'upgrade':
+                    ref.read(packageProvider.notifier).upgradeAll();
+                    break;
+                  case 'refresh':
+                    ref.read(packageProvider.notifier).loadPackages();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'update',
+                  child: Row(
+                    children: [
+                      Icon(Icons.update),
+                      SizedBox(width: 12),
+                      Text('Update Lists'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'upgrade',
+                  child: Row(
+                    children: [
+                      Icon(Icons.upgrade),
+                      SizedBox(width: 12),
+                      Text('Upgrade All'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'refresh',
+                  child: Row(
+                    children: [
+                      Icon(Icons.refresh),
+                      SizedBox(width: 12),
+                      Text('Refresh'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
