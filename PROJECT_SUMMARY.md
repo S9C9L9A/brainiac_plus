@@ -2,7 +2,7 @@
 
 ## 📦 Package Information
 
-**Package Name**: `com.cm99club.brainiac_plus`  
+**Package Name**: `com.cm999club.brainiac_plus`  
 **App Name**: BrainiacPlus  
 **Version**: 2.0.0+1  
 **Platform**: Linux & Android (Cross-platform)
@@ -58,7 +58,7 @@
 brainiac_plus/
 ├── android/
 │   └── app/
-│       ├── build.gradle.kts        → Package: com.cm99club.brainiac_plus
+│       ├── build.gradle.kts        → Package: com.cm999club.brainiac_plus
 │       └── src/main/kotlin/com/cm99club/brainiac_plus/
 │           └── MainActivity.kt
 ├── lib/
@@ -247,7 +247,7 @@ Per usare tutte le features:
 
 **Developer**: Giuseppe Genna (peppe999)  
 **Organization**: CM99 Club  
-**Package**: com.cm99club.brainiac_plus  
+**Package**: com.cm999club.brainiac_plus  
 **Repository**: github.com/cm99club/brainiac_plus (if public)
 
 ---
@@ -273,5 +273,5 @@ To be determined (consider MIT or Apache 2.0)
 ---
 
 **Last Updated**: 13 Feb 2026  
-**Package Name**: com.cm99club.brainiac_plus  
+**Package Name**: com.cm999club.brainiac_plus  
 **Status**: ✅ Production Ready

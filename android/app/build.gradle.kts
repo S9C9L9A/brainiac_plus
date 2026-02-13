@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cm99club.brainiac_plus"
+    namespace = "com.cm999club.brainiac_plus"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,8 @@ android {
     }
 
     defaultConfig {
-        // Application ID for CM99 Club
-        applicationId = "com.cm99club.brainiac_plus"
+        // Application ID for CM999 Club
+        applicationId = "com.cm999club.brainiac_plus"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
