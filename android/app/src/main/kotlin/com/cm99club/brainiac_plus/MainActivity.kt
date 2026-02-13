@@ -1,4 +1,4 @@
-package com.example.brainiac_plus
+package com.cm99club.brainiac_plus
 
 import io.flutter.embedding.android.FlutterActivity
 
