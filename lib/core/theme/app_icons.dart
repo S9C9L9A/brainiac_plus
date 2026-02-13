@@ -28,6 +28,9 @@ class AppIcons {
   
   /// Brain/AI icon (for app branding)
   static const brain = LucideIcons.brain;
+  
+  /// AI/Bot icon
+  static const ai = LucideIcons.bot;
 
   // ==================== NAVIGATION ====================
   

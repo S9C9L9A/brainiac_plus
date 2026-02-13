@@ -7,6 +7,7 @@ import '../file_manager/file_manager_screen.dart';
 import '../terminal/terminal_screen.dart';
 import '../packages/packages_screen.dart';
 import '../automation/automation_screen.dart';
+import '../ai_assistant/screens/ai_chat_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 import 'screens/cpu_detail_screen.dart';
@@ -176,6 +177,18 @@ class DashboardScreen extends ConsumerWidget {
                             context,
                             MaterialPageRoute(
                               builder: (context) => const AutomationScreen(),
+                            ),
+                          ),
+                        ),
+                        _buildActionButton(
+                          context,
+                          'AI Assistant',
+                          AppIcons.ai,
+                          const Color(0xFF9D4EDD),
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AiChatScreen(),
                             ),
                           ),
                         ),
