@@ -51,6 +51,15 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
   lucide_icons: ^0.257.0
+  
+  # Security & Storage
+  flutter_secure_storage: ^9.0.0
+  
+  # OAuth & Deep Linking
+  url_launcher: ^6.2.3
+  
+  # Scheduling
+  cron: ^0.6.0
 
 dev_dependencies:
   flutter_test:

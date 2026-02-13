@@ -8,6 +8,7 @@ import '../terminal/terminal_screen.dart';
 import '../packages/packages_screen.dart';
 import '../automation/automation_screen.dart';
 import '../ai_assistant/screens/ai_chat_screen.dart';
+import '../settings/screens/settings_screen.dart';
 import 'controllers/resource_controller.dart';
 import 'widgets/metric_card.dart';
 import 'screens/cpu_detail_screen.dart';
@@ -50,7 +51,12 @@ class DashboardScreen extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(AppIcons.settings, color: Colors.white, size: AppIcons.defaultSize),
                     onPressed: () {
-                      // TODO: Navigate to settings
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
                     },
                   ),
                 ],

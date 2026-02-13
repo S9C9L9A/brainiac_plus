@@ -181,6 +181,12 @@ class AppIcons {
   
   /// Paste icon
   static const paste = LucideIcons.clipboard;
+  
+  /// Key icon (for API keys)
+  static const key = LucideIcons.key;
+  
+  /// Instagram icon
+  static const instagram = LucideIcons.instagram;
 
   // ==================== COLORS & METADATA ====================
   
