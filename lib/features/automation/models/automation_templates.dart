@@ -1,6 +1,50 @@
 import 'automation.dart';
 import 'automation_enums.dart';
 
+/// Template for creating new automations
+class AutomationTemplate {
+  final String id;
+  final String name;
+  final String description;
+  final AutomationCategory category;
+  final ServiceProvider service;
+  final AutomationMode preferredMode;
+  final String? cronSchedule;
+  final List<String> requiredFields;
+  final List<String> tags;
+  final bool isPremium;
+
+  const AutomationTemplate({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.category,
+    required this.service,
+    this.preferredMode = AutomationMode.hybrid,
+    this.cronSchedule,
+    this.requiredFields = const [],
+    this.tags = const [],
+    this.isPremium = false,
+  });
+
+  Automation toAutomation({Map<String, dynamic>? config}) {
+    final now = DateTime.now();
+    return Automation(
+      id: 'auto_${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      description: description,
+      category: category,
+      service: service,
+      preferredMode: preferredMode,
+      cronSchedule: cronSchedule,
+      config: config ?? {},
+      createdAt: now,
+      updatedAt: now,
+      tags: tags,
+    );
+  }
+}
+
 /// Automation template library with pre-configured automations
 class AutomationTemplates {
   static final List<Automation> templates = [
@@ -283,4 +327,86 @@ class AutomationTemplates {
       return null;
     }
   }
+
+  /// Template list for UI (with better metadata)
+  static final List<AutomationTemplate> all = [
+    // Social Media
+    const AutomationTemplate(
+      id: 'tmpl_instagram_daily',
+      name: 'Daily Instagram Post',
+      description: 'Automatically post to Instagram daily with AI-generated content',
+      category: AutomationCategory.socialMedia,
+      service: ServiceProvider.instagram,
+      cronSchedule: '0 18 * * *',
+      requiredFields: ['Caption', 'Hashtags', 'Image Source'],
+      tags: ['instagram', 'ai', 'daily'],
+    ),
+    const AutomationTemplate(
+      id: 'tmpl_instagram_story',
+      name: 'Instagram Stories',
+      description: 'Post engaging stories 3 times a day automatically',
+      category: AutomationCategory.socialMedia,
+      service: ServiceProvider.instagram,
+      cronSchedule: '0 9,15,21 * * *',
+      requiredFields: ['Story Content', 'Media Type'],
+      tags: ['instagram', 'story'],
+    ),
+    const AutomationTemplate(
+      id: 'tmpl_tiktok_video',
+      name: 'TikTok Video Publisher',
+      description: 'Upload and publish TikTok videos with trending hashtags',
+      category: AutomationCategory.socialMedia,
+      service: ServiceProvider.tiktok,
+      requiredFields: ['Video File', 'Description', 'Hashtags'],
+      tags: ['tiktok', 'video'],
+      isPremium: true,
+    ),
+    
+    // Productivity
+    const AutomationTemplate(
+      id: 'tmpl_notion_sync',
+      name: 'Notion Database Sync',
+      description: 'Sync data between Google Sheets and Notion databases',
+      category: AutomationCategory.productivity,
+      service: ServiceProvider.notion,
+      preferredMode: AutomationMode.api,
+      requiredFields: ['Notion Database ID', 'Google Sheet URL'],
+      tags: ['notion', 'sync', 'data'],
+    ),
+    const AutomationTemplate(
+      id: 'tmpl_email_digest',
+      name: 'Daily Email Digest',
+      description: 'Compile and send daily digest of important emails',
+      category: AutomationCategory.productivity,
+      service: ServiceProvider.google,
+      cronSchedule: '0 8 * * *',
+      requiredFields: ['Email Filters', 'Recipient Email'],
+      tags: ['email', 'digest'],
+    ),
+
+    // Communication
+    const AutomationTemplate(
+      id: 'tmpl_slack_standup',
+      name: 'Daily Standup Bot',
+      description: 'Automated daily standup reminders and collection',
+      category: AutomationCategory.communication,
+      service: ServiceProvider.slack,
+      cronSchedule: '0 9 * * 1-5',
+      requiredFields: ['Slack Channel', 'Team Members'],
+      tags: ['slack', 'standup', 'team'],
+    ),
+
+    // Marketing
+    const AutomationTemplate(
+      id: 'tmpl_analytics_report',
+      name: 'Weekly Analytics Report',
+      description: 'Generate and share weekly social media analytics',
+      category: AutomationCategory.marketing,
+      service: ServiceProvider.google,
+      cronSchedule: '0 9 * * 1',
+      requiredFields: ['Data Sources', 'Report Template'],
+      tags: ['analytics', 'reporting'],
+      isPremium: true,
+    ),
+  ];
 }

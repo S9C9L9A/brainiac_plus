@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
 import '../../core/theme/app_icons.dart';
+import '../dashboard/dashboard_screen.dart'; // For kBottomNavHeight
 import 'controllers/terminal_controller.dart';
 import 'widgets/terminal_output.dart';
 import 'widgets/command_suggestions.dart';
@@ -203,10 +204,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
-              onPressed: () => Navigator.pop(context),
-            ),
             const Icon(AppIcons.terminal, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             const Expanded(
@@ -264,7 +261,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final isRunning = sessions.isNotEmpty ? sessions.last.isProcessRunning : false;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, kBottomNavHeight),
       child: GlassCard(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/glassmorphism.dart';
 import '../../../core/theme/app_icons.dart';
+import '../controllers/system_metrics_provider.dart';
 
 /// Compact horizontal metrics card showing CPU, RAM, Disk in single row
 class CompactMetricsCard extends ConsumerWidget {
@@ -9,10 +9,8 @@ class CompactMetricsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Replace with real system metrics from platform layer
-    const cpuUsage = 45.0;
-    const memoryUsage = 62.0;
-    const diskUsage = 78.0;
+    // Get real system metrics from provider
+    final metrics = ref.watch(systemMetricsProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -38,10 +36,9 @@ class CompactMetricsCard extends ConsumerWidget {
             child: _MetricItem(
               icon: AppIcons.cpu,
               label: 'CPU',
-              value: '${cpuUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(cpuUsage),
+              value: '${metrics.cpuUsage.toStringAsFixed(1)}%',
+              color: _getMetricColor(metrics.cpuUsage),
               onTap: () {
-                // Navigate to CPU detail
                 Navigator.pushNamed(context, '/cpu-detail');
               },
             ),
@@ -54,8 +51,8 @@ class CompactMetricsCard extends ConsumerWidget {
             child: _MetricItem(
               icon: AppIcons.ram,
               label: 'RAM',
-              value: '${memoryUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(memoryUsage),
+              value: '${metrics.memoryUsage.toStringAsFixed(1)}%',
+              color: _getMetricColor(metrics.memoryUsage),
               onTap: () {
                 Navigator.pushNamed(context, '/ram-detail');
               },
@@ -69,8 +66,8 @@ class CompactMetricsCard extends ConsumerWidget {
             child: _MetricItem(
               icon: AppIcons.disk,
               label: 'Disk',
-              value: '${diskUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(diskUsage),
+              value: '${metrics.diskUsage.toStringAsFixed(1)}%',
+              color: _getMetricColor(metrics.diskUsage),
               onTap: () {
                 Navigator.pushNamed(context, '/disk-detail');
               },

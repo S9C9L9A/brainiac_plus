@@ -5,11 +5,16 @@ import '../../core/theme/app_icons.dart';
 import 'widgets/compact_metrics_card.dart';
 import 'widgets/ai_chat_fab.dart';
 import 'widgets/floating_bottom_bar.dart';
+import 'widgets/integrated_ai_chat.dart';
 import 'controllers/dashboard_customization_controller.dart';
 import '../terminal/terminal_screen.dart';
-import '../automation/automation_screen.dart';
+import '../automation/screens/automation_main_screen.dart';
 import '../file_manager/file_manager_screen.dart';
-import '../settings/screens/settings_screen.dart';
+import '../settings/screens/modern_settings_screen.dart';
+import '../activity/recent_activity_screen.dart';
+
+// Constant for bottom navigation bar height
+const double kBottomNavHeight = 100.0;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -76,11 +81,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       case 1:
         return const TerminalScreen();
       case 2:
-        return const AutomationScreen();
+        return const AutomationMainScreen();
       case 3:
         return const FileManagerScreen();
       case 4:
-        return const SettingsScreen();
+        return const ModernSettingsScreen();
       default:
         return _buildDashboardContent();
     }
@@ -99,7 +104,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Scrollable content
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, kBottomNavHeight),
               children: [
                 const SizedBox(height: 20),
                 
@@ -109,20 +114,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Quick Actions
-                if (customState.layout.showQuickActions) ...[
-                  _buildSectionTitle('Quick Actions', isDark),
-                  const SizedBox(height: 12),
-                  _buildQuickActions(isDark),
-                  const SizedBox(height: 24),
-                ],
-                
-                // Recent Activity (placeholder)
-                if (customState.layout.showRecentActivity) ...[
-                  _buildSectionTitle('Recent Activity', isDark),
-                  const SizedBox(height: 12),
-                  _buildRecentActivity(isDark),
-                ],
+                // AI Chat Section (replacing Quick Actions)
+                _buildSectionTitle('AI Assistant', isDark),
+                const SizedBox(height: 12),
+                const IntegratedAIChat(),
               ],
             ),
           ),
@@ -185,14 +180,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           
-          // Customize button
+          // Activity button
           IconButton(
-            icon: Icon(
-              customState.isEditMode ? Icons.check : Icons.tune,
+            icon: const Icon(
+              Icons.history,
               color: Colors.white,
             ),
             onPressed: () {
-              ref.read(dashboardCustomizationProvider.notifier).toggleEditMode();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const RecentActivityScreen(),
+                ),
+              );
             },
           ),
         ],

@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../dashboard/dashboard_screen.dart'; // For kBottomNavHeight
 import '../controllers/settings_controller.dart';
 import '../models/app_settings.dart';
 import '../../../core/services/instagram_oauth_service.dart';
@@ -46,7 +47,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _buildAppBar(context),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, kBottomNavHeight),
                   children: [
                     _buildSection(
                       title: 'API Keys',
@@ -161,10 +162,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(AppIcons.arrowBack, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
-            ),
             const Icon(AppIcons.settings, color: Colors.white),
             const SizedBox(width: 12),
             const Expanded(

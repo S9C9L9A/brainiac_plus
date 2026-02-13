@@ -109,6 +109,17 @@ class AutomationController extends StateNotifier<AutomationState> {
       state = state.copyWith(activeAutomations: errorUpdated);
     }
   }
+
+  void toggleAutomation(String id) {
+    final automation = state.activeAutomations.firstWhere((a) => a.id == id);
+    final toggled = automation.copyWith(isActive: !automation.isActive);
+    final updated = state.activeAutomations.map((a) => a.id == id ? toggled : a).toList();
+    state = state.copyWith(activeAutomations: updated);
+  }
+
+  Future<void> runAutomation(String id) async {
+    await executeAutomation(id);
+  }
 }
 
 /// Provider for automation controller

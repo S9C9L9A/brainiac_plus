@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
+import '../dashboard/dashboard_screen.dart'; // For kBottomNavHeight
 import 'controllers/automation_controller.dart';
 import 'models/automation_enums.dart';
 
@@ -38,11 +39,6 @@ class AutomationScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 12),
           const Text(
             'Automations',
             style: TextStyle(
@@ -85,7 +81,7 @@ class AutomationScreen extends ConsumerWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, kBottomNavHeight),
       children: [
         if (state.activeAutomations.isNotEmpty) ...[
           const Text(

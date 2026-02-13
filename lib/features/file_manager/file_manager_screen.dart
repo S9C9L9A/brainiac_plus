@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
 import '../../core/theme/app_icons.dart';
+import '../dashboard/dashboard_screen.dart'; // For kBottomNavHeight
 import 'controllers/file_controller.dart';
 import 'widgets/file_list_item.dart';
 
@@ -73,11 +74,6 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
-              onPressed: () => Navigator.pop(context),
-            ),
-            const SizedBox(width: 8),
             const Icon(AppIcons.folderOpen, color: Colors.white, size: AppIcons.defaultSize),
             const SizedBox(width: 12),
             Expanded(
@@ -197,7 +193,7 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, kBottomNavHeight),
       itemCount: state.files.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {

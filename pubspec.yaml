@@ -32,13 +32,17 @@ dependencies:
   # Platform Integration
   ffi: ^2.1.0
   
+  # System Metrics (Cross-platform)
+  system_info2: ^4.0.0
+  device_info_plus: ^10.1.0
+
   # UI/UX Components
   flutter_animate: ^4.5.0
   glassmorphism_ui: ^0.3.0
   fl_chart: ^0.66.2
   
   # File Management
-  file_picker: ^6.1.1
+  file_picker: ^8.1.6
   
   # Terminal
   xterm: ^3.5.0
