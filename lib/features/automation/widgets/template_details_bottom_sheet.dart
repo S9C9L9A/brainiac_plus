@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
+import '../../../core/navigation/navigation_service.dart';
 import '../../settings/models/extended_settings.dart';
 import '../../settings/screens/modern_settings_screen.dart';
 import '../models/automation_templates.dart';
@@ -196,12 +197,10 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
                         ),
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
+                        // Use navigation service to switch to Settings tab
+                        NavigationService().navigateToTab(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const ModernSettingsScreen(),
-                          ),
+                          NavigationService.tabSettings,
                         );
                       },
                     ),

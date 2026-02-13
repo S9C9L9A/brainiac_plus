@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_icons.dart';
+import '../../core/navigation/navigation_service.dart';
 import 'widgets/compact_metrics_card.dart';
 import 'widgets/ai_chat_fab.dart';
 import 'widgets/floating_bottom_bar.dart';
@@ -26,6 +27,24 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
   bool _showAIChat = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Register tab change callback with navigation service
+    NavigationService().onTabChange = (tabIndex) {
+      setState(() {
+        _currentIndex = tabIndex;
+      });
+    };
+  }
+
+  @override
+  void dispose() {
+    // Clean up navigation service callback
+    NavigationService().onTabChange = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

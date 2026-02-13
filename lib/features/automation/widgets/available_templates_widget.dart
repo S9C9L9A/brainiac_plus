@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
+import '../../../core/navigation/navigation_service.dart';
 import '../../settings/models/extended_settings.dart';
-import '../../settings/screens/modern_settings_screen.dart';
 import '../models/automation_templates.dart';
 import '../models/automation_enums.dart';
 
@@ -320,7 +320,11 @@ class AvailableTemplatesWidget extends ConsumerWidget {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
-                // Navigate to settings
+                // Use navigation service to switch to Settings tab
+                NavigationService().navigateToTab(
+                  context,
+                  NavigationService.tabSettings,
+                );
               },
               icon: const Icon(Icons.settings),
               label: const Text('Go to Settings'),
