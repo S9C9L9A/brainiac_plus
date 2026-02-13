@@ -1,133 +1,118 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/database/automation_database.dart';
-import '../../../core/services/task_scheduler.dart';
+import '../models/automation.dart';
+import '../models/automation_enums.dart';
+import '../models/automation_templates.dart';
+import '../../../core/services/automation_engine.dart';
 
+/// State for automation management
 class AutomationState {
-  final List<AutomatedTask> tasks;
+  final List<Automation> activeAutomations;
+  final List<Automation> templates;
+  final List<AutomationLog> logs;
   final bool isLoading;
   final String? error;
 
-  AutomationState({
-    this.tasks = const [],
+  const AutomationState({
+    this.activeAutomations = const [],
+    this.templates = const [],
+    this.logs = const [],
     this.isLoading = false,
     this.error,
   });
 
   AutomationState copyWith({
-    List<AutomatedTask>? tasks,
+    List<Automation>? activeAutomations,
+    List<Automation>? templates,
+    List<AutomationLog>? logs,
     bool? isLoading,
     String? error,
   }) {
     return AutomationState(
-      tasks: tasks ?? this.tasks,
+      activeAutomations: activeAutomations ?? this.activeAutomations,
+      templates: templates ?? this.templates,
+      logs: logs ?? this.logs,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error ?? this.error,
     );
+  }
+
+  List<Automation> get runningAutomations =>
+      activeAutomations.where((a) => a.isRunning).toList();
+
+  List<Automation> get scheduledAutomations =>
+      activeAutomations.where((a) => a.isScheduled).toList();
+
+  int get todayExecutions {
+    final today = DateTime.now();
+    return logs.where((log) {
+      return log.startTime.year == today.year &&
+          log.startTime.month == today.month &&
+          log.startTime.day == today.day;
+    }).length;
   }
 }
 
+/// Controller for automation management
 class AutomationController extends StateNotifier<AutomationState> {
-  final TaskScheduler _scheduler = TaskScheduler();
-  final TaskExecutor _executor = TaskExecutor();
+  final AutomationEngine _engine;
 
-  AutomationController() : super(AutomationState()) {
-    loadTasks();
+  AutomationController(this._engine) : super(const AutomationState()) {
+    state = state.copyWith(templates: AutomationTemplates.templates);
   }
 
-  Future<void> loadTasks() async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> createFromTemplate(String templateId, Map<String, dynamic>? config) async {
+    final template = AutomationTemplates.getTemplateById(templateId);
+    if (template == null) return;
+
+    final newAutomation = template.copyWith(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      isTemplate: false,
+      config: config ?? template.config,
+      status: template.hasSchedule ? AutomationStatus.scheduled : AutomationStatus.idle,
+    );
+
+    state = state.copyWith(
+      activeAutomations: [...state.activeAutomations, newAutomation],
+    );
+  }
+
+  Future<void> executeAutomation(String id) async {
+    final automation = state.activeAutomations.firstWhere((a) => a.id == id);
+    
+    final runningAutomation = automation.copyWith(status: AutomationStatus.running);
+    final updated = state.activeAutomations.map((a) => a.id == id ? runningAutomation : a).toList();
+    state = state.copyWith(activeAutomations: updated);
 
     try {
-      final tasks = await AutomationDatabase.getTasks();
-      state = state.copyWith(tasks: tasks, isLoading: false);
-
-      // Schedule enabled tasks
-      for (var task in tasks) {
-        if (task.enabled && task.schedule != null) {
-          _scheduleTask(task);
-        }
-      }
+      final log = await _engine.execute(automation);
+      
+      final completedAutomation = automation.copyWith(
+        status: log.isSuccess ? AutomationStatus.completed : AutomationStatus.failed,
+        executionCount: automation.executionCount + 1,
+        successCount: automation.successCount + (log.isSuccess ? 1 : 0),
+        failureCount: automation.failureCount + (log.isFailed ? 1 : 0),
+        lastRun: DateTime.now(),
+      );
+      
+      final finalUpdated = state.activeAutomations.map((a) => a.id == id ? completedAutomation : a).toList();
+      state = state.copyWith(
+        activeAutomations: finalUpdated,
+        logs: [...state.logs, log],
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final failedAutomation = automation.copyWith(
+        status: AutomationStatus.failed,
+        executionCount: automation.executionCount + 1,
+        failureCount: automation.failureCount + 1,
+      );
+      final errorUpdated = state.activeAutomations.map((a) => a.id == id ? failedAutomation : a).toList();
+      state = state.copyWith(activeAutomations: errorUpdated);
     }
-  }
-
-  Future<void> createTask(String name, String command, String? schedule) async {
-    final task = AutomatedTask(
-      name: name,
-      command: command,
-      schedule: schedule,
-      enabled: true,
-    );
-
-    final id = await AutomationDatabase.insertTask(task);
-    await loadTasks();
-
-    // Schedule if has cron expression
-    final createdTask = state.tasks.firstWhere((t) => t.id == id);
-    if (createdTask.schedule != null) {
-      _scheduleTask(createdTask);
-    }
-  }
-
-  Future<void> updateTask(AutomatedTask task) async {
-    await AutomationDatabase.updateTask(task);
-    await loadTasks();
-
-    // Reschedule
-    if (task.id != null) {
-      _scheduler.cancelTask(task.id!);
-      if (task.enabled && task.schedule != null) {
-        _scheduleTask(task);
-      }
-    }
-  }
-
-  Future<void> deleteTask(int id) async {
-    _scheduler.cancelTask(id);
-    await AutomationDatabase.deleteTask(id);
-    await loadTasks();
-  }
-
-  Future<void> toggleTask(int id) async {
-    final task = state.tasks.firstWhere((t) => t.id == id);
-    final updated = task.copyWith(enabled: !task.enabled);
-    await updateTask(updated);
-  }
-
-  Future<void> executeTask(int id) async {
-    final task = state.tasks.firstWhere((t) => t.id == id);
-    
-    final result = await _executor.executeTask(task.command);
-    
-    // Save log
-    await AutomationDatabase.insertLog(TaskLog(
-      taskId: id,
-      output: result['output'],
-      status: result['success'] ? 'success' : 'error',
-    ));
-
-    // Update last run time
-    await AutomationDatabase.updateTask(task.copyWith(lastRun: DateTime.now()));
-    await loadTasks();
-  }
-
-  void _scheduleTask(AutomatedTask task) {
-    if (task.id == null || task.schedule == null) return;
-
-    _scheduler.scheduleTask(task.id!, task.schedule!, () async {
-      await executeTask(task.id!);
-    });
-  }
-
-  @override
-  void dispose() {
-    _scheduler.cancelAll();
-    super.dispose();
   }
 }
 
-final automationProvider = StateNotifierProvider<AutomationController, AutomationState>((ref) {
-  return AutomationController();
+/// Provider for automation controller
+final automationControllerProvider =
+    StateNotifierProvider<AutomationController, AutomationState>((ref) {
+  return AutomationController(AutomationEngine());
 });

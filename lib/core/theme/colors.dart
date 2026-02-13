@@ -46,4 +46,8 @@ class AppColors {
   static const textPrimaryDark = Color(0xFFFFFFFF);
   static const textSecondaryDark = Color(0xFFEBEBF5);
   static const textTertiaryDark = Color(0xFF8E8E93);
+  
+  // Primary & Secondary for gradients
+  static const primary = systemPurple;
+  static const secondary = systemBlue;
 }

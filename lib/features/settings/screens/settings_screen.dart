@@ -5,6 +5,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../../core/theme/app_icons.dart';
 import '../controllers/settings_controller.dart';
+import '../models/app_settings.dart';
 import '../../../core/services/instagram_oauth_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {

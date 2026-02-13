@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../core/theme/app_icons.dart';
 import '../controllers/ai_chat_controller.dart';
 import '../widgets/message_bubble.dart';

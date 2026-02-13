@@ -31,6 +31,12 @@ class AppIcons {
   
   /// AI/Bot icon
   static const ai = LucideIcons.bot;
+  
+  /// Dashboard/Layout icon
+  static const dashboard = LucideIcons.layoutDashboard;
+  
+  /// RAM is alias for memory
+  static const ram = memory;
 
   // ==================== NAVIGATION ====================
   

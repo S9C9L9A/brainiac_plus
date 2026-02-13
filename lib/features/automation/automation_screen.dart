@@ -2,23 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
-import '../../core/theme/glassmorphism.dart';
-import '../../core/theme/app_icons.dart';
-import '../../core/database/automation_database.dart';
 import 'controllers/automation_controller.dart';
+import 'models/automation_enums.dart';
 
-class AutomationScreen extends ConsumerStatefulWidget {
+class AutomationScreen extends ConsumerWidget {
   const AutomationScreen({super.key});
 
   @override
-  ConsumerState<AutomationScreen> createState() => _AutomationScreenState();
-}
-
-class _AutomationScreenState extends ConsumerState<AutomationScreen> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final state = ref.watch(automationProvider);
+    final state = ref.watch(automationControllerProvider);
 
     return Scaffold(
       body: Container(
@@ -26,236 +19,238 @@ class _AutomationScreenState extends ConsumerState<AutomationScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              _buildAppBar(context),
+              _buildHeader(context, state, isDark),
+              const SizedBox(height: 20),
               Expanded(
                 child: state.isLoading
                     ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                    : _buildTaskList(state.tasks),
+                    : _buildContent(context, state, ref, isDark),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateTaskDialog(),
-        icon: const Icon(AppIcons.add),
-        label: const Text('New Task'),
-        backgroundColor: AppColors.systemBlue,
-      ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildHeader(BuildContext context, AutomationState state, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
-              onPressed: () => Navigator.pop(context),
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Automations',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
-            const Icon(AppIcons.automation, color: Colors.white, size: AppIcons.defaultSize),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                'Task Automation',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
             ),
-          ],
-        ),
+            child: Row(
+              children: [
+                const Icon(Icons.bolt, color: Colors.amber, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  '${state.activeAutomations.length} Active',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTaskList(List<AutomatedTask> tasks) {
-    if (tasks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(AppIcons.automation, size: 64, color: Colors.white38),
-            const SizedBox(height: 16),
-            const Text(
-              'No automated tasks',
-              style: TextStyle(color: Colors.white70, fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Create your first automation',
-              style: TextStyle(color: Colors.white54, fontSize: 14),
-            ),
-          ],
+  Widget _buildContent(BuildContext context, AutomationState state, WidgetRef ref, bool isDark) {
+    if (state.activeAutomations.isEmpty && state.templates.isEmpty) {
+      return const Center(
+        child: Text(
+          'No automations yet',
+          style: TextStyle(color: Colors.white70, fontSize: 16),
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: tasks.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final task = tasks[index];
-        return _buildTaskCard(task);
-      },
-    );
-  }
-
-  Widget _buildTaskCard(AutomatedTask task) {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  task.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Switch(
-                value: task.enabled,
-                onChanged: (_) => ref.read(automationProvider.notifier).toggleTask(task.id!),
-                activeColor: AppColors.systemGreen,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.black26,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              task.command,
-              style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'monospace'),
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      children: [
+        if (state.activeAutomations.isNotEmpty) ...[
+          const Text(
+            'Active Automations',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              if (task.schedule != null) ...[
-                const Icon(AppIcons.schedule, size: 16, color: Colors.white60),
-                const SizedBox(width: 4),
-                Text(
-                  task.schedule!,
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
-                ),
-                const Spacer(),
-              ],
-              if (task.lastRun != null) ...[
-                Text(
-                  'Last: ${_formatDateTime(task.lastRun!)}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
-                ),
-                const SizedBox(width: 8),
-              ],
-              IconButton(
-                icon: const Icon(AppIcons.play, color: Colors.white, size: AppIcons.defaultSize),
-                onPressed: () => ref.read(automationProvider.notifier).executeTask(task.id!),
-                tooltip: 'Run now',
+          ...state.activeAutomations.map((automation) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
-              IconButton(
-                icon: const Icon(AppIcons.delete, color: AppColors.systemRed, size: AppIcons.defaultSize),
-                onPressed: () => _confirmDelete(task),
-                tooltip: 'Delete',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        automation.service.icon,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              automation.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              automation.description,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(automation.status),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          automation.status.label,
+                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (automation.hasSchedule) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Schedule: ${automation.cronSchedule}',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ),
+            );
+          }).toList(),
+          const SizedBox(height: 24),
         ],
-      ),
-    );
-  }
-
-  void _showCreateTaskDialog() {
-    final nameController = TextEditingController();
-    final commandController = TextEditingController();
-    final scheduleController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create Automation Task'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Task Name'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: commandController,
-              decoration: const InputDecoration(labelText: 'Command'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: scheduleController,
-              decoration: const InputDecoration(
-                labelText: 'Schedule (optional)',
-                hintText: '*/5, @hourly, @daily',
-              ),
-            ),
-          ],
+        const Text(
+          'Suggested Templates',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final command = commandController.text.trim();
-              final schedule = scheduleController.text.trim();
-
-              if (name.isNotEmpty && command.isNotEmpty) {
-                ref.read(automationProvider.notifier).createTask(
-                  name,
-                  command,
-                  schedule.isEmpty ? null : schedule,
-                );
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
+        const SizedBox(height: 12),
+        ...state.templates.take(10).map((template) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  template.category.icon,
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        template.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        template.description,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                  onPressed: () async {
+                    await ref
+                        .read(automationControllerProvider.notifier)
+                        .createFromTemplate(template.id, null);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Added: ${template.name}')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 
-  void _confirmDelete(AutomatedTask task) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: Text('Are you sure you want to delete "${task.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(automationProvider.notifier).deleteTask(task.id!);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.systemRed),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateTime(DateTime dt) {
-    return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+  Color _getStatusColor(AutomationStatus status) {
+    switch (status) {
+      case AutomationStatus.running:
+        return Colors.green;
+      case AutomationStatus.scheduled:
+        return Colors.blue;
+      case AutomationStatus.paused:
+        return Colors.orange;
+      case AutomationStatus.completed:
+        return Colors.teal;
+      case AutomationStatus.failed:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 }

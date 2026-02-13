@@ -60,6 +60,17 @@ dependencies:
   
   # Scheduling
   cron: ^0.6.0
+  
+  # Automation & APIs (Cross-platform)
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
+  http: ^1.2.0
+  
+  # Process execution (Platform-specific with checks)
+  process_run: ^1.2.0
+  
+  # UI Components
+  flutter_speed_dial: ^7.0.0
 
 dev_dependencies:
   flutter_test:
