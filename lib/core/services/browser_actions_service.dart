@@ -159,7 +159,7 @@ class BrowserActionsService {
     final originCode = _getCityCode(origin);
     final destCode = _getCityCode(destination);
     
-    return 'https://www.kayak.it/flights/$originCode-$destCode/$dateFrom/$dateTo/$passengers'+'adults?sort=bestflight_a&fs=cabinclass=${_getKayakCabinClass(cabinClass)}';
+    return 'https://www.kayak.it/flights/$originCode-$destCode/$dateFrom/$dateTo/${passengers}adults?sort=bestflight_a&fs=cabinclass=${_getKayakCabinClass(cabinClass)}';
   }
 
   /// Open a generic URL
@@ -247,7 +247,12 @@ class BrowserActionsService {
       'berlino': 'BER',
     };
     
-    return codes[city.toLowerCase()] ?? city.toUpperCase().substring(0, 3);
+    final lowerCity = city.toLowerCase();
+    if (codes.containsKey(lowerCity)) {
+      return codes[lowerCity]!;
+    }
+    final upper = city.toUpperCase();
+    return upper.length >= 3 ? upper.substring(0, 3) : upper;
   }
 
   /// Convert cabin class to Kayak format

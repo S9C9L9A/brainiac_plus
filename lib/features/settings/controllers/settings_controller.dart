@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/app_settings.dart';
@@ -58,7 +59,7 @@ class SettingsController extends StateNotifier<AppSettings> {
       );
     } catch (e) {
       // If loading fails, keep default settings
-      print('Error loading settings: $e');
+      debugPrint('Error loading settings: $e');
     }
   }
 

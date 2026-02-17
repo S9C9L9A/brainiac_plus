@@ -21,10 +21,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _higgsfieldKeyController = TextEditingController();
   final _openaiKeyController = TextEditingController();
   
-  // TODO: Get from environment or config
+  // Instagram OAuth credentials should be provided via environment configuration
   final _instagramOAuth = InstagramOAuthService(
-    clientId: 'YOUR_CLIENT_ID',
-    clientSecret: 'YOUR_CLIENT_SECRET',
+    clientId: const String.fromEnvironment('INSTAGRAM_CLIENT_ID', defaultValue: ''),
+    clientSecret: const String.fromEnvironment('INSTAGRAM_CLIENT_SECRET', defaultValue: ''),
   );
 
   @override
@@ -293,7 +293,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               CircleAvatar(
                 backgroundColor: isExpired ? Colors.red : Colors.green,
                 child: Text(
-                  settings.instagramUsername![0].toUpperCase(),
+                  settings.instagramUsername != null && settings.instagramUsername!.isNotEmpty
+                      ? settings.instagramUsername![0].toUpperCase()
+                      : '?',
                   style: const TextStyle(color: Colors.white),
                 ),
               ),

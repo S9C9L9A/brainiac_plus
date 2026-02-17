@@ -49,9 +49,29 @@ class TaskScheduler {
 }
 
 class TaskExecutor {
+  /// Characters that are not allowed in commands to prevent injection
+  static final _dangerousPatterns = RegExp(r'[;&|`$]');
+
   Future<Map<String, dynamic>> executeTask(String command) async {
+    // Validate command to prevent shell injection
+    if (_dangerousPatterns.hasMatch(command)) {
+      return {
+        'success': false,
+        'output': 'Error: Command contains disallowed characters (;, &, |, `, \$)',
+        'exitCode': -1,
+      };
+    }
+
     try {
-      final result = await Process.run('bash', ['-c', command]);
+      final parts = command.split(' ');
+      if (parts.isEmpty || parts[0].isEmpty) {
+        return {
+          'success': false,
+          'output': 'Error: Empty command',
+          'exitCode': -1,
+        };
+      }
+      final result = await Process.run(parts[0], parts.sublist(1));
       
       return {
         'success': result.exitCode == 0,

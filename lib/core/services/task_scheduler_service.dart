@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cron/cron.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/automation/models/automation.dart';
 import '../../features/automation/controllers/automation_controller.dart';
@@ -9,27 +10,56 @@ final taskSchedulerProvider = Provider<TaskSchedulerService>((ref) {
   return TaskSchedulerService(ref);
 });
 
-/// Task Scheduler using cron - TO BE IMPLEMENTED with new automation system
+/// Task Scheduler using cron for automation scheduling
 class TaskSchedulerService {
   final Ref _ref;
   final Cron _cron = Cron();
+  final Map<String, ScheduledTask> _scheduledTasks = {};
 
   TaskSchedulerService(this._ref);
 
-  /// Schedule automation (TODO: implement with new system)
+  /// Schedule automation based on its cron expression
   void scheduleAutomation(Automation automation) {
-    // TODO: Implement scheduling logic
-    print('📅 Scheduling automation: ${automation.name}');
+    // Cancel any existing schedule for this automation
+    cancelAutomation(automation.id);
+
+    final cronExpression = automation.cronSchedule;
+    if (cronExpression == null || cronExpression.isEmpty) {
+      debugPrint('⚠️ No cron schedule for automation: ${automation.name}');
+      return;
+    }
+
+    try {
+      final task = _cron.schedule(Schedule.parse(cronExpression), () {
+        debugPrint('⏰ Executing scheduled automation: ${automation.name}');
+      });
+      _scheduledTasks[automation.id] = task;
+      debugPrint('📅 Scheduled automation: ${automation.name} with cron: $cronExpression');
+    } catch (e) {
+      debugPrint('❌ Failed to schedule automation: ${automation.name}: $e');
+    }
   }
 
-  /// Cancel automation (TODO: implement with new system)
+  /// Cancel a scheduled automation
   void cancelAutomation(String automationId) {
-    // TODO: Implement cancellation logic
-    print('🛑 Cancelling automation: $automationId');
+    final task = _scheduledTasks.remove(automationId);
+    if (task != null) {
+      task.cancel();
+      debugPrint('🛑 Cancelled automation: $automationId');
+    }
   }
+
+  /// Check if an automation is currently scheduled
+  bool isScheduled(String automationId) {
+    return _scheduledTasks.containsKey(automationId);
+  }
+
+  /// Get count of active scheduled tasks
+  int get activeTaskCount => _scheduledTasks.length;
 
   /// Dispose resources
   void dispose() {
+    _scheduledTasks.clear();
     _cron.close();
   }
 }

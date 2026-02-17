@@ -3,6 +3,7 @@
 /// This file demonstrates how to navigate to the service configuration screen
 /// from various places in the application.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
 import '../../automation/models/automation_enums.dart';
@@ -46,7 +47,7 @@ class ServiceConfigNavigationExamples {
     );
     
     if (result == true) {
-      print('Service configured successfully: $service');
+      debugPrint('Service configured successfully: $service');
       // Update UI, refresh data, etc.
     }
     

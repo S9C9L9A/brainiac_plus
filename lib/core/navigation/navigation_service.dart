@@ -14,11 +14,14 @@ class NavigationService {
   /// Navigate to a specific tab in the dashboard
   /// If called from outside the dashboard, it will pop until reaching the dashboard
   void navigateToTab(BuildContext context, int tabIndex) {
-    if (onTabChange != null) {
+    final callback = onTabChange;
+    if (callback != null) {
       // Close any open bottom sheets or dialogs first
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
       // Change to the requested tab
-      onTabChange!(tabIndex);
+      callback(tabIndex);
     }
   }
 

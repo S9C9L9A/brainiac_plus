@@ -106,6 +106,9 @@ class HiggsfieldService {
         ),
       );
 
+      if (response.data == null) {
+        throw HiggsfieldException('No data received when downloading content');
+      }
       return response.data!;
     } catch (e) {
       throw HiggsfieldException('Failed to download content: $e');

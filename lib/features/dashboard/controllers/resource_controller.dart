@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/platform/linux_platform.dart';
 
 /// System stats data model
 class SystemStats {
@@ -67,7 +67,7 @@ class ResourceController extends StateNotifier<SystemStats> {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      print('Error fetching stats: $e');
+      debugPrint('Error fetching stats: $e');
     }
   }
 

@@ -80,9 +80,9 @@ class RoutingExamples {
     // Get specific route metadata
     final terminalMeta = RoutesRegistry.getByName('/terminal');
     if (terminalMeta != null) {
-      print('Title: ${terminalMeta.title}');
-      print('Category: ${terminalMeta.category}');
-      print('Show in drawer: ${terminalMeta.showInDrawer}');
+      debugPrint('Title: ${terminalMeta.title}');
+      debugPrint('Category: ${terminalMeta.category}');
+      debugPrint('Show in drawer: ${terminalMeta.showInDrawer}');
     }
   }
 

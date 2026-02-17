@@ -59,7 +59,11 @@ class OllamaService {
         },
       );
 
-      return response.data['message']['content'] as String;
+      final data = response.data;
+      if (data is! Map || data['message'] == null || data['message']['content'] == null) {
+        throw OllamaException('Invalid response format from Ollama chat API');
+      }
+      return data['message']['content'] as String;
     } catch (e) {
       throw OllamaException('Failed to chat: $e');
     }
