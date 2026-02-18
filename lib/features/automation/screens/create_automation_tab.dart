@@ -901,90 +901,113 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: GlassCard(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.auto_awesome, color: Colors.purple, size: 28),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'AI Automation Assistant',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, color: Colors.purple, size: 28),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'AI Automation Assistant',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Describe what you want to automate in natural language:',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
+                      if (!_isAiAssisting)
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _aiPromptController,
-                  style: const TextStyle(color: Colors.white),
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: 'e.g., "Post to Instagram every day at 9am" or "Send a Slack message when I receive an email"',
-                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                    filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                  const SizedBox(height: 16),
+                  if (_isAiAssisting) ...[
+                    const Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(color: Colors.purple),
+                          SizedBox(height: 16),
+                          Text(
+                            'AI is analyzing your request...',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  onChanged: (value) => setState(() => _aiPrompt = value),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        _aiPromptController.clear();
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Cancel'),
+                  ] else ...[
+                    const Text(
+                      'Describe what you want to automate in natural language:',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: _aiPrompt.trim().isEmpty
-                          ? null
-                          : () => _getAiSuggestion(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _aiPromptController,
+                      style: const TextStyle(color: Colors.white),
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., "Post to Instagram every day at 9am" or "Send a Slack message when I receive an email"',
+                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
                       ),
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                      label: const Text('Generate'),
+                      onChanged: (value) {
+                        setDialogState(() => _aiPrompt = value);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            _aiPromptController.clear();
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: _aiPrompt.trim().isEmpty
+                              ? null
+                              : () => _getAiSuggestion(context, setDialogState),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: const Text('Generate'),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -993,10 +1016,11 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   }
 
   /// Get AI suggestion and apply it to the form
-  void _getAiSuggestion(BuildContext dialogContext) async {
+  void _getAiSuggestion(BuildContext dialogContext, StateSetter setDialogState) async {
     final prompt = _aiPrompt.trim();
     if (prompt.isEmpty) return;
 
+    setDialogState(() => _isAiAssisting = true);
     setState(() => _isAiAssisting = true);
 
     try {
@@ -1052,6 +1076,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
     } catch (e) {
       if (!mounted) return;
 
+      setDialogState(() => _isAiAssisting = false);
       setState(() => _isAiAssisting = false);
 
       // Show error message
