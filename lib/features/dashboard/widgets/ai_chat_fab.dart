@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
+import '../../../routes/app_routes.dart';
+import '../../settings/providers/extended_settings_provider.dart';
+import '../../ai_assistant/widgets/ai_chat_panel.dart';
 
 /// Floating Action Button for AI Chat with modern gradient design
 class AIChatFAB extends StatefulWidget {
@@ -92,7 +96,7 @@ class _AIChatFABState extends State<AIChatFAB> with SingleTickerProviderStateMix
 }
 
 /// AI Chat overlay/bottom sheet
-class AIChatOverlay extends StatelessWidget {
+class AIChatOverlay extends ConsumerWidget {
   final VoidCallback onClose;
 
   const AIChatOverlay({
@@ -101,7 +105,11 @@ class AIChatOverlay extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(extendedSettingsProvider);
+    final hasLocalConfig = settings.hasOllamaEndpoint && settings.hasOllamaModelName;
+    final modelName = settings.ollamaModelName ?? 'Local model';
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
@@ -126,95 +134,147 @@ class AIChatOverlay extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
+          _buildHeader(modelName, hasLocalConfig),
+          Expanded(
+            child: hasLocalConfig
+                ? const AiChatPanel()
+                : _buildSetupGate(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(String modelName, bool configured) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary],
               ),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [AppColors.primary, AppColors.secondary],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
+                const Text(
+                  'AI Assistant',
+                  style: TextStyle(
                     color: Colors.white,
-                    size: 24,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'AI Assistant',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Powered by CodeLlama',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                Text(
+                  configured ? modelName : 'Setup required',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: onClose,
                 ),
               ],
             ),
           ),
-          
-          // Chat content placeholder
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 80,
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'AI Chat Integration',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Coming soon...',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _buildStatusPill(configured),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: onClose,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusPill(bool configured) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: configured
+            ? AppColors.systemGreen.withValues(alpha: 0.2)
+            : Colors.orange.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        configured ? 'Ready' : 'Setup',
+        style: TextStyle(
+          color: configured ? AppColors.systemGreen : Colors.orange,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSetupGate(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.memory,
+              size: 72,
+              color: Colors.white.withValues(alpha: 0.35),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Local AI not configured',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Install Ollama and download a model in AI Services.\nThen come back here to start chatting.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                AppRoutes.navigateTo(context, AppRoutes.settings);
+              },
+              icon: const Icon(Icons.tune, color: Colors.white),
+              label: const Text('Open AI Services'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.systemBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

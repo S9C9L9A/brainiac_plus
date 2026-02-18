@@ -7,7 +7,6 @@ import '../../core/navigation/navigation_service.dart';
 import 'widgets/compact_metrics_card.dart';
 import 'widgets/ai_chat_fab.dart';
 import 'widgets/floating_bottom_bar.dart';
-import 'widgets/integrated_ai_chat.dart';
 import 'widgets/social_media_card.dart';
 import 'controllers/dashboard_customization_controller.dart';
 import 'controllers/social_media_controller.dart';
