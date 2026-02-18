@@ -8,6 +8,8 @@ import '../models/automation_enums.dart';
 import '../controllers/automation_controller.dart';
 import '../models/automation_templates.dart';
 import '../providers/automation_template_selection_provider.dart';
+import '../providers/automation_assistant_provider.dart';
+import '../../../core/services/automation_assistant_service.dart';
 
 class CreateAutomationTab extends ConsumerStatefulWidget {
   const CreateAutomationTab({super.key});
@@ -33,6 +35,11 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   AutomationTemplate? _selectedTemplate;
   String? _appliedTemplateId;
   final Map<String, String> _templateFieldValues = {};
+  
+  // AI Assistant state
+  bool _isAiAssisting = false;
+  String _aiPrompt = '';
+  final _aiPromptController = TextEditingController();
 
   @override
   void initState() {
@@ -67,6 +74,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
     _templateSubscription.close();
     _nameController.dispose();
     _descriptionController.dispose();
+    _aiPromptController.dispose();
     super.dispose();
   }
 
@@ -141,21 +149,46 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Basic Information',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Let\'s start by giving your automation a name and description',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+            Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Basic Information',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Let\'s start by giving your automation a name and description',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: _showAiAssistantDialog,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.withValues(alpha: 0.3),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.auto_awesome, size: 20),
+                  label: const Text('AI Assist'),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             TextField(
@@ -861,5 +894,177 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
         }),
       ],
     );
+  }
+
+  /// Show AI assistant dialog to get automation suggestions
+  void _showAiAssistantDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GlassCard(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Colors.purple, size: 28),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'AI Automation Assistant',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Describe what you want to automate in natural language:',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _aiPromptController,
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., "Post to Instagram every day at 9am" or "Send a Slack message when I receive an email"',
+                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) => setState(() => _aiPrompt = value),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        _aiPromptController.clear();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: _aiPrompt.trim().isEmpty
+                          ? null
+                          : () => _getAiSuggestion(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.auto_awesome, size: 18),
+                      label: const Text('Generate'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Get AI suggestion and apply it to the form
+  void _getAiSuggestion(BuildContext dialogContext) async {
+    final prompt = _aiPrompt.trim();
+    if (prompt.isEmpty) return;
+
+    setState(() => _isAiAssisting = true);
+
+    try {
+      final assistantService = ref.read(automationAssistantServiceProvider);
+      final suggestion = await assistantService.suggestAutomation(prompt);
+
+      if (!mounted) return;
+
+      // Close the dialog
+      Navigator.of(dialogContext).pop();
+
+      // Apply the suggestion to the form
+      setState(() {
+        _name = suggestion.name;
+        _description = suggestion.description;
+        _nameController.text = suggestion.name;
+        _descriptionController.text = suggestion.description;
+        _selectedCategory = suggestion.category;
+        _selectedService = suggestion.service;
+        _selectedMode = suggestion.mode;
+        _triggerType = suggestion.trigger;
+        _isAiAssisting = false;
+      });
+
+      // Clear the prompt
+      _aiPromptController.clear();
+      _aiPrompt = '';
+
+      // Show success message with confidence indicator
+      if (!mounted) return;
+      final confidenceEmoji = suggestion.isHighConfidence ? '✨' : '💡';
+      final confidenceText = suggestion.isHighConfidence ? 'High confidence' : 'Low confidence';
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$confidenceEmoji AI suggestion applied! ($confidenceText: ${(suggestion.confidence * 100).toStringAsFixed(0)}%)',
+          ),
+          backgroundColor: suggestion.isHighConfidence 
+              ? AppColors.systemGreen 
+              : AppColors.systemOrange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      // Optionally advance to next step if high confidence
+      if (suggestion.isHighConfidence && _canProceed()) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          setState(() => _currentStep = 1);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isAiAssisting = false);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to get AI suggestion: ${e.toString()}'),
+          backgroundColor: AppColors.systemRed,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      // Close the dialog on error
+      Navigator.of(dialogContext).pop();
+    }
   }
 }
