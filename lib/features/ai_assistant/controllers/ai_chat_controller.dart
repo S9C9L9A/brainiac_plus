@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
 import '../../../core/services/ollama_service.dart';
+import '../../settings/providers/extended_settings_provider.dart';
 
 /// Provider for Ollama service
 final ollamaServiceProvider = Provider<OllamaService>((ref) {
-  return OllamaService();
+  final settings = ref.watch(extendedSettingsProvider);
+  return OllamaService(
+    baseUrl: settings.ollamaEndpoint,
+    model: settings.ollamaModelName,
+  );
 });
 
 /// Provider for AI chat controller

@@ -6,6 +6,8 @@ class ExtendedAppSettings {
   final String? higgsfieldApiKey;
   final String? openaiApiKey;
   final String? ollamaEndpoint;
+  final String? ollamaModelName;
+  final String? ollamaModelsPath;
   
   // Social Media - Instagram
   final String? instagramAccessToken;
@@ -74,6 +76,8 @@ class ExtendedAppSettings {
     this.higgsfieldApiKey,
     this.openaiApiKey,
     this.ollamaEndpoint,
+    this.ollamaModelName,
+    this.ollamaModelsPath,
     this.instagramAccessToken,
     this.instagramUserId,
     this.instagramUsername,
@@ -168,6 +172,10 @@ class ExtendedAppSettings {
   bool get hasHiggsfieldKey => higgsfieldApiKey != null && higgsfieldApiKey!.isNotEmpty;
   bool get hasOpenAIKey => openaiApiKey != null && openaiApiKey!.isNotEmpty;
   bool get hasOllamaEndpoint => ollamaEndpoint != null && ollamaEndpoint!.isNotEmpty;
+  bool get hasOllamaModelName =>
+      ollamaModelName != null && ollamaModelName!.isNotEmpty;
+  bool get hasOllamaModelsPath =>
+      ollamaModelsPath != null && ollamaModelsPath!.isNotEmpty;
   
   bool get hasInstagramAuth => instagramAccessToken != null && instagramUserId != null;
   bool get hasFacebookAuth => facebookAccessToken != null && facebookUserId != null;
@@ -186,6 +194,8 @@ class ExtendedAppSettings {
     String? higgsfieldApiKey,
     String? openaiApiKey,
     String? ollamaEndpoint,
+    String? ollamaModelName,
+    String? ollamaModelsPath,
     String? instagramAccessToken,
     String? instagramUserId,
     String? instagramUsername,
@@ -228,6 +238,8 @@ class ExtendedAppSettings {
       higgsfieldApiKey: higgsfieldApiKey ?? this.higgsfieldApiKey,
       openaiApiKey: openaiApiKey ?? this.openaiApiKey,
       ollamaEndpoint: ollamaEndpoint ?? this.ollamaEndpoint,
+      ollamaModelName: ollamaModelName ?? this.ollamaModelName,
+      ollamaModelsPath: ollamaModelsPath ?? this.ollamaModelsPath,
       instagramAccessToken: instagramAccessToken ?? this.instagramAccessToken,
       instagramUserId: instagramUserId ?? this.instagramUserId,
       instagramUsername: instagramUsername ?? this.instagramUsername,
@@ -281,6 +293,8 @@ class ExtendedAppSettings {
       higgsfieldApiKey: json['higgsfieldApiKey'] as String?,
       openaiApiKey: json['openaiApiKey'] as String?,
       ollamaEndpoint: json['ollamaEndpoint'] as String?,
+      ollamaModelName: json['ollamaModelName'] as String?,
+      ollamaModelsPath: json['ollamaModelsPath'] as String?,
       instagramAccessToken: json['instagramAccessToken'] as String?,
       instagramUserId: json['instagramUserId'] as String?,
       instagramUsername: json['instagramUsername'] as String?,
@@ -328,6 +342,8 @@ class ExtendedAppSettings {
       'higgsfieldApiKey': higgsfieldApiKey,
       'openaiApiKey': openaiApiKey,
       'ollamaEndpoint': ollamaEndpoint,
+      'ollamaModelName': ollamaModelName,
+      'ollamaModelsPath': ollamaModelsPath,
       'instagramAccessToken': instagramAccessToken,
       'instagramUserId': instagramUserId,
       'instagramUsername': instagramUsername,
