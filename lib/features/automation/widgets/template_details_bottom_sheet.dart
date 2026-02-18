@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../../core/navigation/navigation_service.dart';
+import '../../../core/navigation/automation_navigation_service.dart';
 import '../../settings/models/extended_settings.dart';
-import '../../settings/screens/modern_settings_screen.dart';
+import '../../settings/providers/extended_settings_provider.dart';
 import '../models/automation_templates.dart';
 import '../models/automation_enums.dart';
+import '../providers/automation_template_selection_provider.dart';
 
 class TemplateDetailsBottomSheet extends ConsumerWidget {
   final AutomationTemplate template;
@@ -220,14 +222,18 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
                         ),
                       ),
                       onPressed: () {
+                        ref.read(automationTemplateSelectionProvider.notifier).state = template;
                         Navigator.pop(context);
-                        // TODO: Navigate to Create tab with this template
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Creating automation from ${template.name}...'),
-                            backgroundColor: AppColors.systemBlue,
-                          ),
+                        NavigationService().navigateToTab(
+                          context,
+                          NavigationService.tabAutomation,
                         );
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          AutomationNavigationService().navigateToTab(
+                            context,
+                            AutomationNavigationService.tabCreate,
+                          );
+                        });
                       },
                     ),
                   ),

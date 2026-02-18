@@ -9,6 +9,8 @@ import '../features/file_manager/file_manager_screen.dart';
 import '../features/packages/packages_screen.dart';
 import '../features/ai_assistant/screens/ai_chat_screen.dart';
 import '../features/settings/screens/settings_screen.dart';
+import '../features/automation/screens/facebook_automation_test_screen.dart';
+import '../features/onboarding/screens/setup_wizard_screen.dart';
 
 /// App routes configuration with named routes and navigation utilities
 class AppRoutes {
@@ -68,6 +70,15 @@ class AppRoutes {
   /// Service configuration
   static const String serviceConfig = '/service-config';
 
+  /// Social Media Detail
+  static const String socialMediaDetail = '/social-media-detail';
+
+  /// Facebook Automation Test
+  static const String facebookAutomationTest = '/automation/facebook-test';
+
+  /// Setup Wizard
+  static const String setupWizard = '/setup-wizard';
+
   /// About & Help
   static const String about = '/about';
   static const String help = '/help';
@@ -93,6 +104,12 @@ class AppRoutes {
       cpuDetail: (context) => const CpuDetailScreen(),
       ramDetail: (context) => const RamDetailScreen(),
       diskDetail: (context) => const DiskDetailScreen(),
+
+      // Onboarding
+      setupWizard: (context) => const SetupWizardScreen(),
+
+      // Test screens
+      facebookAutomationTest: (context) => const FacebookAutomationTestScreen(),
     };
   }
 

@@ -7,11 +7,7 @@ import '../../../routes/app_routes.dart';
 import '../../dashboard/dashboard_screen.dart';
 import '../../automation/models/automation_enums.dart';
 import '../models/extended_settings.dart';
-
-// Mock provider - replace with real implementation
-final extendedSettingsProvider = StateProvider<ExtendedAppSettings>(
-  (ref) => const ExtendedAppSettings(),
-);
+import '../providers/extended_settings_provider.dart';
 
 class ModernSettingsScreen extends ConsumerStatefulWidget {
   const ModernSettingsScreen({super.key});

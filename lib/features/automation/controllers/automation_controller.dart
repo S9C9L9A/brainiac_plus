@@ -90,18 +90,23 @@ class AutomationController extends StateNotifier<AutomationState> {
 
   /// Create a new automation and save to database
   Future<bool> createAutomation(Automation automation) async {
+    state = state.copyWith(isLoading: true, error: null);
+
     try {
-      // Save to database
       await AutomationRepository.insertAutomation(automation);
-      
-      // Update state
+
+      final automations = await AutomationRepository.getAllAutomations();
+      final logs = await AutomationRepository.getAllLogs(limit: 100);
+
       state = state.copyWith(
-        activeAutomations: [...state.activeAutomations, automation],
+        activeAutomations: automations,
+        logs: logs,
+        isLoading: false,
       );
-      
+
       return true;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: e.toString(), isLoading: false);
       return false;
     }
   }

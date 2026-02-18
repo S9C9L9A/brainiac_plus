@@ -5,11 +5,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../automation/models/automation_enums.dart';
 import '../models/extended_settings.dart';
-
-// Mock provider for extended settings
-final extendedSettingsProvider = StateProvider<ExtendedAppSettings>(
-  (ref) => const ExtendedAppSettings(),
-);
+import '../providers/extended_settings_provider.dart';
 
 /// Screen for configuring a specific service integration
 class ServiceConfigScreen extends ConsumerStatefulWidget {
@@ -35,6 +31,13 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
     super.initState();
     _apiKeyController = TextEditingController();
     _apiSecretController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settings = ref.read(extendedSettingsProvider);
+      final values = _getExistingValues(settings, widget.serviceType);
+      _apiKeyController.text = values.apiKey;
+      _apiSecretController.text = values.apiSecret;
+    });
   }
 
   @override
@@ -47,8 +50,14 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
   void _handleSave() {
     setState(() => _isLoading = true);
 
-    // Simulate saving configuration
-    Future.delayed(const Duration(seconds: 1), () {
+    final apiKey = _apiKeyController.text.trim();
+    final apiSecret = _apiSecretController.text.trim();
+
+    final settings = ref.read(extendedSettingsProvider);
+    final updated = _updateSettings(settings, widget.serviceType, apiKey, apiSecret);
+    ref.read(extendedSettingsProvider.notifier).setSettings(updated);
+
+    Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -424,4 +433,150 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
         return 'Visit the ${widget.serviceType.label} developer portal to generate API credentials. Keep your secret safe!';
     }
   }
+
+  _ServiceCredentials _getExistingValues(
+    ExtendedAppSettings settings,
+    ServiceProvider service,
+  ) {
+    switch (service) {
+      case ServiceProvider.facebook:
+        return _ServiceCredentials(
+          apiKey: settings.facebookAccessToken ?? '',
+          apiSecret: settings.facebookUserId ?? '',
+        );
+      case ServiceProvider.instagram:
+        return _ServiceCredentials(
+          apiKey: settings.instagramAccessToken ?? '',
+          apiSecret: settings.instagramUserId ?? '',
+        );
+      case ServiceProvider.twitter:
+        return _ServiceCredentials(
+          apiKey: settings.twitterApiKey ?? '',
+          apiSecret: settings.twitterApiSecret ?? '',
+        );
+      case ServiceProvider.tiktok:
+        return _ServiceCredentials(
+          apiKey: settings.tiktokAccessToken ?? '',
+          apiSecret: '',
+        );
+      case ServiceProvider.linkedin:
+        return _ServiceCredentials(
+          apiKey: settings.linkedinAccessToken ?? '',
+          apiSecret: '',
+        );
+      case ServiceProvider.youtube:
+        return _ServiceCredentials(
+          apiKey: settings.youtubeApiKey ?? '',
+          apiSecret: settings.youtubeAccessToken ?? '',
+        );
+      case ServiceProvider.notion:
+        return _ServiceCredentials(
+          apiKey: settings.notionApiKey ?? '',
+          apiSecret: settings.notionWorkspaceId ?? '',
+        );
+      case ServiceProvider.google:
+        return _ServiceCredentials(
+          apiKey: settings.googleAccessToken ?? '',
+          apiSecret: settings.googleRefreshToken ?? '',
+        );
+      case ServiceProvider.slack:
+        return _ServiceCredentials(
+          apiKey: settings.slackBotToken ?? '',
+          apiSecret: settings.slackWorkspaceId ?? '',
+        );
+      case ServiceProvider.discord:
+        return _ServiceCredentials(
+          apiKey: settings.discordBotToken ?? '',
+          apiSecret: settings.discordServerId ?? '',
+        );
+      case ServiceProvider.telegram:
+        return _ServiceCredentials(
+          apiKey: settings.telegramBotToken ?? '',
+          apiSecret: settings.telegramChatId ?? '',
+        );
+      case ServiceProvider.github:
+        return _ServiceCredentials(
+          apiKey: settings.githubAccessToken ?? '',
+          apiSecret: settings.githubUsername ?? '',
+        );
+      case ServiceProvider.custom:
+        return _ServiceCredentials(apiKey: '', apiSecret: '');
+    }
+  }
+
+  ExtendedAppSettings _updateSettings(
+    ExtendedAppSettings settings,
+    ServiceProvider service,
+    String apiKey,
+    String apiSecret,
+  ) {
+    switch (service) {
+      case ServiceProvider.facebook:
+        return settings.copyWith(
+          facebookAccessToken: apiKey,
+          facebookUserId: apiSecret,
+        );
+      case ServiceProvider.instagram:
+        return settings.copyWith(
+          instagramAccessToken: apiKey,
+          instagramUserId: apiSecret,
+        );
+      case ServiceProvider.twitter:
+        return settings.copyWith(
+          twitterApiKey: apiKey,
+          twitterApiSecret: apiSecret,
+        );
+      case ServiceProvider.tiktok:
+        return settings.copyWith(tiktokAccessToken: apiKey);
+      case ServiceProvider.linkedin:
+        return settings.copyWith(linkedinAccessToken: apiKey);
+      case ServiceProvider.youtube:
+        return settings.copyWith(
+          youtubeApiKey: apiKey,
+          youtubeAccessToken: apiSecret,
+        );
+      case ServiceProvider.notion:
+        return settings.copyWith(
+          notionApiKey: apiKey,
+          notionWorkspaceId: apiSecret,
+        );
+      case ServiceProvider.google:
+        return settings.copyWith(
+          googleAccessToken: apiKey,
+          googleRefreshToken: apiSecret,
+        );
+      case ServiceProvider.slack:
+        return settings.copyWith(
+          slackBotToken: apiKey,
+          slackWorkspaceId: apiSecret,
+        );
+      case ServiceProvider.discord:
+        return settings.copyWith(
+          discordBotToken: apiKey,
+          discordServerId: apiSecret,
+        );
+      case ServiceProvider.telegram:
+        return settings.copyWith(
+          telegramBotToken: apiKey,
+          telegramChatId: apiSecret,
+        );
+      case ServiceProvider.github:
+        return settings.copyWith(
+          githubAccessToken: apiKey,
+          githubUsername: apiSecret,
+        );
+      case ServiceProvider.custom:
+        return settings;
+    }
+  }
+}
+
+class _ServiceCredentials {
+  final String apiKey;
+  final String apiSecret;
+
+  const _ServiceCredentials({
+    required this.apiKey,
+    required this.apiSecret,
+  });
 }

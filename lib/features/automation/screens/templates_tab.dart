@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../dashboard/dashboard_screen.dart';
+import '../../settings/providers/extended_settings_provider.dart';
 import '../../settings/screens/modern_settings_screen.dart';
 import '../models/automation_templates.dart';
 import '../models/automation_enums.dart';

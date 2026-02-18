@@ -1,10 +1,10 @@
-import 'package:brainiac_plus/features/settings/screens/modern_settings_screen.dart';
+import 'package:brainiac_plus/features/settings/models/extended_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
 import '../../../core/navigation/navigation_service.dart';
-import '../../settings/models/extended_settings.dart';
+import '../../settings/providers/extended_settings_provider.dart';
 import '../models/automation_templates.dart';
 import '../models/automation_enums.dart';
 

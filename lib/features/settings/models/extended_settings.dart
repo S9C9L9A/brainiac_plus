@@ -267,4 +267,104 @@ class ExtendedAppSettings {
       maxRetries: maxRetries ?? this.maxRetries,
     );
   }
+
+  factory ExtendedAppSettings.fromJson(Map<String, dynamic> json) {
+    DateTime? _parseDate(String key) {
+      final value = json[key];
+      if (value is String && value.isNotEmpty) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
+
+    return ExtendedAppSettings(
+      higgsfieldApiKey: json['higgsfieldApiKey'] as String?,
+      openaiApiKey: json['openaiApiKey'] as String?,
+      ollamaEndpoint: json['ollamaEndpoint'] as String?,
+      instagramAccessToken: json['instagramAccessToken'] as String?,
+      instagramUserId: json['instagramUserId'] as String?,
+      instagramUsername: json['instagramUsername'] as String?,
+      instagramTokenExpiry: _parseDate('instagramTokenExpiry'),
+      facebookAccessToken: json['facebookAccessToken'] as String?,
+      facebookUserId: json['facebookUserId'] as String?,
+      facebookTokenExpiry: _parseDate('facebookTokenExpiry'),
+      twitterApiKey: json['twitterApiKey'] as String?,
+      twitterApiSecret: json['twitterApiSecret'] as String?,
+      twitterAccessToken: json['twitterAccessToken'] as String?,
+      twitterAccessSecret: json['twitterAccessSecret'] as String?,
+      tiktokAccessToken: json['tiktokAccessToken'] as String?,
+      tiktokTokenExpiry: _parseDate('tiktokTokenExpiry'),
+      linkedinAccessToken: json['linkedinAccessToken'] as String?,
+      linkedinTokenExpiry: _parseDate('linkedinTokenExpiry'),
+      youtubeApiKey: json['youtubeApiKey'] as String?,
+      youtubeAccessToken: json['youtubeAccessToken'] as String?,
+      notionApiKey: json['notionApiKey'] as String?,
+      notionWorkspaceId: json['notionWorkspaceId'] as String?,
+      googleAccessToken: json['googleAccessToken'] as String?,
+      googleRefreshToken: json['googleRefreshToken'] as String?,
+      googleTokenExpiry: _parseDate('googleTokenExpiry'),
+      slackBotToken: json['slackBotToken'] as String?,
+      slackWorkspaceId: json['slackWorkspaceId'] as String?,
+      discordBotToken: json['discordBotToken'] as String?,
+      discordServerId: json['discordServerId'] as String?,
+      telegramBotToken: json['telegramBotToken'] as String?,
+      telegramChatId: json['telegramChatId'] as String?,
+      githubAccessToken: json['githubAccessToken'] as String?,
+      githubUsername: json['githubUsername'] as String?,
+      notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
+      autoRefreshMetrics: json['autoRefreshMetrics'] as bool? ?? true,
+      refreshInterval: json['refreshInterval'] as int? ?? 5,
+      theme: json['theme'] as String? ?? 'system',
+      automationEnabled: json['automationEnabled'] as bool? ?? true,
+      retryFailedTasks: json['retryFailedTasks'] as bool? ?? true,
+      maxRetries: json['maxRetries'] as int? ?? 3,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    String? _formatDate(DateTime? value) => value?.toIso8601String();
+
+    return {
+      'higgsfieldApiKey': higgsfieldApiKey,
+      'openaiApiKey': openaiApiKey,
+      'ollamaEndpoint': ollamaEndpoint,
+      'instagramAccessToken': instagramAccessToken,
+      'instagramUserId': instagramUserId,
+      'instagramUsername': instagramUsername,
+      'instagramTokenExpiry': _formatDate(instagramTokenExpiry),
+      'facebookAccessToken': facebookAccessToken,
+      'facebookUserId': facebookUserId,
+      'facebookTokenExpiry': _formatDate(facebookTokenExpiry),
+      'twitterApiKey': twitterApiKey,
+      'twitterApiSecret': twitterApiSecret,
+      'twitterAccessToken': twitterAccessToken,
+      'twitterAccessSecret': twitterAccessSecret,
+      'tiktokAccessToken': tiktokAccessToken,
+      'tiktokTokenExpiry': _formatDate(tiktokTokenExpiry),
+      'linkedinAccessToken': linkedinAccessToken,
+      'linkedinTokenExpiry': _formatDate(linkedinTokenExpiry),
+      'youtubeApiKey': youtubeApiKey,
+      'youtubeAccessToken': youtubeAccessToken,
+      'notionApiKey': notionApiKey,
+      'notionWorkspaceId': notionWorkspaceId,
+      'googleAccessToken': googleAccessToken,
+      'googleRefreshToken': googleRefreshToken,
+      'googleTokenExpiry': _formatDate(googleTokenExpiry),
+      'slackBotToken': slackBotToken,
+      'slackWorkspaceId': slackWorkspaceId,
+      'discordBotToken': discordBotToken,
+      'discordServerId': discordServerId,
+      'telegramBotToken': telegramBotToken,
+      'telegramChatId': telegramChatId,
+      'githubAccessToken': githubAccessToken,
+      'githubUsername': githubUsername,
+      'notificationsEnabled': notificationsEnabled,
+      'autoRefreshMetrics': autoRefreshMetrics,
+      'refreshInterval': refreshInterval,
+      'theme': theme,
+      'automationEnabled': automationEnabled,
+      'retryFailedTasks': retryFailedTasks,
+      'maxRetries': maxRetries,
+    };
+  }
 }

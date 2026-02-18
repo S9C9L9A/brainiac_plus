@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"github.com/gin-gonic/gin"
+	"brainiac_backend/routes"
 )
 
 // BrainiacPlus Go Backend
@@ -61,8 +63,16 @@ func main() {
 	// Sync endpoints
 	r.POST("/api/sync", handleSync)
 
-	log.Println("🧠 BrainiacPlus Backend starting on :8080")
-	r.Run(":8080")
+	// Facebook integration routes
+	routes.SetupFacebookRoutes(r)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("🧠 BrainiacPlus Backend starting on :" + port)
+	r.Run(":" + port)
 }
 
 // Ollama chat handler

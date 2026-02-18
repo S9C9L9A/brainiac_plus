@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
+import '../../../routes/app_routes.dart';
 import '../../dashboard/dashboard_screen.dart';
 import 'active_automations_tab.dart';
 import 'templates_tab.dart';
 import 'create_automation_tab.dart';
 import 'marketplace_tab.dart';
+import '../../../core/navigation/automation_navigation_service.dart';
 
 class AutomationMainScreen extends ConsumerStatefulWidget {
   const AutomationMainScreen({super.key});
@@ -23,10 +25,14 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    AutomationNavigationService().registerTabChangeHandler(
+      (index) => _tabController.animateTo(index),
+    );
   }
 
   @override
   void dispose() {
+    AutomationNavigationService().clearHandler();
     _tabController.dispose();
     super.dispose();
   }
@@ -102,6 +108,14 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
             ],
           ),
           const Spacer(),
+          // Test Facebook button
+          IconButton(
+            icon: const Icon(Icons.facebook, color: Colors.white),
+            tooltip: 'Test Facebook Automation',
+            onPressed: () {
+              Navigator.pushNamed(context, AppRoutes.facebookAutomationTest);
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () {

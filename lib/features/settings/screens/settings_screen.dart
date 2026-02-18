@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/glassmorphism.dart';
@@ -108,6 +109,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           onChanged: (v) => ref
                               .read(settingsControllerProvider.notifier)
                               .setRefreshInterval(v.toInt()),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSection(
+                      title: 'Setup & Configuration',
+                      icon: Icons.settings_suggest,
+                      children: [
+                        _buildActionTile(
+                          title: 'Riavvia Setup Guidato',
+                          subtitle: 'Riconfigura i servizi social',
+                          icon: Icons.restart_alt,
+                          onTap: () => _resetSetup(context),
                         ),
                       ],
                     ),
@@ -353,6 +367,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Widget _buildActionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.systemBlue),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+      contentPadding: EdgeInsets.zero,
+      onTap: onTap,
+    );
+  }
+
   Widget _buildSlider({
     required String title,
     required double value,
@@ -498,6 +528,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ All settings cleared')),
       );
+    }
+  }
+
+  void _resetSetup(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🔄 Riavvia Setup?'),
+        content: const Text(
+          'Questo riavvierà il wizard di configurazione iniziale. '
+          'Le tue impostazioni attuali rimarranno salvate.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annulla'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Riavvia Setup'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      // Reset setup completion flag
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('setup_completed', false);
+
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/setup-wizard',
+          (route) => false,
+        );
+      }
     }
   }
 }

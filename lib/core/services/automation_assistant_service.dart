@@ -1,4 +1,5 @@
-import '../ollama_service.dart';
+import 'package:brainiac_plus/core/services/ollama_service.dart';
+
 import '../../../features/automation/models/automation.dart';
 import '../../../features/automation/models/automation_enums.dart';
 

@@ -1,3 +1,4 @@
+import 'package:brainiac_plus/features/dashboard/widgets/social_media/social_media_services_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
@@ -7,7 +8,9 @@ import 'widgets/compact_metrics_card.dart';
 import 'widgets/ai_chat_fab.dart';
 import 'widgets/floating_bottom_bar.dart';
 import 'widgets/integrated_ai_chat.dart';
+import 'widgets/social_media_card.dart';
 import 'controllers/dashboard_customization_controller.dart';
+import 'controllers/social_media_controller.dart';
 import '../terminal/terminal_screen.dart';
 import '../automation/screens/automation_main_screen.dart';
 import '../file_manager/file_manager_screen.dart';
@@ -112,6 +115,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Widget _buildDashboardContent() {
     final customState = ref.watch(dashboardCustomizationProvider);
+    final socialMediaState = ref.watch(socialMediaServicesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
@@ -133,10 +137,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 
                 const SizedBox(height: 24),
                 
+                // Social Media Services Section
+                if (socialMediaState.configuredServices.isNotEmpty) ...[
+                  SocialMediaServicesSection(
+                    services: socialMediaState.configuredServices,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                
                 // AI Chat Section (replacing Quick Actions)
-                _buildSectionTitle('AI Assistant', isDark),
+                // _buildSectionTitle('AI Assistant', isDark),
                 const SizedBox(height: 12),
-                const IntegratedAIChat(),
+                // const IntegratedAIChat(),
               ],
             ),
           ),

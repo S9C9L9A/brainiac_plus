@@ -6,6 +6,8 @@ import '../../dashboard/dashboard_screen.dart';
 import '../models/automation.dart';
 import '../models/automation_enums.dart';
 import '../controllers/automation_controller.dart';
+import '../models/automation_templates.dart';
+import '../providers/automation_template_selection_provider.dart';
 
 class CreateAutomationTab extends ConsumerStatefulWidget {
   const CreateAutomationTab({super.key});
@@ -16,14 +18,57 @@ class CreateAutomationTab extends ConsumerStatefulWidget {
 
 class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   int _currentStep = 0;
-  
+  late final ProviderSubscription<AutomationTemplate?> _templateSubscription;
+
   // Form state
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
   String _name = '';
   String _description = '';
   ServiceProvider? _selectedService;
   AutomationCategory? _selectedCategory;
   AutomationMode _selectedMode = AutomationMode.hybrid;
   TriggerType _triggerType = TriggerType.manual;
+  String? _cronSchedule;
+  AutomationTemplate? _selectedTemplate;
+  String? _appliedTemplateId;
+  final Map<String, String> _templateFieldValues = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = ref.read(automationTemplateSelectionProvider);
+    if (initial != null) {
+      _applyTemplate(initial);
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(automationTemplateSelectionProvider.notifier).state = null;
+        }
+      });
+    }
+
+    _templateSubscription = ref.listenManual<AutomationTemplate?>(
+      automationTemplateSelectionProvider,
+      (previous, next) {
+        if (next == null) return;
+        if (_appliedTemplateId == next.id) return;
+        _applyTemplate(next);
+        Future.microtask(() {
+          if (mounted) {
+            ref.read(automationTemplateSelectionProvider.notifier).state = null;
+          }
+        });
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _templateSubscription.close();
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +93,6 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
     return Row(
       children: List.generate(4, (index) {
         final isActive = index <= _currentStep;
-        final isCompleted = index < _currentStep;
 
         return Expanded(
           child: Row(
@@ -115,6 +159,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             ),
             const SizedBox(height: 24),
             TextField(
+              controller: _nameController,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 labelText: 'Automation Name',
@@ -133,6 +178,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: _descriptionController,
               style: const TextStyle(color: Colors.white),
               maxLines: 3,
               decoration: InputDecoration(
@@ -285,15 +331,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Configuration',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
+            if (_selectedTemplate != null) _buildTemplateSummary(),
+            if (_selectedTemplate != null) const SizedBox(height: 20),
+            if (_selectedTemplate != null) _buildTemplateRequiredFields(),
+            if (_selectedTemplate != null) const SizedBox(height: 24),
             const Text(
               'Execution Mode',
               style: TextStyle(
@@ -304,21 +345,68 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             ),
             const SizedBox(height: 12),
             ...AutomationMode.values.map((mode) {
-              return RadioListTile<AutomationMode>(
-                value: mode,
-                groupValue: _selectedMode,
-                onChanged: (value) => setState(() => _selectedMode = value!),
-                title: Row(
-                  children: [
-                    Text(mode.icon),
-                    const SizedBox(width: 8),
-                    Text(
-                      mode.label,
-                      style: const TextStyle(color: Colors.white),
+              final isSelected = _selectedMode == mode;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  onTap: () => setState(() => _selectedMode = mode),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                          ? AppColors.systemBlue.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.systemBlue
+                            : Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
-                  ],
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.systemBlue
+                                  : Colors.white.withValues(alpha: 0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? Center(
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.systemBlue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(mode.icon),
+                              const SizedBox(width: 8),
+                              Text(
+                                mode.label,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                activeColor: AppColors.systemBlue,
               );
             }),
             const SizedBox(height: 24),
@@ -332,15 +420,60 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             ),
             const SizedBox(height: 12),
             ...TriggerType.values.map((trigger) {
-              return RadioListTile<TriggerType>(
-                value: trigger,
-                groupValue: _triggerType,
-                onChanged: (value) => setState(() => _triggerType = value!),
-                title: Text(
-                  trigger.name.toUpperCase(),
-                  style: const TextStyle(color: Colors.white),
+              final isSelected = _triggerType == trigger;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  onTap: () => setState(() => _triggerType = trigger),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected 
+                          ? AppColors.systemBlue.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.systemBlue
+                            : Colors.white.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.systemBlue
+                                  : Colors.white.withValues(alpha: 0.5),
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? Center(
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.systemBlue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          trigger.name.toUpperCase(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                activeColor: AppColors.systemBlue,
               );
             }),
           ],
@@ -371,6 +504,22 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             _buildReviewItem('Service', _selectedService?.label ?? '-'),
             _buildReviewItem('Mode', _selectedMode.label),
             _buildReviewItem('Trigger', _triggerType.name),
+            if (_cronSchedule != null && _cronSchedule!.isNotEmpty)
+              _buildReviewItem('Schedule', _cronSchedule!),
+            if (_selectedTemplate != null && _templateFieldValues.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Template Inputs',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ..._templateFieldValues.entries.map(
+                (entry) => _buildReviewItem(entry.key, entry.value),
+              ),
+            ],
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
@@ -481,7 +630,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
       case 1:
         return _selectedService != null;
       case 2:
-        return true;
+        if (_selectedTemplate == null) return true;
+        return _selectedTemplate!.requiredFields.every(
+          (field) => (_templateFieldValues[field] ?? '').trim().isNotEmpty,
+        );
       case 3:
         return true;
       default:
@@ -498,51 +650,216 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   }
 
   void _createAutomation() async {
-    // Create automation object
+    if (_selectedCategory == null || _selectedService == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete all required fields.'),
+          backgroundColor: AppColors.systemOrange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    final now = DateTime.now();
+    final templateConfig = _buildTemplateConfig();
     final automation = Automation(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _name,
-      description: _description,
+      id: now.millisecondsSinceEpoch.toString(),
+      name: _name.trim(),
+      description: _description.trim(),
       category: _selectedCategory!,
       service: _selectedService!,
       preferredMode: _selectedMode,
       triggerType: _triggerType,
-      status: _triggerType == TriggerType.scheduled 
-          ? AutomationStatus.scheduled 
+      status: _triggerType == TriggerType.scheduled
+          ? AutomationStatus.scheduled
           : AutomationStatus.idle,
-      config: {},
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      config: {
+        'mode': _selectedMode.name,
+        'trigger': _triggerType.name,
+        ...templateConfig,
+      },
+      cronSchedule: _cronSchedule,
+      createdAt: now,
+      updatedAt: now,
       isActive: true,
       isTemplate: false,
+      tags: _selectedTemplate?.tags ?? const [],
     );
 
-    // Save via controller
-    final success = await ref.read(automationControllerProvider.notifier).createAutomation(automation);
-    
     if (!mounted) return;
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success 
-              ? 'Automation created successfully! 🎉' 
-              : 'Failed to create automation'
+
+    try {
+      final controller = ref.read(automationControllerProvider.notifier);
+      final success = await controller.createAutomation(automation);
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Automation created successfully! 🎉'),
+            backgroundColor: AppColors.systemGreen,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        setState(() {
+          _currentStep = 0;
+          _name = '';
+          _description = '';
+          _nameController.clear();
+          _descriptionController.clear();
+          _selectedService = null;
+          _selectedCategory = null;
+          _selectedMode = AutomationMode.hybrid;
+          _triggerType = TriggerType.manual;
+          _cronSchedule = null;
+          _selectedTemplate = null;
+          _appliedTemplateId = null;
+          _templateFieldValues.clear();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to create automation'),
+            backgroundColor: AppColors.systemRed,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating automation: $e'),
+          backgroundColor: AppColors.systemRed,
+          duration: const Duration(seconds: 3),
         ),
-        backgroundColor: success ? AppColors.systemGreen : AppColors.systemRed,
-        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
+  void _applyTemplate(AutomationTemplate template) {
+    setState(() {
+      _selectedTemplate = template;
+      _appliedTemplateId = template.id;
+      _name = template.name;
+      _description = template.description;
+      _nameController.text = template.name;
+      _descriptionController.text = template.description;
+      _selectedCategory = template.category;
+      _selectedService = template.service;
+      _selectedMode = template.preferredMode;
+      _cronSchedule = template.cronSchedule;
+      _triggerType = template.cronSchedule != null && template.cronSchedule!.isNotEmpty
+          ? TriggerType.scheduled
+          : TriggerType.manual;
+      _templateFieldValues
+        ..clear()
+        ..addEntries(template.requiredFields.map((field) => MapEntry(field, '')));
+      _currentStep = 2;
+    });
+  }
+
+  Map<String, dynamic> _buildTemplateConfig() {
+    if (_selectedTemplate == null) return {};
+    final config = <String, dynamic>{
+      'templateId': _selectedTemplate!.id,
+      'requiredFields': _selectedTemplate!.requiredFields,
+    };
+    for (final entry in _templateFieldValues.entries) {
+      config['input:${entry.key}'] = entry.value;
+    }
+    return config;
+  }
+
+  Widget _buildTemplateSummary() {
+    final template = _selectedTemplate!;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.systemBlue.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.systemBlue.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.auto_awesome, color: AppColors.systemBlue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Template selected',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  template.name,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() => _currentStep = 0),
+            child: const Text('Edit basics'),
+          ),
+        ],
       ),
     );
-    
-    if (success) {
-      // Reset form
-      setState(() {
-        _currentStep = 0;
-        _name = '';
-        _description = '';
-        _selectedService = null;
-        _selectedCategory = null;
-      });
+  }
+
+  Widget _buildTemplateRequiredFields() {
+    final fields = _selectedTemplate!.requiredFields;
+    if (fields.isEmpty) {
+      return const Text(
+        'No additional template inputs required.',
+        style: TextStyle(color: Colors.white70),
+      );
     }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Template Inputs',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...fields.map((field) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TextField(
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: field,
+                labelStyle: const TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) {
+                _templateFieldValues[field] = value;
+                setState(() {});
+              },
+            ),
+          );
+        }),
+      ],
+    );
   }
 }

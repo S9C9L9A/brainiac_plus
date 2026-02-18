@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'app_routes.dart';
 import '../features/automation/models/automation_enums.dart';
-import '../features/settings/screens/service_config_screen.dart';
+import '../features/settings/screens/interactive_service_setup_screen.dart';
+import '../features/dashboard/screens/social_media_detail_screen.dart';
+import '../features/dashboard/models/social_media_service.dart';
 
 /// Advanced route generator with parameter support and error handling
 class RouteGenerator {
   RouteGenerator._();
 
   /// Generate route with parameters support
-  static Route<dynamic>? generateRoute(RouteSettings settings) {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
 
     // Get base routes
@@ -47,10 +49,21 @@ class RouteGenerator {
         return _errorRoute(settings);
 
       // Service configuration with ServiceProvider parameter
+      // Uses interactive wizard for better UX
       case AppRoutes.serviceConfig:
         if (args is ServiceProvider) {
           return MaterialPageRoute(
-            builder: (context) => ServiceConfigScreen(serviceType: args),
+            builder: (context) => InteractiveServiceSetupScreen(serviceType: args),
+            settings: settings,
+          );
+        }
+        return _errorRoute(settings);
+
+      // Social Media Detail with SocialMediaService parameter
+      case AppRoutes.socialMediaDetail:
+        if (args is SocialMediaService) {
+          return MaterialPageRoute(
+            builder: (context) => SocialMediaDetailScreen(service: args),
             settings: settings,
           );
         }
