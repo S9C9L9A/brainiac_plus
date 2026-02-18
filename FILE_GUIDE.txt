@@ -1,0 +1,270 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     📚 GUIDA AI FILE - COSA LEGGERE                         ║
+║                   Backend Go + Flutter Integration                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+🎯 LEGGI QUESTI FILE PER CAPIRE TUTTO
+══════════════════════════════════════════════════════════════════════════════
+FILE #1: 00_LEGGI_PRIMO.txt (5 min) ⭐ INIZIA DA QUI!
+─────────────────────────────────────────────────────
+Cosa contiene:
+  • Overview di tutto il progetto
+  • Quick start in 5 step
+  • Avviso di sicurezza sul token
+  • FAQ rapide
+  • Timeline consigliata
+Leggi quando:
+  ✅ Appena apri il progetto
+  ✅ Vuoi capire velocemente cosa fare
+Cosa imparerai:
+  ✅ Cosa è stato creato
+  ✅ Come avviare il backend in 5 min
+  ✅ Prossimi passi
+FILE #2: QUICK_START.md (5 min) ⚡ SUPER VELOCE
+──────────────────────────────────────────────────
+Cosa contiene:
+  • 5 step pratici per far funzionare il backend
+  • Comandi esatti da copiare
+  • Risultati attesi ad ogni step
+Leggi quando:
+  ✅ Vuoi avviare il backend ADESSO
+  ✅ Hai poco tempo
+Cosa imparerai:
+  ✅ Come installare Go
+  ✅ Come configurare il token
+  ✅ Come avviare e testare
+FILE #3: STRUCTURE_VISUALIZATION.txt (2 min) 🏗️ VISUALE
+─────────────────────────────────────────────────────
+Cosa contiene:
+  • Struttura visiva dei file
+  • Endpoint disponibili con esempi
+  • Flusso di autenticazione (ASCII art)
+  • Come iniziare (ordine step)
+  • Quick reference comandi
+Leggi quando:
+  ✅ Vuoi una vista d'insieme visuale
+  ✅ Vuoi capire rapidamente la struttura
+Cosa imparerai:
+  ✅ Dove sono i file
+  ✅ Quali endpoint usare
+  ✅ Come funziona il flusso
+FILE #4: SYSTEM_ARCHITECTURE.md (10 min) 🏗️ DIAGRAMMI
+────────────────────────────────────────────────────
+Cosa contiene:
+  • Diagrammi dell'architettura (ASCII art)
+  • Flusso di dati completo
+  • I tre layer (Routes, Services, Models)
+  • Pattern di sicurezza
+  • Deploy architecture
+Leggi quando:
+  ✅ Vuoi capire come funziona il sistema
+  ✅ Vuoi leggere dopo QUICK_START
+Cosa imparerai:
+  ✅ Come i dati fluiscono nel sistema
+  ✅ Perché questa architettura
+  ✅ Come scalare
+FILE #5: GO_BACKEND_GUIDE.md (30 min) 📚 COMPLETO
+────────────────────────────────────────────────
+Cosa contiene:
+  • Architettura dettagliata
+  • Tutti gli endpoint con esempi
+  • Come aggiungere nuovi servizi
+  • Deploy (Railway, Heroku, Docker)
+  • Troubleshooting
+Leggi quando:
+  ✅ Vuoi capire bene il backend
+  ✅ Vuoi imparare come estenderlo
+Cosa imparerai:
+  ✅ Come funziona ogni parte
+  ✅ Come aggiungere Instagram/TikTok
+  ✅ Come deployare in produzione
+FILE #6: FLUTTER_BACKEND_INTEGRATION.md (30 min) 📱 FRONTEND
+───────────────────────────────────────────────────────────
+Cosa contiene:
+  • Setup Flutter completo
+  • Integrazione Facebook SDK
+  • Login flow passo passo
+  • Pubblicazione post
+  • Gestione token sicura
+Leggi quando:
+  ✅ Vuoi integrare il backend nel tuo app
+  ✅ Vuoi implementare il login
+Cosa imparerai:
+  ✅ Come usare api_client.dart
+  ✅ Come fare il login con Facebook
+  ✅ Come pubblicare post
+  ✅ Come salvare i token in sicurezza
+FILE #7: INSTALLATION_GUIDE.md (Riferimento) 🛠️ SETUP
+──────────────────────────────────────────────────
+Cosa contiene:
+  • Come installare Go (Linux, macOS, Windows)
+  • Setup variabili d'ambiente
+  • Comandi essenziali
+  • Troubleshooting dettagliato
+  • Docker setup
+Leggi quando:
+  ✅ Problema di installazione
+  ✅ Errori durante l'avvio
+  ✅ Come deployare con Docker
+Cosa imparerai:
+  ✅ Come risolvere problemi comuni
+  ✅ Come deployare
+  ✅ Alternative di setup
+FILE #8: BACKEND_SETUP_SUMMARY.md (15 min) 📋 RIEPILOGO
+────────────────────────────────────────────────────
+Cosa contiene:
+  • Riepilogo di cosa è stato fatto
+  • Tutti gli endpoint
+  • Flusso completo A-Z
+  • Pattern di sviluppo
+  • Checklist
+Leggi quando:
+  ✅ Vuoi un riepilogo veloce
+  ✅ Vuoi una referenza tecnica
+Cosa imparerai:
+  ✅ Cosa funziona
+  ✅ Come testare
+  ✅ Prossimi passi
+FILE #9: COMPLETION_OVERVIEW.md (10 min) ✅ COMPLETAMENTO
+──────────────────────────────────────────────────────
+Cosa contiene:
+  • Cosa è stato creato (9 file Go + 1 Flutter + 8 docs)
+  • Feature completate
+  • Statistiche progetto
+  • Prossimi passi
+  • Learning path
+Leggi quando:
+  ✅ Vuoi sapere cosa è stato fatto
+  ✅ Vuoi capire il valore del progetto
+Cosa imparerai:
+  ✅ Scope completo del lavoro
+  ✅ Timeline di implementazione
+FILE #10: BACKEND_SETUP_README.md (10 min) 📖 OVERVIEW
+───────────────────────────────────────────────────
+Cosa contiene:
+  • Overview generale
+  • Checklist di sicurezza
+  • Supporto e troubleshooting
+  • Risorse utili
+Leggi quando:
+  ✅ Vuoi un'overview del progetto
+  ✅ Problemi di sicurezza
+Cosa imparerai:
+  ✅ Come proteggere i token
+  ✅ Cosa è production-ready
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        ORDINE CONSIGLIATO DI LETTURA                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+Se hai 5 MINUTI:
+  1. 00_LEGGI_PRIMO.txt
+  2. QUICK_START.md
+  → Fatto! Sei pronto ad avviare
+Se hai 15 MINUTI:
+  1. 00_LEGGI_PRIMO.txt
+  2. QUICK_START.md
+  3. STRUCTURE_VISUALIZATION.txt
+  → Hai capito come funziona
+Se hai 1 ORA:
+  1. 00_LEGGI_PRIMO.txt
+  2. QUICK_START.md
+  3. SYSTEM_ARCHITECTURE.md
+  4. GO_BACKEND_GUIDE.md (prime 15 min)
+  → Sei un esperto del backend
+Se hai 2 ORE:
+  1. 00_LEGGI_PRIMO.txt
+  2. QUICK_START.md
+  3. SYSTEM_ARCHITECTURE.md
+  4. GO_BACKEND_GUIDE.md
+  5. FLUTTER_BACKEND_INTEGRATION.md
+  → Sai come implementare tutto
+Se hai 1 GIORNO:
+  → Leggi TUTTI i file
+  → Implementa nel tuo app
+  → Testa tutto
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                          FILE PER CATEGORIA                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+👶 PRINCIPIANTI (Non conosci Go/Flutter)
+  1. 00_LEGGI_PRIMO.txt
+  2. QUICK_START.md
+  3. STRUCTURE_VISUALIZATION.txt
+  → Poi prova a far funzionare il backend
+👨‍💻 INTERMEDI (Conosci i linguaggi)
+  1. SYSTEM_ARCHITECTURE.md
+  2. GO_BACKEND_GUIDE.md
+  3. FLUTTER_BACKEND_INTEGRATION.md
+  → Implementa nel tuo progetto
+🚀 AVANZATI (Conosci bene)
+  1. BACKEND_SETUP_SUMMARY.md
+  2. GO_BACKEND_GUIDE.md sezione Deploy
+  3. INSTALLATION_GUIDE.md Docker
+  → Deploya in produzione
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        COSA CERCARE IN OGNI FILE                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+Se ti chiedi:                        Leggi:
+─────────────────────────────────    ──────────────────────────────
+"Come faccio a iniziare?"             00_LEGGI_PRIMO.txt
+"5 minuti per avviare?"              QUICK_START.md
+"Come funziona il sistema?"          SYSTEM_ARCHITECTURE.md
+"Come funziona il backend?"          GO_BACKEND_GUIDE.md
+"Come uso da Flutter?"               FLUTTER_BACKEND_INTEGRATION.md
+"Errore di installazione"            INSTALLATION_GUIDE.md
+"Come faccio il deploy?"             GO_BACKEND_GUIDE.md sezione Deploy
+"Token non funziona"                 INSTALLATION_GUIDE.md Troubleshooting
+"Come aggiungere Instagram?"         GO_BACKEND_GUIDE.md Nuovi Servizi
+"Com'è fatto il progetto?"           STRUCTURE_VISUALIZATION.txt
+"Cosa è stato fatto?"                COMPLETION_OVERVIEW.md
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     🎯 DOVE TROVARE RISPOSTE VELOCE                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+Authenficazione:
+  → GO_BACKEND_GUIDE.md sezione "Autenticazione Facebook"
+  → FLUTTER_BACKEND_INTEGRATION.md sezione "Autenticazione"
+Post/Pagine:
+  → GO_BACKEND_GUIDE.md sezione "Endpoint"
+  → STRUCTURE_VISUALIZATION.txt sezione "ENDPOINT DISPONIBILI"
+JWT/Sicurezza:
+  → SYSTEM_ARCHITECTURE.md sezione "Flusso di Sicurezza"
+  → BACKEND_SETUP_README.md sezione "Checklist di Sicurezza"
+Deploy:
+  → GO_BACKEND_GUIDE.md sezione "Deploy"
+  → INSTALLATION_GUIDE.md sezione "Docker"
+Comandi:
+  → STRUCTURE_VISUALIZATION.txt sezione "COMANDI UTILI"
+  → QUICK_START.md
+Errori:
+  → INSTALLATION_GUIDE.md sezione "Troubleshooting"
+  → STRUCTURE_VISUALIZATION.txt sezione "TROUBLESHOOTING"
+Setup:
+  → QUICK_START.md (super veloce)
+  → INSTALLATION_GUIDE.md (completo)
+Pattern:
+  → SYSTEM_ARCHITECTURE.md sezione "Layer Pattern"
+  → GO_BACKEND_GUIDE.md sezione "Architettura"
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           📊 STATISTICHE FILE                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+File:                                     Tempo   Linee
+──────────────────────────────────────    ────    ─────
+00_LEGGI_PRIMO.txt                        5 min   ~100
+QUICK_START.md                            5 min   ~80
+STRUCTURE_VISUALIZATION.txt              2 min   ~200
+SYSTEM_ARCHITECTURE.md                   10 min  ~400
+GO_BACKEND_GUIDE.md                      30 min  ~600
+FLUTTER_BACKEND_INTEGRATION.md           30 min  ~500
+INSTALLATION_GUIDE.md                    Ref    ~400
+BACKEND_SETUP_SUMMARY.md                 15 min  ~400
+COMPLETION_OVERVIEW.md                   10 min  ~300
+BACKEND_SETUP_README.md                  10 min  ~300
+TOTALE:                                  ~122 min (2 ore) ~3500+ linee
+Plus:
+  • 9 file Go backend (~800 linee)
+  • 1 file Flutter (~300 linee)
+  • Completo e production-ready!
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    ✅ LEGGI QUESTO PRIMO!                                   ║
+║                                                                              ║
+║  cat 00_LEGGI_PRIMO.txt                                                     ║
+║                                                                              ║
+║  Poi scegli un file dalla lista sopra basato su quanto tempo hai.           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
