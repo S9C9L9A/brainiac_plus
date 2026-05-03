@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 
 /// Service for interacting with Ollama API
@@ -10,12 +11,26 @@ class OllamaService {
   OllamaService({
     String? baseUrl,
     String? model,
-  })  : baseUrl = baseUrl ?? 'http://localhost:11434',
-        model = model ?? 'codellama:7b',
+  })  : baseUrl = _normalizeBaseUrl(baseUrl ?? 'http://localhost:11434'),
+        model = model ?? 'qwen2.5-coder:14b',
         _dio = Dio(BaseOptions(
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 120),
         ));
+
+  static String _normalizeBaseUrl(String value) {
+    var trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return 'http://localhost:11434';
+    }
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      trimmed = 'http://$trimmed';
+    }
+    trimmed = trimmed.replaceAll(RegExp(r'/+$'), '');
+    return trimmed.replaceAll(RegExp(r'/api/?$'), '');
+  }
+
+  bool _isNotFound(DioException e) => e.response?.statusCode == 404;
 
   /// Generate code from a prompt (non-streaming)
   Future<String> generateCode(String prompt, {
@@ -37,6 +52,19 @@ class OllamaService {
       );
 
       return response.data['response'] as String;
+    } on DioException catch (e) {
+      if (_isNotFound(e)) {
+        throw OllamaException(
+          'Ollama endpoint not found at $baseUrl/api/generate. '
+          'Verify the base URL and that the Ollama server is running.',
+        );
+      }
+      if (e.error is SocketException) {
+        throw OllamaException(
+          'Cannot reach Ollama at $baseUrl. Is the server running?',
+        );
+      }
+      throw OllamaException('Failed to generate code: $e');
     } catch (e) {
       throw OllamaException('Failed to generate code: $e');
     }
@@ -64,6 +92,23 @@ class OllamaService {
         throw OllamaException('Invalid response format from Ollama chat API');
       }
       return data['message']['content'] as String;
+    } on DioException catch (e) {
+      if (_isNotFound(e)) {
+        try {
+          return await _generateFromMessages(messages, temperature: temperature);
+        } catch (fallbackError) {
+          throw OllamaException(
+            'Ollama chat endpoint not available. Check base URL and server. '
+            'Fallback failed: $fallbackError',
+          );
+        }
+      }
+      if (e.error is SocketException) {
+        throw OllamaException(
+          'Cannot reach Ollama at $baseUrl. Is the server running?',
+        );
+      }
+      throw OllamaException('Failed to chat: $e');
     } catch (e) {
       throw OllamaException('Failed to chat: $e');
     }
@@ -104,9 +149,45 @@ class OllamaService {
           }
         }
       }
+    } on DioException catch (e) {
+      if (_isNotFound(e)) {
+        try {
+          final fallback = await _generateFromMessages(messages, temperature: temperature);
+          yield fallback;
+          return;
+        } catch (fallbackError) {
+          throw OllamaException(
+            'Ollama chat stream endpoint not available. '
+            'Check base URL and server. Fallback failed: $fallbackError',
+          );
+        }
+      }
+      if (e.error is SocketException) {
+        throw OllamaException(
+          'Cannot reach Ollama at $baseUrl. Is the server running?',
+        );
+      }
+      throw OllamaException('Failed to stream chat: $e');
     } catch (e) {
       throw OllamaException('Failed to stream chat: $e');
     }
+  }
+
+  Future<String> _generateFromMessages(
+    List<ChatMessage> messages, {
+    double temperature = 0.7,
+  }) async {
+    final prompt = _buildPromptFromMessages(messages);
+    return generateCode(prompt, temperature: temperature);
+  }
+
+  String _buildPromptFromMessages(List<ChatMessage> messages) {
+    final buffer = StringBuffer();
+    for (final message in messages) {
+      buffer.writeln('${message.role.toUpperCase()}: ${message.content}');
+    }
+    buffer.writeln('ASSISTANT:');
+    return buffer.toString();
   }
 
   /// Check if Ollama is available
@@ -129,6 +210,67 @@ class OllamaService {
       throw OllamaException('Failed to list models: $e');
     }
   }
+
+  /// List available models with detailed info
+  Future<List<OllamaModel>> listModelsDetailed() async {
+    try {
+      final response = await _dio.get('$baseUrl/api/tags');
+      final models = response.data['models'] as List;
+      return models
+          .map((m) => OllamaModel.fromJson(m as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw OllamaException('Failed to list models: $e');
+    }
+  }
+}
+
+/// Model info from Ollama
+class OllamaModel {
+  final String name;
+  final int sizeBytes;
+  final DateTime modifiedAt;
+  final String? digest;
+
+  OllamaModel({
+    required this.name,
+    required this.sizeBytes,
+    required this.modifiedAt,
+    this.digest,
+  });
+
+  /// Get human readable size
+  String get sizeFormatted {
+    const kb = 1024;
+    const mb = kb * 1024;
+    const gb = mb * 1024;
+
+    if (sizeBytes >= gb) {
+      return '${(sizeBytes / gb).toStringAsFixed(2)} GB';
+    } else if (sizeBytes >= mb) {
+      return '${(sizeBytes / mb).toStringAsFixed(2)} MB';
+    } else if (sizeBytes >= kb) {
+      return '${(sizeBytes / kb).toStringAsFixed(2)} KB';
+    } else {
+      return '$sizeBytes B';
+    }
+  }
+
+  /// Get size in MB
+  int get sizeMB => (sizeBytes / (1024 * 1024)).round();
+
+  factory OllamaModel.fromJson(Map<String, dynamic> json) {
+    return OllamaModel(
+      name: json['name'] as String,
+      sizeBytes: json['size'] as int? ?? 0,
+      modifiedAt: DateTime.tryParse(json['modified_at'] as String? ?? '') ??
+          DateTime.now(),
+      digest: json['digest'] as String?,
+    );
+  }
+
+  @override
+  String toString() => '$name (${sizeFormatted})';
 }
 
 /// Chat message model for Ollama API

@@ -8,7 +8,6 @@ import '../features/automation/automation_screen.dart';
 import '../features/file_manager/file_manager_screen.dart';
 import '../features/packages/packages_screen.dart';
 import '../features/ai_assistant/screens/ai_chat_screen.dart';
-import '../features/settings/screens/settings_screen.dart';
 import '../features/automation/screens/facebook_automation_test_screen.dart';
 import '../features/onboarding/screens/setup_wizard_screen.dart';
 
@@ -64,6 +63,7 @@ class AppRoutes {
 
   /// Settings sub-pages
   static const String settingsApiKeys = '/settings/api-keys';
+  static const String settingsAI = '/settings/ai';
   static const String settingsAutomation = '/settings/automation';
   static const String settingsAppearance = '/settings/appearance';
   
@@ -89,16 +89,68 @@ class AppRoutes {
   static Map<String, WidgetBuilder> getRoutes() {
     return {
       // Main
-      home: (context) => const DashboardScreen(),
-      dashboard: (context) => const DashboardScreen(),
+      home: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        if (args is Map<String, int>) {
+          return DashboardScreen.withIndex(
+            initialTabIndex: args['tabIndex'] ?? 0,
+            initialSettingsTabIndex: args['settingsTabIndex'] ?? 0,
+            initialAutomationTabIndex: args['automationTabIndex'] ?? 0,
+          );
+        }
+        return const DashboardScreen();
+      },
+      dashboard: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        if (args is Map<String, int>) {
+          return DashboardScreen.withIndex(
+            initialTabIndex: args['tabIndex'] ?? 0,
+            initialSettingsTabIndex: args['settingsTabIndex'] ?? 0,
+            initialAutomationTabIndex: args['automationTabIndex'] ?? 0,
+          );
+        }
+        return const DashboardScreen();
+      },
 
       // Features
       terminal: (context) => const TerminalScreen(),
-      automation: (context) => const AutomationScreen(),
+      automation: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final automationTabIndex = args is int ? args : 0;
+        return DashboardScreen.withIndex(
+          initialTabIndex: 2,
+          initialAutomationTabIndex: automationTabIndex,
+        );
+      },
       fileManager: (context) => const FileManagerScreen(),
       packages: (context) => const PackagesScreen(),
       aiChat: (context) => const AiChatScreen(),
-      settings: (context) => const SettingsScreen(),
+      settings: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final settingsTabIndex = args is int ? args : 0;
+        return DashboardScreen.withIndex(
+          initialTabIndex: 4,
+          initialSettingsTabIndex: settingsTabIndex,
+        );
+      },
+
+      //sub-routes for settings
+      settingsApiKeys: (context) => const DashboardScreen.withIndex(
+        initialTabIndex: 4,
+        initialSettingsTabIndex: 0,
+      ),
+      settingsAI: (context) => const DashboardScreen.withIndex(
+        initialTabIndex: 4,
+        initialSettingsTabIndex: 1,
+      ),
+      settingsAutomation: (context) => const DashboardScreen.withIndex(
+        initialTabIndex: 4,
+        initialSettingsTabIndex: 2,
+      ),
+      settingsAppearance: (context) => const DashboardScreen.withIndex(
+        initialTabIndex: 4,
+        initialSettingsTabIndex: 2,
+      ),
 
       // Details
       cpuDetail: (context) => const CpuDetailScreen(),

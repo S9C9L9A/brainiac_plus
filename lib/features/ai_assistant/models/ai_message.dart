@@ -7,6 +7,9 @@ class AiMessage {
   final bool isError;
   final String? codeSnippet;
   final List<String>? filesPaths;
+  final String? agentId;
+  final String? intent;
+  final List<String>? actions;
 
   AiMessage({
     required this.id,
@@ -16,6 +19,9 @@ class AiMessage {
     this.isError = false,
     this.codeSnippet,
     this.filesPaths,
+    this.agentId,
+    this.intent,
+    this.actions,
   });
 
   Map<String, dynamic> toJson() => {
@@ -26,6 +32,9 @@ class AiMessage {
         'isError': isError,
         'codeSnippet': codeSnippet,
         'filesPaths': filesPaths,
+        'agentId': agentId,
+        'intent': intent,
+        'actions': actions,
       };
 
   factory AiMessage.fromJson(Map<String, dynamic> json) => AiMessage(
@@ -36,6 +45,9 @@ class AiMessage {
         isError: json['isError'] as bool? ?? false,
         codeSnippet: json['codeSnippet'] as String?,
         filesPaths: (json['filesPaths'] as List?)?.cast<String>(),
+        agentId: json['agentId'] as String?,
+        intent: json['intent'] as String?,
+        actions: (json['actions'] as List?)?.cast<String>(),
       );
 }
 
@@ -52,6 +64,9 @@ AiMessage assistantMessage(
   String content, {
   String? codeSnippet,
   List<String>? filesPaths,
+  String? agentId,
+  String? intent,
+  List<String>? actions,
 }) =>
     AiMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -60,6 +75,9 @@ AiMessage assistantMessage(
       timestamp: DateTime.now(),
       codeSnippet: codeSnippet,
       filesPaths: filesPaths,
+      agentId: agentId,
+      intent: intent,
+      actions: actions,
     );
 
 /// Error message

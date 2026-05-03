@@ -1,10 +1,10 @@
 import 'dart:math';
 
 import 'package:brainiac_plus/core/navigation/navigation_service.dart';
+import 'package:brainiac_plus/features/dashboard/widgets/social_media/social_media_card.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../models/social_media_service.dart';
-import '../social_media_card.dart';
 
 class SocialMediaServicesSection extends StatelessWidget {
   final List<SocialMediaService> services;

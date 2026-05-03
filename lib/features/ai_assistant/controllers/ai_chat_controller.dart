@@ -1,7 +1,12 @@
+import 'dart:math' show min;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
 import '../../../core/services/ollama_service.dart';
 import '../../settings/providers/extended_settings_provider.dart';
+import '../services/agent_registry.dart';
+import '../services/ai_guardrails_service.dart';
+import '../services/ai_orchestrator_service.dart';
+import '../services/agent_response_parser.dart';
 
 /// Provider for Ollama service
 final ollamaServiceProvider = Provider<OllamaService>((ref) {
@@ -12,10 +17,38 @@ final ollamaServiceProvider = Provider<OllamaService>((ref) {
   );
 });
 
+final ollamaAvailabilityProvider = FutureProvider<bool>((ref) async {
+  final service = ref.watch(ollamaServiceProvider);
+  return service.isAvailable();
+});
+
+final agentRegistryProvider = Provider<AgentRegistry>((ref) {
+  return AgentRegistry();
+});
+
+final aiGuardrailsProvider = Provider<AiGuardrailsService>((ref) {
+  return AiGuardrailsService();
+});
+
+final agentResponseParserProvider = Provider<AgentResponseParser>((ref) {
+  return AgentResponseParser();
+});
+
+final aiOrchestratorProvider = Provider<AiOrchestratorService>((ref) {
+  return AiOrchestratorService(
+    registry: ref.watch(agentRegistryProvider),
+    guardrails: ref.watch(aiGuardrailsProvider),
+  );
+});
+
 /// Provider for AI chat controller
 final aiChatControllerProvider =
     StateNotifierProvider<AiChatController, AiChatState>((ref) {
-  return AiChatController(ref.watch(ollamaServiceProvider));
+  return AiChatController(
+    ref.watch(ollamaServiceProvider),
+    ref.watch(aiOrchestratorProvider),
+    ref.watch(agentResponseParserProvider),
+  );
 });
 
 /// AI Chat State
@@ -46,8 +79,14 @@ class AiChatState {
 /// AI Chat Controller
 class AiChatController extends StateNotifier<AiChatState> {
   final OllamaService _ollamaService;
+  final AiOrchestratorService _orchestrator;
+  final AgentResponseParser _responseParser;
 
-  AiChatController(this._ollamaService) : super(AiChatState()) {
+  AiChatController(
+    this._ollamaService,
+    this._orchestrator,
+    this._responseParser,
+  ) : super(AiChatState()) {
     _initialize();
   }
 
@@ -66,7 +105,6 @@ class AiChatController extends StateNotifier<AiChatState> {
   Future<void> sendMessage(String content) async {
     if (content.trim().isEmpty) return;
 
-    // Add user message
     final userMsg = userMessage(content);
     state = state.copyWith(
       messages: [...state.messages, userMsg],
@@ -75,28 +113,42 @@ class AiChatController extends StateNotifier<AiChatState> {
     );
 
     try {
-      // Build conversation history for context
-      final chatMessages = _buildChatHistory();
+      // Check if Ollama is available before proceeding
+      final isAvailable = await _ollamaService.isAvailable();
+      if (!isAvailable) {
+        final errorMsg = errorMessage(
+          '❌ Ollama is not available.\n\n'
+          'Please ensure:\n'
+          '1. Ollama is installed and running\n'
+          '2. The endpoint is correct (default: http://localhost:11434)\n'
+          '3. Check your network connection\n\n'
+          'Run: ollama serve',
+        );
+        state = state.copyWith(
+          messages: [...state.messages, errorMsg],
+          isLoading: false,
+          error: 'Ollama unavailable',
+        );
+        return;
+      }
 
-      // Get AI response
+      final decision = _orchestrator.route(content);
+      final chatMessages = _buildChatHistory(decision.systemPrompt);
       final response = await _ollamaService.chat(chatMessages);
-
-      // Parse response for code snippets
-      final parsedResponse = _parseResponse(response);
-
-      // Add assistant message
-      final assistantMsg = assistantMessage(
-        parsedResponse['content'] as String,
-        codeSnippet: parsedResponse['codeSnippet'] as String?,
-        filesPaths: parsedResponse['files'] as List<String>?,
-      );
+      final assistantMsg = _buildAssistantMessage(decision, response);
 
       state = state.copyWith(
         messages: [...state.messages, assistantMsg],
         isLoading: false,
       );
     } catch (e) {
-      final errorMsg = errorMessage('Failed to get response: $e');
+      final errorMsg = errorMessage(
+        '⚠️ Error: ${e.toString()}\n\n'
+        'Troubleshooting:\n'
+        '• Verify Ollama is running: ollama serve\n'
+        '• Check endpoint: http://localhost:11434\n'
+        '• Try again in a moment',
+      );
       state = state.copyWith(
         messages: [...state.messages, errorMsg],
         isLoading: false,
@@ -109,7 +161,28 @@ class AiChatController extends StateNotifier<AiChatState> {
   Future<void> sendMessageStream(String content) async {
     if (content.trim().isEmpty) return;
 
-    // Add user message
+    // Check Ollama availability first
+    final isAvailable = await _ollamaService.isAvailable();
+    if (!isAvailable) {
+      final userMsg = userMessage(content);
+      final errorMsg = errorMessage(
+        '❌ Ollama Service Unavailable\n\n'
+        'The AI assistant requires Ollama to be running.\n\n'
+        'To start Ollama:\n'
+        '1. Open a terminal\n'
+        '2. Run: ollama serve\n'
+        '3. Ensure it\'s accessible at: http://localhost:11434\n\n'
+        'Then try your message again.',
+      );
+      state = state.copyWith(
+        messages: [...state.messages, userMsg, errorMsg],
+        isLoading: false,
+        error: 'Ollama unavailable',
+      );
+      return;
+    }
+
+    final decision = _orchestrator.route(content);
     final userMsg = userMessage(content);
     state = state.copyWith(
       messages: [...state.messages, userMsg],
@@ -117,36 +190,112 @@ class AiChatController extends StateNotifier<AiChatState> {
       error: null,
     );
 
+    final chatMessages = _buildChatHistory(decision.systemPrompt);
+    final streamMsgId = DateTime.now().millisecondsSinceEpoch.toString();
+    var streamContent = '';
+    var receivedChunk = false;
+
     try {
-      // Build conversation history
-      final chatMessages = _buildChatHistory();
-
-      // Create placeholder for streaming response
-      final streamMsgId = DateTime.now().millisecondsSinceEpoch.toString();
-      var streamContent = '';
-
-      // Stream AI response
       await for (final chunk in _ollamaService.chatStream(chatMessages)) {
+        receivedChunk = true;
         streamContent += chunk;
 
-        // Update message with accumulated content
         final updatedMsg = AiMessage(
           id: streamMsgId,
           role: 'assistant',
           content: streamContent,
           timestamp: DateTime.now(),
+          agentId: decision.agent.id,
+          intent: decision.intent,
         );
 
-        // Replace last message if it's the stream message, otherwise add
-        final messages = state.messages.where((m) => m.id != streamMsgId).toList();
+        final messages =
+            state.messages.where((m) => m.id != streamMsgId).toList();
         messages.add(updatedMsg);
 
         state = state.copyWith(messages: messages);
       }
 
-      state = state.copyWith(isLoading: false);
+      final parsedResponse = _responseParser.parse(streamContent);
+      final sanitizedPaths = _orchestrator.sanitizePaths(
+        decision,
+        parsedResponse.filesPaths,
+      );
+
+      final finalizedMsg = assistantMessage(
+        parsedResponse.content,
+        codeSnippet: parsedResponse.codeSnippet,
+        filesPaths: sanitizedPaths,
+        agentId: decision.agent.id,
+        intent: decision.intent,
+      );
+
+      final messages =
+          state.messages.where((m) => m.id != streamMsgId).toList();
+      messages.add(finalizedMsg);
+
+      state = state.copyWith(
+        messages: messages,
+        isLoading: false,
+      );
     } catch (e) {
-      final errorMsg = errorMessage('Failed to stream response: $e');
+      // If no chunks received, try fallback to non-streaming
+      if (!receivedChunk) {
+        try {
+          final response = await _ollamaService.chat(chatMessages);
+          final parsedResponse = _responseParser.parse(response);
+          final sanitizedPaths = _orchestrator.sanitizePaths(
+            decision,
+            parsedResponse.filesPaths,
+          );
+
+          final fallbackMsg = assistantMessage(
+            parsedResponse.content,
+            codeSnippet: parsedResponse.codeSnippet,
+            filesPaths: sanitizedPaths,
+            agentId: decision.agent.id,
+            intent: decision.intent,
+          );
+
+          final messages =
+              state.messages.where((m) => m.id != streamMsgId).toList();
+          messages.add(fallbackMsg);
+
+          state = state.copyWith(
+            messages: messages,
+            isLoading: false,
+          );
+          return;
+        } catch (fallbackError) {
+          // Fallback also failed - show detailed error
+          final errorMsg = errorMessage(
+            '⚠️ Failed to get AI response\n\n'
+            'Error: ${_extractErrorMessage(e)}\n\n'
+            'Possible causes:\n'
+            '• Ollama service crashed or stopped\n'
+            '• Network connectivity issues\n'
+            '• Model not loaded in Ollama\n\n'
+            'Try:\n'
+            '1. Restart Ollama: ollama serve\n'
+            '2. Check terminal for errors\n'
+            '3. Reload the app',
+          );
+          state = state.copyWith(
+            messages: [...state.messages, errorMsg],
+            isLoading: false,
+            error: e.toString(),
+          );
+          return;
+        }
+      }
+
+      // Chunks were received but stream failed mid-way
+      final errorMsg = errorMessage(
+        '⚠️ Stream interrupted\n\n'
+        'The connection was lost while receiving the response.\n\n'
+        'Partial response shown above.\n\n'
+        'Try again or restart Ollama.',
+      );
       state = state.copyWith(
         messages: [...state.messages, errorMsg],
         isLoading: false,
@@ -155,10 +304,41 @@ class AiChatController extends StateNotifier<AiChatState> {
     }
   }
 
+  /// Extract readable error message from exception
+  String _extractErrorMessage(Object e) {
+    final msg = e.toString();
+    if (msg.contains('not available')) {
+      return 'Ollama service not available';
+    } else if (msg.contains('endpoint not found')) {
+      return 'Cannot reach Ollama endpoint';
+    } else if (msg.contains('Connection refused')) {
+      return 'Connection refused - Ollama not running?';
+    } else if (msg.contains('timeout')) {
+      return 'Request timeout - Ollama might be slow';
+    }
+    return msg.substring(0, min(msg.length, 100));
+  }
+
+  AiMessage _buildAssistantMessage(RoutingDecision decision, String response) {
+    final parsedResponse = _responseParser.parse(response);
+    final sanitizedPaths = _orchestrator.sanitizePaths(
+      decision,
+      parsedResponse.filesPaths,
+    );
+
+    return assistantMessage(
+      parsedResponse.content,
+      codeSnippet: parsedResponse.codeSnippet,
+      filesPaths: sanitizedPaths,
+      agentId: decision.agent.id,
+      intent: decision.intent,
+    );
+  }
+
   /// Build chat history for Ollama API
-  List<ChatMessage> _buildChatHistory() {
+  List<ChatMessage> _buildChatHistory(String systemPrompt) {
     final history = <ChatMessage>[
-      ChatMessage.system(_getSystemPrompt()),
+      ChatMessage.system(systemPrompt),
     ];
 
     // Add last 10 messages for context
@@ -172,69 +352,6 @@ class AiChatController extends StateNotifier<AiChatState> {
     }
 
     return history;
-  }
-
-  /// System prompt for code generation
-  String _getSystemPrompt() {
-    return '''You are an AI assistant for BrainiacPlus, a Flutter system monitoring app.
-
-CAPABILITIES:
-- Generate Dart/Flutter code for new features
-- Debug and fix existing code
-- Suggest optimizations and improvements
-- Create automation tasks
-
-RULES:
-1. Always output VALID Dart code
-2. Use Riverpod for state management
-3. Use Lucide icons from app_icons.dart
-4. Match the glassmorphism theme
-5. Follow Flutter best practices
-6. Be concise and clear
-
-RESPONSE FORMAT:
-- Short explanation first
-- Code blocks with ```dart
-- List affected files if multiple
-- Explain what the code does
-
-AVAILABLE FEATURES:
-- Dashboard (system metrics)
-- Terminal (command execution)
-- File Manager (file operations)
-- Packages (apt/snap management)
-- Automation (scheduled tasks)
-
-Be helpful and generate production-ready code!''';
-  }
-
-  /// Parse response for code snippets and file paths
-  Map<String, dynamic> _parseResponse(String response) {
-    String content = response;
-    String? codeSnippet;
-    List<String>? files;
-
-    // Extract code blocks
-    final codeRegex = RegExp(r'```dart\n([\s\S]*?)```');
-    final codeMatch = codeRegex.firstMatch(response);
-    if (codeMatch != null) {
-      codeSnippet = codeMatch.group(1)?.trim();
-      // Remove code block from content
-      content = response.replaceFirst(codeRegex, '[Code snippet attached]');
-    }
-
-    // Extract file paths (lib/...)
-    final fileRegex = RegExp(r'lib/[\w/]+\.dart');
-    final fileMatches = fileRegex.allMatches(response);
-    if (fileMatches.isNotEmpty) {
-      files = fileMatches.map((m) => m.group(0)!).toList();
-    }
-
-    return {
-      'content': content,
-      'codeSnippet': codeSnippet,
-      'files': files,
-    };
   }
 
   /// Clear chat history

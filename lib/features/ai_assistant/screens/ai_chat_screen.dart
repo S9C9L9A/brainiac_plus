@@ -1,10 +1,10 @@
+import 'package:brainiac_plus/features/ai_assistant/widgets/chat/ai_chat_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../settings/providers/extended_settings_provider.dart';
 import '../controllers/ai_chat_controller.dart';
-import '../widgets/ai_chat_panel.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
   const AiChatScreen({super.key});

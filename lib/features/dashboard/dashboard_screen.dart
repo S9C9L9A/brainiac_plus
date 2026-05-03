@@ -1,13 +1,12 @@
+import 'package:brainiac_plus/features/dashboard/widgets/ai/ai_chat_fab.dart';
+import 'package:brainiac_plus/features/dashboard/widgets/metrics/compact_metrics_card.dart';
+import 'package:brainiac_plus/features/dashboard/widgets/navigation/floating_bottom_bar.dart';
 import 'package:brainiac_plus/features/dashboard/widgets/social_media/social_media_services_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/navigation/navigation_service.dart';
-import 'widgets/compact_metrics_card.dart';
-import 'widgets/ai_chat_fab.dart';
-import 'widgets/floating_bottom_bar.dart';
-import 'widgets/social_media_card.dart';
 import 'controllers/dashboard_customization_controller.dart';
 import 'controllers/social_media_controller.dart';
 import '../terminal/terminal_screen.dart';
@@ -20,7 +19,23 @@ import '../activity/recent_activity_screen.dart';
 const double kBottomNavHeight = 100.0;
 
 class DashboardScreen extends ConsumerStatefulWidget {
-  const DashboardScreen({super.key});
+  final int? initialTabIndex;
+  final int? initialSettingsTabIndex;
+  final int? initialAutomationTabIndex;
+
+  const DashboardScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialSettingsTabIndex = 0,
+    this.initialAutomationTabIndex = 0,
+  });
+
+  const DashboardScreen.withIndex({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialSettingsTabIndex = 0,
+    this.initialAutomationTabIndex = 0,
+  });
 
   @override
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
@@ -28,15 +43,20 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
+  int _settingsTabIndex = 0;
+  int _automationTabIndex = 0;
   bool _showAIChat = false;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = _sanitizeMainIndex(widget.initialTabIndex ?? 0);
+    _settingsTabIndex = _sanitizeSettingsIndex(widget.initialSettingsTabIndex ?? 0);
+    _automationTabIndex = _sanitizeAutomationIndex(widget.initialAutomationTabIndex ?? 0);
     // Register tab change callback with navigation service
     NavigationService().onTabChange = (tabIndex) {
       setState(() {
-        _currentIndex = tabIndex;
+        _currentIndex = _sanitizeMainIndex(tabIndex);
       });
     };
   }
@@ -60,7 +80,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           children: [
             // Main content based on selected tab
             _buildContent(),
-            
+
             // Floating Bottom Navigation Bar
             Positioned(
               left: 0,
@@ -75,7 +95,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 },
               ),
             ),
-            
+
             // AI Chat FAB
             Positioned(
               right: 20,
@@ -102,14 +122,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       case 1:
         return const TerminalScreen();
       case 2:
-        return const AutomationMainScreen();
+        return AutomationMainScreen(initialTabIndex: _automationTabIndex);
       case 3:
         return const FileManagerScreen();
       case 4:
-        return const ModernSettingsScreen();
+        return ModernSettingsScreen(initialTabIndex: _settingsTabIndex);
       default:
         return _buildDashboardContent();
     }
+  }
+
+  int _sanitizeMainIndex(int value) {
+    if (value < 0) return 0;
+    if (value > 4) return 4;
+    return value;
+  }
+
+  int _sanitizeSettingsIndex(int value) {
+    if (value < 0) return 0;
+    if (value > 3) return 3;
+    return value;
+  }
+
+  int _sanitizeAutomationIndex(int value) {
+    if (value < 0) return 0;
+    if (value > 3) return 3;
+    return value;
   }
 
   Widget _buildDashboardContent() {
@@ -122,20 +160,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         children: [
           // Header
           _buildHeader(isDark, customState),
-          
+
           // Scrollable content
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, kBottomNavHeight),
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Compact Metrics Card
                 if (customState.layout.compactMetrics)
                   const CompactMetricsCard(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Social Media Services Section
                 if (socialMediaState.configuredServices.isNotEmpty) ...[
                   SocialMediaServicesSection(
@@ -143,7 +181,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                 ],
-                
+
                 // AI Chat Section (replacing Quick Actions)
                 // _buildSectionTitle('AI Assistant', isDark),
                 const SizedBox(height: 12),
@@ -172,19 +210,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
-            child: const Icon(
-              Icons.memory,
-              color: Colors.white,
-              size: 28,
-            ),
+            child: const Icon(Icons.memory, color: Colors.white, size: 28),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Title
           const Expanded(
             child: Column(
@@ -201,21 +233,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 Text(
                   'Your AI Assistant',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
           ),
-          
+
           // Activity button
           IconButton(
-            icon: const Icon(
-              Icons.history,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.history, color: Colors.white),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -309,9 +335,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -345,9 +369,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Center(
         child: Column(

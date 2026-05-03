@@ -1,3 +1,4 @@
+import 'package:brainiac_plus/features/dashboard/widgets/metrics/mount_point_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
@@ -6,7 +7,6 @@ import '../../../core/theme/glassmorphism.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../file_manager/file_manager_screen.dart';
 import '../controllers/storage_controller.dart';
-import '../widgets/mount_point_card.dart';
 
 class DiskDetailScreen extends ConsumerStatefulWidget {
   const DiskDetailScreen({super.key});

@@ -7,7 +7,12 @@ import 'modern/tabs/preferences_tab.dart';
 import 'modern/tabs/about_tab.dart';
 
 class ModernSettingsScreen extends ConsumerStatefulWidget {
-  const ModernSettingsScreen({super.key});
+  final int initialTabIndex;
+
+  const ModernSettingsScreen({
+    super.key,
+    this.initialTabIndex = 0,
+  });
 
   @override
   ConsumerState<ModernSettingsScreen> createState() =>
@@ -21,7 +26,17 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: _sanitizeTabIndex(widget.initialTabIndex),
+    );
+  }
+
+  int _sanitizeTabIndex(int value) {
+    if (value < 0) return 0;
+    if (value > 3) return 3;
+    return value;
   }
 
   @override

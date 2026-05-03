@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/colors.dart';
 import '../../../routes/app_routes.dart';
-import '../../dashboard/dashboard_screen.dart';
 import 'active_automations_tab.dart';
 import 'templates_tab.dart';
 import 'create_automation_tab.dart';
@@ -11,7 +10,12 @@ import 'marketplace_tab.dart';
 import '../../../core/navigation/automation_navigation_service.dart';
 
 class AutomationMainScreen extends ConsumerStatefulWidget {
-  const AutomationMainScreen({super.key});
+  final int initialTabIndex;
+
+  const AutomationMainScreen({
+    super.key,
+    this.initialTabIndex = 0,
+  });
 
   @override
   ConsumerState<AutomationMainScreen> createState() => _AutomationMainScreenState();
@@ -24,7 +28,11 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: _sanitizeTabIndex(widget.initialTabIndex),
+    );
     AutomationNavigationService().registerTabChangeHandler(
       (index) => _tabController.animateTo(index),
     );
@@ -158,5 +166,11 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
         ],
       ),
     );
+  }
+
+  int _sanitizeTabIndex(int value) {
+    if (value < 0) return 0;
+    if (value > 3) return 3;
+    return value;
   }
 }

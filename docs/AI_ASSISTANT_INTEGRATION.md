@@ -40,16 +40,27 @@ Each AI suggestion includes a confidence score (0.0 to 1.0):
    - Handles code generation and chat completion
    - Supports both streaming and non-streaming modes
 
-2. **AutomationAssistantService** (`lib/core/services/automation_assistant_service.dart`)
+2. **Main Agent Orchestrator** (`lib/features/ai_assistant/services/ai_orchestrator_service.dart`)
+   - Routes requests to the right sub-agent
+   - Builds system prompts per domain
+   - Applies guardrails to file paths
+
+3. **Agent Registry** (`lib/features/ai_assistant/services/agent_registry.dart`)
+   - Defines sub-agent domains, keywords, and allowed paths
+
+4. **Response Parser** (`lib/features/ai_assistant/services/agent_response_parser.dart`)
+   - Extracts code blocks and affected file paths
+
+5. **AutomationAssistantService** (`lib/core/services/automation_assistant_service.dart`)
    - Wrapper around OllamaService
    - Specialized prompts for automation tasks
    - Parses AI responses into structured data
 
-3. **AutomationAssistantProvider** (`lib/features/automation/providers/automation_assistant_provider.dart`)
+6. **AutomationAssistantProvider** (`lib/features/automation/providers/automation_assistant_provider.dart`)
    - Riverpod provider for dependency injection
    - Makes AutomationAssistantService available throughout the app
 
-4. **CreateAutomationTab** (`lib/features/automation/screens/create_automation_tab.dart`)
+7. **CreateAutomationTab** (`lib/features/automation/screens/create_automation_tab.dart`)
    - UI integration of AI assistant
    - "AI Assist" button in Basic Information step
    - Dialog for natural language input
@@ -60,19 +71,17 @@ Each AI suggestion includes a confidence score (0.0 to 1.0):
 ```
 User Input (Natural Language)
     ↓
-AI Assistant Dialog
+Main Agent Orchestrator
     ↓
-AutomationAssistantService.suggestAutomation()
+Selected Sub-Agent Prompt
     ↓
-OllamaService.generateCode()
+OllamaService.chat()
     ↓
 Ollama API (Local LLM)
     ↓
-Parse JSON Response
+AgentResponseParser
     ↓
-AutomationSuggestion Object
-    ↓
-Auto-fill Form Fields
+Chat UI and metadata (agent, files)
 ```
 
 ## Usage
