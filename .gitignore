@@ -43,3 +43,33 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets / environment
+.env
+.env.local
+.env.*.local
+go_backend/.env
+**/secrets/
+
+# Go build artifacts
+go_backend/go_backend
+go_backend/*.exe
+go_backend/bin/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/settings.json
+
+# Test outputs
+coverage/
+*.lcov
+test-results/
+
+# Local AI / Ollama
+ollama_models/
+*.gguf
+
