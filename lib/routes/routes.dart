@@ -31,6 +31,3 @@ export 'app_routes.dart';
 export 'route_generator.dart';
 export 'navigation_constants.dart';
 
-// Examples (for reference/demo)
-export 'routing_examples.dart';
-
