@@ -1,186 +1,55 @@
-# 📚 BrainiacPlus - Documentazione
+# BrainiacPlus — Documentation
 
-Benvenuto nella documentazione di **BrainiacPlus**, l'app multi-platform (Linux/Android) per l'automazione dei social media.
-
----
-
-## 🚀 Inizia Qui
-
-### Per Utenti Finali
-
-1. **[Quick Start](setup/QUICK_START.md)** - Installazione e primo avvio (5 minuti)
-2. **[Configurazione Social Media](#-configurazione-social-media)** - Collega i tuoi account
-
-### Per Sviluppatori
-
-1. **[System Architecture](architecture/SYSTEM_ARCHITECTURE.md)** - Architettura del sistema
-2. **[Go Backend Guide](architecture/GO_BACKEND_GUIDE.md)** - Backend API documentation
-3. **[Maintenance Guide](guides/MAINTENANCE_GUIDE.md)** - Sviluppo e debug
+Welcome. Pick the entry point that matches what you're trying to do.
 
 ---
 
-## 📱 Configurazione Social Media
+## I want to run the app
 
-### Facebook
-- **[Facebook Quick Start](setup/QUICK_START_FACEBOOK.md)** ⭐ Inizia qui (2 minuti)
-- **[Facebook Token Guide](setup/FACEBOOK_TOKEN_GUIDE.md)** - Generazione e rinnovo token
-- **[Test Results](guides/TEST_RESULTS.md)** - Funzionalità disponibili
+→ [`setup/QUICK_START.md`](setup/QUICK_START.md) — install + first run (5 min)
+→ [`setup/INSTALLATION_GUIDE.md`](setup/INSTALLATION_GUIDE.md) — full install (Linux / macOS / Windows)
 
-### Instagram
-- **[Instagram Quick Start](setup/INSTAGRAM_QUICK_START.md)** ⭐ Setup veloce (2 minuti)
-- **[Instagram Setup Guide](setup/INSTAGRAM_SETUP_GUIDE.md)** - Guida completa
+## I want to connect a social account
 
-### Altri Servizi
-- **[Service Config Guide](setup/SERVICE_CONFIG_GUIDE.md)** - YouTube, Twitter, ecc.
+| Service | Quick start | Full guide |
+|---|---|---|
+| Facebook | [`setup/QUICK_START_FACEBOOK.md`](setup/QUICK_START_FACEBOOK.md) | [`setup/FACEBOOK_TOKEN_GUIDE.md`](setup/FACEBOOK_TOKEN_GUIDE.md) |
+| Instagram | [`setup/INSTAGRAM_QUICK_START.md`](setup/INSTAGRAM_QUICK_START.md) | [`setup/INSTAGRAM_SETUP_GUIDE.md`](setup/INSTAGRAM_SETUP_GUIDE.md) |
+| Instagram (CLI) | [`setup/INSTAGRAM_CLI_SETUP.md`](setup/INSTAGRAM_CLI_SETUP.md) | — |
+| Other (YouTube, Twitter, …) | [`setup/SERVICE_CONFIG_GUIDE.md`](setup/SERVICE_CONFIG_GUIDE.md) | — |
 
----
+## I want to understand the system
 
-## 🏗️ Architettura
+- [`architecture/SYSTEM_ARCHITECTURE.md`](architecture/SYSTEM_ARCHITECTURE.md) — high-level design with diagrams
+- [`architecture/GO_BACKEND_GUIDE.md`](architecture/GO_BACKEND_GUIDE.md) — backend internals
+- [`architecture/AI_ASSISTANT_INTEGRATION.md`](architecture/AI_ASSISTANT_INTEGRATION.md) — Ollama integration
+- [`architecture/FACEBOOK_AUTOMATION_README.md`](architecture/FACEBOOK_AUTOMATION_README.md) — Facebook automation flow
+- [`architecture/SOCIAL_MEDIA_CARDS_README.md`](architecture/SOCIAL_MEDIA_CARDS_README.md) — social-media UI cards
+- [`architecture/METRICS_REFACTOR.md`](architecture/METRICS_REFACTOR.md) — system-metrics provider design
 
-```
-┌──────────────────────────────────────┐
-│      BrainiacPlus (Utente PC)        │
-├──────────────────────────────────────┤
-│                                      │
-│  Flutter App ←→ Go Backend           │
-│  (UI/UX)        (localhost:8080)     │
-│                                      │
-│  ↓ API Calls                         │
-│                                      │
-│  Facebook Graph API                  │
-│  Instagram Graph API                 │
-│  YouTube Data API                    │
-│  Twitter API                         │
-└──────────────────────────────────────┘
-```
+## I want to maintain or operate it
 
-**Caratteristiche chiave**:
-- ✅ Backend locale (nessun server remoto)
-- ✅ Privacy totale (dati sul tuo PC)
-- ✅ Multi-account supportato
-- ✅ Cross-platform (Linux, Android)
+- [`guides/MAINTENANCE_GUIDE.md`](guides/MAINTENANCE_GUIDE.md)
+- [`guides/SERVICE_CONFIGURATION_COMPLETE_GUIDE.md`](guides/SERVICE_CONFIGURATION_COMPLETE_GUIDE.md)
+- [`guides/SERVICE_SETUP_QUICK_REFERENCE.md`](guides/SERVICE_SETUP_QUICK_REFERENCE.md)
 
-📖 [Architettura Completa](architecture/SYSTEM_ARCHITECTURE.md)
+## Implementation notes (short technical references)
+
+- [`AUTOMATION_TEMPLATE_PREFILL.md`](AUTOMATION_TEMPLATE_PREFILL.md) — how template pre-fill works in the Create Automation tab
+- [`SETTINGS_PERSISTENCE.md`](SETTINGS_PERSISTENCE.md) — where settings are stored
 
 ---
 
-## 📖 Guide Dettagliate
-
-### Setup e Installazione
-- [Installation Guide](setup/INSTALLATION_GUIDE.md) - Installazione completa
-- [Quick Start](setup/QUICK_START.md) - Avvio rapido
-- [Service Config](setup/SERVICE_CONFIG_GUIDE.md) - Configurazione servizi
-
-### Funzionalità
-- [Facebook Automation](architecture/FACEBOOK_AUTOMATION_README.md) - Sistema automazioni Facebook
-- [Social Media Cards](architecture/SOCIAL_MEDIA_CARDS_README.md) - Dashboard social cards
-- [Test Results](guides/TEST_RESULTS.md) - Funzionalità testate
-
-### Manutenzione
-- [Maintenance Guide](guides/MAINTENANCE_GUIDE.md) - Debug e troubleshooting
-- [Missing Permissions](guides/PERMESSO_MANCANTE.md) - Limitazioni API Facebook
-
----
-
-## 🛠️ Comandi Utili
-
-```bash
-# Avvia l'app
-flutter run -d linux
-
-# Avvia backend (automatico all'avvio app)
-cd go_backend && go run main.go
-
-# Test Facebook
-./test_facebook_automation.sh
-
-# Test Instagram
-./test_instagram_integration.sh
-
-# Test completo sistema
-./test_automazioni_complete.sh
-```
-
----
-
-## ❓ FAQ
-
-**Q: Devo avere un server per usare BrainiacPlus?**  
-A: No! Tutto gira sul tuo PC. Il backend è localhost:8080.
-
-**Q: I miei dati sono al sicuro?**  
-A: Sì, tutto è locale. Nessun dato viene inviato a server esterni (eccetto API social).
-
-**Q: Posso usare più account social?**  
-A: Sì, puoi collegare multipli account Facebook, Instagram, ecc.
-
-**Q: Funziona su Android?**  
-A: Sì, è multi-platform (Linux + Android).
-
-**Q: Serve la Facebook App Review per usarlo?**  
-A: No per le funzionalità di lettura (metriche, insights). Sì per pubblicare post automaticamente.
-
----
-
-## 📞 Supporto
-
-### Script di Test
-- `test_facebook_automation.sh` - Test automazioni Facebook
-- `test_instagram_integration.sh` - Test integrazione Instagram
-- `test_automazioni_complete.sh` - Test completo sistema
-- `demo_automation_scheduler.sh` - Demo animata automazioni
-
-### Log e Debug
-```bash
-# Log backend
-tail -f go_backend/logs/backend.log
-
-# Log Flutter
-flutter run -d linux --verbose
-
-# Test API manuale
-curl http://localhost:8080/api/v1/health
-```
-
----
-
-## 📂 Struttura Documentazione
+## Layout
 
 ```
 docs/
-├── README.md                  ← Sei qui
-├── setup/                     ← Guide di installazione
-│   ├── QUICK_START.md
-│   ├── INSTALLATION_GUIDE.md
-│   ├── QUICK_START_FACEBOOK.md
-│   ├── FACEBOOK_TOKEN_GUIDE.md
-│   ├── INSTAGRAM_QUICK_START.md
-│   ├── INSTAGRAM_SETUP_GUIDE.md
-│   └── SERVICE_CONFIG_GUIDE.md
-├── architecture/              ← Architettura tecnica
-│   ├── SYSTEM_ARCHITECTURE.md
-│   ├── GO_BACKEND_GUIDE.md
-│   ├── FACEBOOK_AUTOMATION_README.md
-│   └── SOCIAL_MEDIA_CARDS_README.md
-├── guides/                    ← Guide d'uso
-│   ├── MAINTENANCE_GUIDE.md
-│   ├── TEST_RESULTS.md
-│   └── PERMESSO_MANCANTE.md
-└── archive/                   ← Vecchie documentazioni
+├── README.md              ← you are here
+├── architecture/          ← system design
+├── setup/                 ← user-facing setup & quick starts
+├── guides/                ← operations / maintenance
+└── *.md                   ← short implementation notes
 ```
 
----
-
-## 🎯 Prossimi Passi
-
-1. **[Quick Start](setup/QUICK_START.md)** - Installa l'app
-2. **[Facebook Setup](setup/QUICK_START_FACEBOOK.md)** - Collega Facebook (2 min)
-3. **[Instagram Setup](setup/INSTAGRAM_QUICK_START.md)** - Collega Instagram (2 min)
-4. **Usa l'app!** 🚀
-
----
-
-**Versione**: 1.0.0  
-**Ultima modifica**: 2026-02-16  
-**Piattaforme**: Linux, Android  
-**License**: MIT
+For dev-workflow conventions and Claude Code rules see [`/CLAUDE.md`](../CLAUDE.md).
+For multi-agent dev routing see [`.github/agents/README.md`](../.github/agents/README.md).
