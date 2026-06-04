@@ -3,7 +3,7 @@ import 'package:brainiac_plus/core/theme/colors.dart';
 import 'package:brainiac_plus/core/theme/glassmorphism.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/storage_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MountPointCard extends StatelessWidget {
   final MountPoint mountPoint;
