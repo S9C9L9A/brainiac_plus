@@ -1,159 +1,102 @@
-# AI Assistant Agent 🤖
+# AI Assistant Agent
 
 ## Domain
-Responsible for the AI chat UI, code generation workflow, and self-modification UX.
-
-> Ollama API integration is handled by `ollama_integration.agent.md`.
+Responsible for the AI chat UI, multi-agent orchestration pipeline, and code generation workflow.
 
 ## Responsibilities
 - Chat interface with natural language understanding
+- Multi-agent verification pipeline (safety, code review, test, action, coordinator)
 - Code generation from user requests
-- Approval workflow with diff preview
-- Hot reload and git auto-commit
-- Safety validation and sandbox testing
-- Rollback mechanisms
+- Safety validation (locked files, dangerous commands, credential detection)
 - AI suggestions panel
 - Quick actions processing
 
 ## Files Owned
+
 ```
 lib/features/ai_assistant/
 ├── screens/
-│   ├── ai_chat_screen.dart          # Main chat interface
-│   ├── code_preview_screen.dart     # Diff preview & approval
-│   └── ai_suggestions_panel.dart    # Dashboard suggestions
+│   └── ai_chat_screen.dart              # Main chat interface
 ├── controllers/
-│   ├── ai_chat_controller.dart      # Chat state management
-│   ├── code_generation_controller.dart  # Code gen logic
-│   └── approval_workflow_controller.dart # Approval flow
+│   └── ai_chat_controller.dart          # Chat state management
 ├── models/
-│   ├── chat_message.dart            # Chat message model
-│   ├── code_change.dart             # Code modification model
-│   └── ai_suggestion.dart           # Suggestion model
+│   ├── agent_task.dart                  # Shared pipeline data model
+│   ├── agent_profile.dart               # Agent domain descriptor
+│   ├── agent_response.dart              # Parsed LLM response
+│   ├── ai_message.dart                  # Chat message model
+│   ├── ai_suggestion.dart               # Suggestion model
+│   └── code_change.dart                 # Code modification model
 ├── widgets/
-│   ├── chat_input_bar.dart          # Chat input component
-│   ├── message_bubble.dart          # Chat bubbles
-│   ├── diff_viewer.dart             # Code diff display
-│   └── quick_action_button.dart     # Quick action tiles
+│   └── chat/
+│       ├── ai_chat_panel.dart           # Chat panel widget
+│       ├── chat_input_bar.dart          # Chat input component
+│       └── message_bubble.dart          # Chat bubbles
 └── services/
-    └── (uses core/services/ollama_service.dart)
+    ├── ai_orchestrator_service.dart     # Entry point: route() and runPipeline()
+    ├── agent_coordinator.dart           # Stage 5: aggregates verdict + summary
+    ├── agent_registry.dart              # Domain-agent registry
+    ├── agent_response_parser.dart       # Extracts code blocks + file paths
+    ├── ai_guardrails_service.dart       # File-path filtering per domain
+    ├── safety_agent.dart                # Stage 1: locked files, dangerous ops
+    ├── code_review_agent.dart           # Stage 2: code smells, secrets
+    ├── test_agent.dart                  # Stage 3: coverage recommendations
+    └── action_agent.dart                # Stage 4: maps intent to in-app actions
 
 lib/core/services/
-├── ollama_service.dart              # Ollama HTTP API client
-├── code_generator_service.dart      # Template-based code gen
-├── git_service.dart                 # Git operations
-└── safety_validator_service.dart    # Code safety checks
+├── ollama_service.dart                  # Ollama HTTP API client
+└── automation_assistant_service.dart    # Automation-specific prompts
 ```
 
 ## Technical Stack
-- **AI Model**: CodeLlama 7B via Ollama
-- **API**: HTTP REST (localhost:11434)
+- **AI Model**: `mistral-medium-3.5:latest` (default); any Ollama-compatible model
+- **API**: HTTP REST (`localhost:11434`)
 - **State**: Riverpod
-- **Git**: Process.run for git commands
-- **Hot Reload**: flutter/material hot reload APIs
-- **Diff**: diff_match_patch package
+- **Endpoints**: `POST /api/generate`, `POST /api/chat`
 
 ## Architecture
-### Level 3/4 Self-Modification Flow
+
+### Multi-Agent Pipeline
+
 ```
-User Request (NL)
+User Input
     ↓
-CodeLlama generates code
+AiOrchestratorService.runPipeline()
     ↓
-Template validation
+Stage 1 — SafetyAgent         (locked files, dangerous commands, credential patterns)
     ↓
-Safety checks (sandbox)
+Stage 2 — CodeReviewAgent     (code smells, hardcoded secrets, async safety)
     ↓
-Show diff preview to user
+Stage 3 — TestAgent           (coverage recommendations, critical code detection)
     ↓
-User approves/rejects
-    ↓ (approved)
-Apply changes to files
+Stage 4 — ActionAgent         (maps keywords to in-app AgentActions)
     ↓
-Hot reload app
+Stage 5 — AgentCoordinator    (sets verdict: ok | warning | blocked; builds summary)
     ↓
-Git auto-commit
-    ↓
-Success feedback
+AgentTask (final) — .verdict + .summary + .suggestedActions
 ```
+
+### route() vs runPipeline()
+
+- `route(userContent)` — returns `RoutingDecision` (agent + system prompt). No pipeline run.
+- `runPipeline(userContent, {codeSnippet, referencedFiles})` — returns finalized `AgentTask`.
 
 ### Safety Constraints
-- ❌ No modifications to: main.dart, pubspec.yaml (without approval)
-- ❌ No file deletions (only edits/creates)
-- ✅ All changes require user approval
-- ✅ Git-based rollback always available
-- ✅ Sandbox validation before preview
+- Locked files (`pubspec.yaml`, `lib/main.dart`, `go_backend/.env`, `android/app/build.gradle.kts`) produce blocked verdict
+- Dangerous shell patterns (`rm -rf`, `git push --force`, `DROP TABLE`, …) produce blocked verdict
+- Credential patterns (`.env`, `.pem`, `.key`, `secrets/`) in referenced files produce blocked verdict
 
 ## API Endpoints (Ollama)
-```dart
+
+```
 POST /api/generate
-{
-  "model": "qwen2.5-coder:14b"  // or codellama:13b,
-  "prompt": "...",
-  "stream": false,
-  "temperature": 0.7
-}
-
 POST /api/chat
-{
-  "model": "qwen2.5-coder:14b"  // or codellama:13b,
-  "messages": [...],
-  "stream": true
-}
 ```
 
-## Code Generation Templates
-```dart
-// Feature Creation Template
-"Create a new Flutter screen named {name} with:
-- Riverpod state management
-- Glassmorphism UI matching app theme
-- Lucide icons from app_icons.dart
-- Standard error handling
-Output ONLY valid Dart code, no explanations."
-
-// Bug Fix Template
-"Fix this Dart code:
-{code}
-Error: {error}
-Output ONLY the corrected code."
-
-// Refactoring Template
-"Refactor this Dart code to {goal}:
-{code}
-Maintain all functionality. Output ONLY code."
-```
-
-## Integration Points
-- **Dashboard**: Hybrid UI with chat bar + suggestions panel
-- **Navigation**: AI Assistant as main tab
-- **Theme**: Uses app_theme.dart glassmorphism
-- **Icons**: Uses app_icons.dart Lucide icons
-- **Git**: Auto-commits to 'ai-generated' branch
-
-## Success Metrics
-- Response time < 10s for code generation
-- 95%+ code validity rate (compiles without errors)
-- Zero unauthorized file modifications
-- 100% rollback success rate
-- User satisfaction with suggestions
-
-## Example Usage
-```dart
-// User types in chat:
-"Add a network monitor to the dashboard showing upload/download speed"
-
-// AI generates:
-// 1. lib/features/dashboard/widgets/network_monitor_card.dart
-// 2. Modifies lib/features/dashboard/dashboard_screen.dart
-// 3. Shows diff preview
-// 4. User approves
-// 5. Files updated, hot reload, git commit
-```
+Default timeouts: 30 s connect, 120 s receive.
 
 ## Development Status
-- [ ] Phase 1: Ollama Service
-- [ ] Phase 2: Chat Interface
-- [ ] Phase 3: Code Generation
-- [ ] Phase 4: Approval Workflow
-- [ ] Phase 5: Self-Modification
+- [x] Phase 1: Ollama Service (`ollama_service.dart`)
+- [x] Phase 2: Chat Interface (`ai_chat_screen.dart`, `ai_chat_controller.dart`)
+- [x] Phase 3: Multi-agent pipeline (`agent_coordinator.dart` + 4 specialist agents)
+- [ ] Phase 4: Approval Workflow (diff preview + user confirm)
+- [ ] Phase 5: Self-Modification (hot reload + git auto-commit)

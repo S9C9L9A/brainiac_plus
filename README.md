@@ -120,7 +120,7 @@ brainiac_plus/
 
 **AI**
 - [Ollama](https://ollama.com/) local model server (default `localhost:11434`)
-- Tested: CodeLlama 7B, Llama2, Mistral
+- Default model: `mistral-medium-3.5:latest` (see [GPU optimization](docs/GPU_OPTIMIZATION.md)); also tested with CodeLlama, Llama2, Mistral 7B
 
 ---
 
@@ -147,7 +147,9 @@ cd go_backend && go build      # production binary
 - [Go backend guide](docs/architecture/GO_BACKEND_GUIDE.md)
 - [Maintenance](docs/guides/MAINTENANCE_GUIDE.md)
 - [AI agents (multi-agent dev workflow)](.github/agents/README.md)
-- [Claude Code instructions](CLAUDE.md)
+- [Claude Code instructions](.claude/CLAUDE.md)
+- [Terminal dashboard guide](docs/DASHBOARD_GUIDE.md)
+- [GPU / ROCm optimization](docs/GPU_OPTIMIZATION.md)
 
 ---
 

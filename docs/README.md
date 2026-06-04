@@ -24,8 +24,14 @@ Welcome. Pick the entry point that matches what you're trying to do.
 - [`architecture/GO_BACKEND_GUIDE.md`](architecture/GO_BACKEND_GUIDE.md) — backend internals
 - [`architecture/AI_ASSISTANT_INTEGRATION.md`](architecture/AI_ASSISTANT_INTEGRATION.md) — Ollama integration
 - [`architecture/FACEBOOK_AUTOMATION_README.md`](architecture/FACEBOOK_AUTOMATION_README.md) — Facebook automation flow
+- [`architecture/INSTAGRAM_AUTOMATION_GUIDE.md`](architecture/INSTAGRAM_AUTOMATION_GUIDE.md) — Instagram automation flow
 - [`architecture/SOCIAL_MEDIA_CARDS_README.md`](architecture/SOCIAL_MEDIA_CARDS_README.md) — social-media UI cards
 - [`architecture/METRICS_REFACTOR.md`](architecture/METRICS_REFACTOR.md) — system-metrics provider design
+
+## I want to use the terminal dashboard or tune the GPU
+
+- [`DASHBOARD_GUIDE.md`](DASHBOARD_GUIDE.md) — terminal dashboard (metrics, GPU, tasks, launcher); see also [`scripts/README.md`](../scripts/README.md)
+- [`GPU_OPTIMIZATION.md`](GPU_OPTIMIZATION.md) — ROCm / Radeon AI PRO R9700 setup, model config, performance tuning
 
 ## I want to maintain or operate it
 
@@ -51,5 +57,5 @@ docs/
 └── *.md                   ← short implementation notes
 ```
 
-For dev-workflow conventions and Claude Code rules see [`/CLAUDE.md`](../CLAUDE.md).
+For dev-workflow conventions and Claude Code rules see [`.claude/CLAUDE.md`](../.claude/CLAUDE.md).
 For multi-agent dev routing see [`.github/agents/README.md`](../.github/agents/README.md).
