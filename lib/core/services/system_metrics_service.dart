@@ -1,29 +1,30 @@
 import 'dart:io';
 import 'package:system_info2/system_info2.dart';
+import 'gpu_detection_service.dart';
 
 /// Classe unificata per metriche di sistema in tempo reale
 class RealtimeSystemMetrics {
   // CPU
   final double cpuUsagePercent;
-  
+
   // Memory
   final int totalMemoryMB;
   final int usedMemoryMB;
   final int freeMemoryMB;
   final double memoryUsagePercent;
-  
+
   // Disk
   final int totalDiskGB;
   final int usedDiskGB;
   final int freeDiskGB;
   final double diskUsagePercent;
-  
+
   // Hardware Info
   final int cpuCores;
   final String cpuModel;
   final bool hasGpu;
   final int? gpuMemoryMB;
-  
+
   // Metadata
   final DateTime lastUpdate;
   final String osName;
@@ -99,10 +100,12 @@ class RealtimeSystemMetrics {
 /// Service centralizzato per metriche di sistema
 class SystemMetricsService {
   static final _instance = SystemMetricsService._();
-  
+
   int _previousIdleTicks = 0;
   int _previousTotalTicks = 0;
-  
+
+  final GpuDetectionService _gpuDetector = GpuDetectionService();
+
   static final _isLinux = Platform.isLinux;
   static final _isAndroid = Platform.isAndroid;
 
@@ -118,7 +121,7 @@ class SystemMetricsService {
       final cpuUsage = await _getCpuUsage();
       final memoryMetrics = _getMemoryMetrics();
       final diskMetrics = await _getDiskMetrics();
-      final hardwareInfo = _getHardwareInfo();
+      final hardwareInfo = await _getHardwareInfo();
 
       return RealtimeSystemMetrics(
         cpuUsagePercent: cpuUsage,
@@ -144,7 +147,7 @@ class SystemMetricsService {
   }
 
   /// === CPU METRICS ===
-  
+
   Future<double> _getCpuUsage() async {
     try {
       if (_isLinux || _isAndroid) {
@@ -216,14 +219,11 @@ class SystemMetricsService {
       final totalMB = (totalPhysicalMemory / (1024 * 1024)).round();
       final freeMB = (freePhysicalMemory / (1024 * 1024)).round();
       final usedMB = totalMB - freeMB;
-      final usage = totalMB > 0 ? (usedMB / totalMB * 100).clamp(0.0, 100.0) : 0.0;
+      final usage = totalMB > 0
+          ? (usedMB / totalMB * 100).clamp(0.0, 100.0)
+          : 0.0;
 
-      return {
-        'usage': usage,
-        'total': totalMB,
-        'used': usedMB,
-        'free': freeMB,
-      };
+      return {'usage': usage, 'total': totalMB, 'used': usedMB, 'free': freeMB};
     } catch (e) {
       _debugPrint('Error getting memory metrics: $e');
       return {'usage': 0.0, 'total': 0, 'used': 0, 'free': 0};
@@ -244,7 +244,9 @@ class SystemMetricsService {
               final total = int.tryParse(values[1].replaceAll('G', '')) ?? 0;
               final used = int.tryParse(values[2].replaceAll('G', '')) ?? 0;
               final avail = int.tryParse(values[3].replaceAll('G', '')) ?? 0;
-              final usage = total > 0 ? (used / total * 100).clamp(0.0, 100.0) : 0.0;
+              final usage = total > 0
+                  ? (used / total * 100).clamp(0.0, 100.0)
+                  : 0.0;
 
               return {
                 'usage': usage,
@@ -264,14 +266,11 @@ class SystemMetricsService {
       final totalGB = (totalVirtualMemory / (1024 * 1024 * 1024)).round();
       final freeGB = (freeVirtualMemory / (1024 * 1024 * 1024)).round();
       final usedGB = totalGB - freeGB;
-      final usage = totalGB > 0 ? (usedGB / totalGB * 100).clamp(0.0, 100.0) : 0.0;
+      final usage = totalGB > 0
+          ? (usedGB / totalGB * 100).clamp(0.0, 100.0)
+          : 0.0;
 
-      return {
-        'usage': usage,
-        'total': totalGB,
-        'used': usedGB,
-        'free': freeGB,
-      };
+      return {'usage': usage, 'total': totalGB, 'used': usedGB, 'free': freeGB};
     } catch (e) {
       _debugPrint('Error getting disk metrics: $e');
       return {'usage': 0.0, 'total': 0, 'used': 0, 'free': 0};
@@ -280,11 +279,10 @@ class SystemMetricsService {
 
   /// === HARDWARE INFO ===
 
-  Map<String, dynamic> _getHardwareInfo() {
+  Future<Map<String, dynamic>> _getHardwareInfo() async {
     try {
       final cores = SysInfo.cores.length;
       var model = 'Unknown';
-      var hasGpu = false;
 
       if (_isLinux) {
         // Read CPU model from /proc/cpuinfo
@@ -301,19 +299,16 @@ class SystemMetricsService {
             }
           }
         } catch (_) {}
-
-        // Detect GPU
-        try {
-          final nvidiaSmi = Process.runSync('which', ['nvidia-smi']);
-          if (nvidiaSmi.exitCode == 0) hasGpu = true;
-        } catch (_) {}
       }
+
+      // Detect GPU across AMD (ROCm) and NVIDIA via GpuDetectionService.
+      final gpu = await _gpuDetector.detect();
 
       return {
         'cores': cores,
         'model': model,
-        'hasGpu': hasGpu,
-        'gpuMemory': null,
+        'hasGpu': gpu.hasGpu,
+        'gpuMemory': gpu.memoryMB,
       };
     } catch (e) {
       _debugPrint('Error getting hardware info: $e');
