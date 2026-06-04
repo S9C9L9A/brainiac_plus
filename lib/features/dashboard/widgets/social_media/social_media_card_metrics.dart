@@ -25,10 +25,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
       ),
       child: Column(
         children: [
@@ -69,7 +66,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
   Widget _buildMetricItem({
     required String label,
     required String value,
-    required IconData icon,
+    required FaIconData icon,
     double? trend,
   }) {
     return Column(
@@ -179,10 +176,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.15),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

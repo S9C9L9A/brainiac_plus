@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../models/social_media_service.dart';
 
-IconData getPlatformIcon(SocialPlatform platform) {
+FaIconData getPlatformIcon(SocialPlatform platform) {
   switch (platform) {
     case SocialPlatform.facebook:
       return FontAwesomeIcons.facebook;

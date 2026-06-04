@@ -17,10 +17,7 @@ import '../../settings/providers/extended_settings_provider.dart';
 class InteractiveServiceSetupScreen extends ConsumerStatefulWidget {
   final ServiceProvider serviceType;
 
-  const InteractiveServiceSetupScreen({
-    super.key,
-    required this.serviceType,
-  });
+  const InteractiveServiceSetupScreen({super.key, required this.serviceType});
 
   @override
   ConsumerState<InteractiveServiceSetupScreen> createState() =>
@@ -236,7 +233,8 @@ class _InteractiveServiceSetupScreenState
           _buildInfoCard(
             'What you\'ll need:',
             [
-              config['requirement1'] ?? 'API Key from ${widget.serviceType.label}',
+              config['requirement1'] ??
+                  'API Key from ${widget.serviceType.label}',
               config['requirement2'] ?? 'API Secret (if applicable)',
               config['requirement3'] ?? 'About 5 minutes',
             ],
@@ -247,7 +245,8 @@ class _InteractiveServiceSetupScreenState
           _buildInfoCard(
             'What you\'ll get:',
             [
-              config['benefit1'] ?? 'Automated posting to ${widget.serviceType.label}',
+              config['benefit1'] ??
+                  'Automated posting to ${widget.serviceType.label}',
               config['benefit2'] ?? 'Real-time analytics and insights',
               config['benefit3'] ?? 'Scheduled content management',
             ],
@@ -255,10 +254,7 @@ class _InteractiveServiceSetupScreenState
             Colors.purple,
           ),
           const SizedBox(height: 32),
-          _buildStepButtons(
-            onNext: () => _nextStep(),
-            showBack: false,
-          ),
+          _buildStepButtons(onNext: () => _nextStep(), showBack: false),
         ],
       ),
     );
@@ -296,12 +292,12 @@ class _InteractiveServiceSetupScreenState
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // How to get credentials
             _buildHowToCard(config),
-            
+
             const SizedBox(height: 24),
-            
+
             // API Key field
             _buildCredentialField(
               controller: _apiKeyController,
@@ -323,9 +319,9 @@ class _InteractiveServiceSetupScreenState
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // API Secret field (if needed)
             if (config['requiresSecret'] == true) ...[
               _buildCredentialField(
@@ -347,7 +343,7 @@ class _InteractiveServiceSetupScreenState
                 },
               ),
             ],
-            
+
             const SizedBox(height: 32),
             _buildStepButtons(
               onNext: () {
@@ -356,7 +352,8 @@ class _InteractiveServiceSetupScreenState
                 }
               },
               onBack: () => _previousStep(),
-              nextEnabled: _apiKeyValid && 
+              nextEnabled:
+                  _apiKeyValid &&
                   (config['requiresSecret'] != true || _apiSecretValid),
             ),
           ],
@@ -398,16 +395,13 @@ class _InteractiveServiceSetupScreenState
             ),
           ),
           const SizedBox(height: 32),
-          
-          if (!_testPassed) ...[
-            _buildTestCard(),
-          ] else ...[
-            _buildSuccessCard(),
-          ],
-          
+
+          if (!_testPassed) ...[_buildTestCard()] else ...[_buildSuccessCard()],
+
           const SizedBox(height: 32),
 
-          if (Platform.isLinux && widget.serviceType == ServiceProvider.instagram)
+          if (Platform.isLinux &&
+              widget.serviceType == ServiceProvider.instagram)
             _buildInstagramCliTools(),
 
           const SizedBox(height: 32),
@@ -449,15 +443,15 @@ class _InteractiveServiceSetupScreenState
             ),
           ),
           const SizedBox(height: 32),
-          
+
           _buildCompletionSummary(),
-          
+
           const SizedBox(height: 24),
-          
+
           _buildNextStepsCard(),
-          
+
           const SizedBox(height: 32),
-          
+
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -502,7 +496,7 @@ class _InteractiveServiceSetupScreenState
 
   // ===== HELPER WIDGETS =====
 
-  Widget _buildStepIcon(IconData icon, Color color) {
+  Widget _buildStepIcon(FaIconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -510,23 +504,16 @@ class _InteractiveServiceSetupScreenState
           colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withOpacity(0.5),
-          width: 2,
-        ),
+        border: Border.all(color: color.withOpacity(0.5), width: 2),
       ),
-      child: FaIcon(
-        icon,
-        color: color,
-        size: 40,
-      ),
+      child: FaIcon(icon, color: color, size: 40),
     );
   }
 
   Widget _buildInfoCard(
     String title,
     List<String> items,
-    IconData icon,
+    FaIconData icon,
     Color color,
   ) {
     return GlassCard(
@@ -557,34 +544,36 @@ class _InteractiveServiceSetupScreenState
               ],
             ),
             const SizedBox(height: 16),
-            ...items.map((item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 6),
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                          height: 1.5,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -602,10 +591,7 @@ class _InteractiveServiceSetupScreenState
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.blue.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -630,11 +616,11 @@ class _InteractiveServiceSetupScreenState
           ),
           const SizedBox(height: 16),
           Text(
-            config['howToGetCredentials'] ?? 
-            '1. Go to ${widget.serviceType.label} Developer Portal\n'
-            '2. Create a new app or select existing one\n'
-            '3. Copy the API Key and Secret\n'
-            '4. Paste them below',
+            config['howToGetCredentials'] ??
+                '1. Go to ${widget.serviceType.label} Developer Portal\n'
+                    '2. Create a new app or select existing one\n'
+                    '3. Copy the API Key and Secret\n'
+                    '4. Paste them below',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 14,
@@ -644,7 +630,10 @@ class _InteractiveServiceSetupScreenState
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () => _openDocumentation(config['docsUrl']),
-            icon: const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 14),
+            icon: const FaIcon(
+              FontAwesomeIcons.arrowUpRightFromSquare,
+              size: 14,
+            ),
             label: const Text('Open Documentation'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.blue[300],
@@ -660,7 +649,7 @@ class _InteractiveServiceSetupScreenState
     required TextEditingController controller,
     required String label,
     required String hint,
-    required IconData icon,
+    required FaIconData icon,
     bool obscureText = false,
     required Function(String) onChanged,
     String? Function(String?)? validator,
@@ -855,17 +844,14 @@ class _InteractiveServiceSetupScreenState
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, IconData icon) {
+  Widget _buildSummaryItem(String label, String value, FaIconData icon) {
     return Row(
       children: [
         FaIcon(icon, color: Colors.white60, size: 16),
         const SizedBox(width: 12),
         Text(
           '$label:',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -995,19 +981,20 @@ class _InteractiveServiceSetupScreenState
       // Add more services...
     };
 
-    return configs[widget.serviceType] ?? {
-      'requirement1': 'API Key',
-      'requirement2': 'API Secret (if needed)',
-      'requirement3': 'Valid account credentials',
-      'benefit1': 'Automate your workflows',
-      'benefit2': 'Save time and effort',
-      'benefit3': 'Track your metrics',
-      'apiKeyLabel': 'API Key',
-      'apiKeyHint': 'Enter your API key',
-      'requiresSecret': true,
-      'docsUrl': null,
-      'howToGetCredentials': 'Check the service documentation for details',
-    };
+    return configs[widget.serviceType] ??
+        {
+          'requirement1': 'API Key',
+          'requirement2': 'API Secret (if needed)',
+          'requirement3': 'Valid account credentials',
+          'benefit1': 'Automate your workflows',
+          'benefit2': 'Save time and effort',
+          'benefit3': 'Track your metrics',
+          'apiKeyLabel': 'API Key',
+          'apiKeyHint': 'Enter your API key',
+          'requiresSecret': true,
+          'docsUrl': null,
+          'howToGetCredentials': 'Check the service documentation for details',
+        };
   }
 
   void _nextStep() {
@@ -1036,35 +1023,38 @@ class _InteractiveServiceSetupScreenState
     }
   }
 
-    Future<void> _handleComplete() async {
+  Future<void> _handleComplete() async {
     setState(() => _isLoading = true);
 
     final apiKey = _apiKeyController.text.trim();
     final apiSecret = _apiSecretController.text.trim();
     final settings = ref.read(extendedSettingsProvider);
-    final updated = _updateSettings(settings, widget.serviceType, apiKey, apiSecret);
+    final updated = _updateSettings(
+      settings,
+      widget.serviceType,
+      apiKey,
+      apiSecret,
+    );
     ref.read(extendedSettingsProvider.notifier).setSettings(updated);
 
     if (mounted) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${widget.serviceType.label} configured successfully!',
-          ),
+          content: Text('${widget.serviceType.label} configured successfully!'),
           backgroundColor: AppColors.systemGreen,
         ),
       );
       Navigator.pop(context, true);
     }
-    }
+  }
 
-    ExtendedAppSettings _updateSettings(
+  ExtendedAppSettings _updateSettings(
     ExtendedAppSettings settings,
     ServiceProvider service,
     String apiKey,
     String apiSecret,
-    ) {
+  ) {
     switch (service) {
       case ServiceProvider.facebook:
         return settings.copyWith(
@@ -1123,7 +1113,7 @@ class _InteractiveServiceSetupScreenState
       case ServiceProvider.custom:
         return settings;
     }
-    }
+  }
 
   void _showHelpDialog() {
     showDialog(
@@ -1181,7 +1171,7 @@ class _InteractiveServiceSetupScreenState
   Widget _buildHelpOption(
     String title,
     String subtitle,
-    IconData icon,
+    FaIconData icon,
     VoidCallback onTap,
   ) {
     return ListTile(
@@ -1239,8 +1229,8 @@ class _InteractiveServiceSetupScreenState
               _isCheckingCli
                   ? 'Checking instagram-cli availability...'
                   : _isLinuxCliAvailable
-                      ? 'instagram-cli is available on this system.'
-                      : 'instagram-cli not found. Install it to use CLI tools.',
+                  ? 'instagram-cli is available on this system.'
+                  : 'instagram-cli not found. Install it to use CLI tools.',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 13,
@@ -1295,7 +1285,10 @@ class _InteractiveServiceSetupScreenState
                   onPressed: _isLinuxCliAvailable
                       ? () => _runInstagramCli(['auth', 'logout'])
                       : null,
-                  icon: const FaIcon(FontAwesomeIcons.rightFromBracket, size: 14),
+                  icon: const FaIcon(
+                    FontAwesomeIcons.rightFromBracket,
+                    size: 14,
+                  ),
                   label: const Text('Logout'),
                 ),
                 OutlinedButton.icon(
@@ -1337,9 +1330,7 @@ class _InteractiveServiceSetupScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
-        content: SingleChildScrollView(
-          child: Text(body),
-        ),
+        content: SingleChildScrollView(child: Text(body)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
