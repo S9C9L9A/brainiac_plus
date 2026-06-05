@@ -98,7 +98,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
                     : FontAwesomeIcons.arrowTrendDown,
                 color: trend >= 0
                     ? const Color(0xFF4ADE80)
-                    : const Color(0xFF87171),
+                    : const Color(0xFFF87171),
                 size: layout.metricLabelSize + 2,
               ),
             ],
