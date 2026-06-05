@@ -48,7 +48,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
 
     if (_modelController.text.isEmpty) {
       _modelController.text =
-          settings.ollamaModelName ?? 'qwen2.5-coder:14b';
+          settings.ollamaModelName ?? 'mistral-medium-3.5:latest';
     }
 
     if (_endpointController.text.isEmpty) {
@@ -154,7 +154,8 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
   }
 
   Widget _buildLocalLinuxSetup(ExtendedAppSettings settings) {
-    final isConfigured = settings.hasOllamaEndpoint &&
+    final isConfigured =
+        settings.hasOllamaEndpoint &&
         settings.hasOllamaModelName &&
         settings.hasOllamaModelsPath;
 
@@ -213,9 +214,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                 OutlinedButton(
                   onPressed: _isInstalling
                       ? null
-                      : () => _installOllama(
-                            method: LocalAiInstallMethod.snap,
-                          ),
+                      : () => _installOllama(method: LocalAiInstallMethod.snap),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
                   ),
@@ -227,7 +226,9 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                     backgroundColor: AppColors.systemGreen,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text(_isDownloading ? 'Downloading...' : 'Download model'),
+                  child: Text(
+                    _isDownloading ? 'Downloading...' : 'Download model',
+                  ),
                 ),
                 OutlinedButton(
                   onPressed: _isTesting ? null : _testOllama,
@@ -379,10 +380,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: Colors.white60, fontSize: 11),
                 ),
                 Text(
                   value,
@@ -394,10 +392,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                 ),
                 Text(
                   detail,
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 10,
-                  ),
+                  style: const TextStyle(color: Colors.white38, fontSize: 10),
                 ),
               ],
             ),
@@ -416,7 +411,9 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
         final endpoint = _endpointController.text.isNotEmpty
             ? _endpointController.text
             : 'http://localhost:11434';
-        final installedAsync = ref.watch(ollamaAvailableModelsProvider(endpoint));
+        final installedAsync = ref.watch(
+          ollamaAvailableModelsProvider(endpoint),
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,29 +458,37 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 7),
+                                horizontal: 10,
+                                vertical: 7,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.check_circle,
-                                      color: AppColors.systemGreen, size: 14),
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.systemGreen,
+                                    size: 14,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       model.name,
                                       style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500),
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     model.sizeFormatted,
                                     style: const TextStyle(
-                                        color: Colors.white54, fontSize: 10),
+                                      color: Colors.white54,
+                                      fontSize: 10,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -530,8 +535,9 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                             const SizedBox(height: 6),
                             ...recommended.take(3).map((model) {
                               return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 3,
+                                ),
                                 child: GestureDetector(
                                   onTap: () {
                                     _modelController.text = model.name;
@@ -539,7 +545,9 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.08),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Column(
@@ -561,12 +569,13 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                horizontal: 6,
-                                                vertical: 2,
-                                              ),
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
                                               decoration: BoxDecoration(
                                                 color: _parseHexColor(
-                                                    model.ratingColor),
+                                                  model.ratingColor,
+                                                ),
                                                 borderRadius:
                                                     BorderRadius.circular(3),
                                               ),
@@ -610,15 +619,14 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                         ),
                         child: const Text(
                           'Loading models...',
-                          style:
-                              TextStyle(color: Colors.white70, fontSize: 12),
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                       ),
                       error: (err, _) => TextField(
                         controller: _modelController,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          hintText: 'qwen2.5-coder:14b',
+                          hintText: 'mistral-medium-3.5:latest',
                           hintStyle: const TextStyle(color: Colors.white38),
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.08),
@@ -662,7 +670,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                 controller: _modelController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'qwen2.5-coder:14b',
+                  hintText: 'mistral-medium-3.5:latest',
                   hintStyle: const TextStyle(color: Colors.white38),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.08),
@@ -685,10 +693,24 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
 
   /// Build model dropdown with all options
   Widget _buildModelDropdown(List<OllamaModelInfo> allModels) {
+    // Deduplicate by name: duplicate values break DropdownButton's
+    // "exactly one item per value" invariant.
+    final seen = <String>{};
+    final models = <OllamaModelInfo>[
+      for (final m in allModels)
+        if (seen.add(m.name)) m,
+    ];
+    final currentValue = _modelController.text.isNotEmpty
+        ? _modelController.text
+        : null;
+    // True when the configured model is among the detected models.
+    final hasCurrent =
+        currentValue != null && models.any((m) => m.name == currentValue);
+
     return Column(
       children: [
         DropdownButtonFormField<String>(
-          value: _modelController.text.isNotEmpty ? _modelController.text : null,
+          value: currentValue,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           dropdownColor: const Color(0xFF1a1a2e),
           decoration: InputDecoration(
@@ -706,55 +728,69 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
             ),
             prefixIcon: const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                '🤖',
-                style: TextStyle(fontSize: 16),
-              ),
+              child: Text('🤖', style: TextStyle(fontSize: 16)),
             ),
             prefixIconConstraints: const BoxConstraints(minWidth: 32),
           ),
-          items: allModels.map<DropdownMenuItem<String>>((model) {
-            return DropdownMenuItem<String>(
-              value: model.name,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _parseHexColor(model.ratingColor),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          items:
+              models.map<DropdownMenuItem<String>>((model) {
+                  return DropdownMenuItem<String>(
+                    value: model.name,
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          model.displayName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: _parseHexColor(model.ratingColor),
+                            shape: BoxShape.circle,
                           ),
                         ),
-                        Text(
-                          model.ratingIcon,
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 10,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                model.displayName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                model.ratingIcon,
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+                  );
+                }).toList()
+                // Keep the configured model selectable even if Ollama did not
+                // report it (e.g. not pulled yet), so the value matches exactly
+                // one item instead of throwing.
+                ..insertAll(0, [
+                  if (!hasCurrent && currentValue != null)
+                    DropdownMenuItem<String>(
+                      value: currentValue,
+                      child: Text(
+                        '$currentValue (not installed)',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                ]),
           onChanged: (value) {
             if (value != null) {
               _modelController.text = value;
@@ -785,11 +821,11 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: _parseHexColor(selectedModel.ratingColor)
-            .withValues(alpha: 0.1),
+        color: _parseHexColor(selectedModel.ratingColor).withValues(alpha: 0.1),
         border: Border.all(
-          color: _parseHexColor(selectedModel.ratingColor)
-              .withValues(alpha: 0.3),
+          color: _parseHexColor(
+            selectedModel.ratingColor,
+          ).withValues(alpha: 0.3),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -823,19 +859,13 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
           Wrap(
             spacing: 12,
             children: [
-              _buildDetailChip(
-                icon: '📦',
-                label: '${selectedModel.sizeGB} GB',
-              ),
+              _buildDetailChip(icon: '📦', label: '${selectedModel.sizeGB} GB'),
               _buildDetailChip(
                 icon: '💾',
                 label: '${selectedModel.vramRequiredMB ~/ 1024} GB RAM',
               ),
               if (selectedModel.isQuantized)
-                _buildDetailChip(
-                  icon: '🔧',
-                  label: selectedModel.quantization,
-                ),
+                _buildDetailChip(icon: '🔧', label: selectedModel.quantization),
             ],
           ),
           const SizedBox(height: 6),
@@ -867,10 +897,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
           const SizedBox(width: 3),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 10,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 10),
           ),
         ],
       ),
@@ -891,7 +918,10 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
@@ -1029,8 +1059,12 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     final path = _modelsPathController.text.trim();
     final endpoint = _endpointController.text.trim();
 
-    ref.read(extendedSettingsProvider.notifier).setSettings(
-          ref.read(extendedSettingsProvider).copyWith(
+    ref
+        .read(extendedSettingsProvider.notifier)
+        .setSettings(
+          ref
+              .read(extendedSettingsProvider)
+              .copyWith(
                 ollamaEndpoint: endpoint.isEmpty ? null : endpoint,
                 ollamaModelName: model.isEmpty ? null : model,
                 ollamaModelsPath: path.isEmpty ? null : path,
