@@ -711,6 +711,11 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
       children: [
         DropdownButtonFormField<String>(
           value: currentValue,
+          // Expand to the parent width so the Expanded inside each item gets a
+          // bounded constraint; without this the dropdown computes intrinsic
+          // widths over an unbounded Expanded and trips rendering/semantics
+          // assertions.
+          isExpanded: true,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           dropdownColor: const Color(0xFF1a1a2e),
           decoration: InputDecoration(
