@@ -1,9 +1,11 @@
 import 'dart:math' show min;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
+import '../models/agent_task.dart';
 import '../../../core/services/ollama_service.dart';
 import '../../settings/providers/extended_settings_provider.dart';
 import '../services/agent_registry.dart';
+import '../services/agent_coordinator.dart';
 import '../services/ai_guardrails_service.dart';
 import '../services/ai_orchestrator_service.dart';
 import '../services/agent_response_parser.dart';
@@ -38,18 +40,19 @@ final aiOrchestratorProvider = Provider<AiOrchestratorService>((ref) {
   return AiOrchestratorService(
     registry: ref.watch(agentRegistryProvider),
     guardrails: ref.watch(aiGuardrailsProvider),
+    coordinator: AgentCoordinator(),
   );
 });
 
 /// Provider for AI chat controller
 final aiChatControllerProvider =
     StateNotifierProvider<AiChatController, AiChatState>((ref) {
-  return AiChatController(
-    ref.watch(ollamaServiceProvider),
-    ref.watch(aiOrchestratorProvider),
-    ref.watch(agentResponseParserProvider),
-  );
-});
+      return AiChatController(
+        ref.watch(ollamaServiceProvider),
+        ref.watch(aiOrchestratorProvider),
+        ref.watch(agentResponseParserProvider),
+      );
+    });
 
 /// AI Chat State
 class AiChatState {
@@ -57,21 +60,27 @@ class AiChatState {
   final bool isLoading;
   final String? error;
 
+  /// Result of the latest multi-agent pipeline run (null before first message)
+  final AgentTask? lastPipelineResult;
+
   AiChatState({
     this.messages = const [],
     this.isLoading = false,
     this.error,
+    this.lastPipelineResult,
   });
 
   AiChatState copyWith({
     List<AiMessage>? messages,
     bool? isLoading,
     String? error,
+    AgentTask? lastPipelineResult,
   }) {
     return AiChatState(
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      lastPipelineResult: lastPipelineResult ?? this.lastPipelineResult,
     );
   }
 }
@@ -95,7 +104,8 @@ class AiChatController extends StateNotifier<AiChatState> {
     final systemMsg = AiMessage(
       id: 'system',
       role: 'assistant',
-      content: '👋 Hi! I\'m BrainiacPlus AI Assistant. I can help you add features, fix bugs, or automate tasks. What would you like to build today?',
+      content:
+          '👋 Hi! I\'m BrainiacPlus AI Assistant. I can help you add features, fix bugs, or automate tasks. What would you like to build today?',
       timestamp: DateTime.now(),
     );
     state = state.copyWith(messages: [systemMsg]);
@@ -112,21 +122,37 @@ class AiChatController extends StateNotifier<AiChatState> {
       error: null,
     );
 
+    // ── Multi-agent pipeline ─────────────────────────────────────────────
+    final pipelineResult = _orchestrator.runPipeline(content);
+    if (pipelineResult.verdict == AgentVerdict.blocked) {
+      final blockedMsg = errorMessage(
+        '🚫 **Action Blocked by Agent Pipeline**\n\n${pipelineResult.summary}',
+      );
+      state = state.copyWith(
+        messages: [...state.messages, blockedMsg],
+        isLoading: false,
+        lastPipelineResult: pipelineResult,
+        error: 'Pipeline blocked',
+      );
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     try {
-      // Check if Ollama is available before proceeding
       final isAvailable = await _ollamaService.isAvailable();
       if (!isAvailable) {
         final errorMsg = errorMessage(
-          '❌ Ollama is not available.\n\n'
+          '❌ Local LLM server not available.\n\n'
           'Please ensure:\n'
-          '1. Ollama is installed and running\n'
-          '2. The endpoint is correct (default: http://localhost:11434)\n'
+          '1. The local LLM server is running\n'
+          '2. The endpoint is correct (default: http://localhost:8080)\n'
           '3. Check your network connection\n\n'
-          'Run: ollama serve',
+          'Start it with: ./scripts/local-llm.sh start',
         );
         state = state.copyWith(
           messages: [...state.messages, errorMsg],
           isLoading: false,
+          lastPipelineResult: pipelineResult,
           error: 'Ollama unavailable',
         );
         return;
@@ -137,21 +163,35 @@ class AiChatController extends StateNotifier<AiChatState> {
       final response = await _ollamaService.chat(chatMessages);
       final assistantMsg = _buildAssistantMessage(decision, response);
 
+      final msgs = [...state.messages];
+      if (pipelineResult.verdict == AgentVerdict.warning) {
+        msgs.add(
+          assistantMessage(
+            '⚠️ **Pipeline Warnings**\n\n${pipelineResult.summary}',
+            agentId: 'coordinator',
+            intent: 'review',
+          ),
+        );
+      }
+      msgs.add(assistantMsg);
+
       state = state.copyWith(
-        messages: [...state.messages, assistantMsg],
+        messages: msgs,
         isLoading: false,
+        lastPipelineResult: pipelineResult,
       );
     } catch (e) {
       final errorMsg = errorMessage(
         '⚠️ Error: ${e.toString()}\n\n'
         'Troubleshooting:\n'
-        '• Verify Ollama is running: ollama serve\n'
-        '• Check endpoint: http://localhost:11434\n'
+        '• Verify the local LLM server is running: ./scripts/local-llm.sh start\n'
+        '• Check endpoint: http://localhost:8080\n'
         '• Try again in a moment',
       );
       state = state.copyWith(
         messages: [...state.messages, errorMsg],
         isLoading: false,
+        lastPipelineResult: pipelineResult,
         error: e.toString(),
       );
     }
@@ -161,22 +201,39 @@ class AiChatController extends StateNotifier<AiChatState> {
   Future<void> sendMessageStream(String content) async {
     if (content.trim().isEmpty) return;
 
-    // Check Ollama availability first
+    // ── Multi-agent pipeline ─────────────────────────────────────────────
+    final pipelineResult = _orchestrator.runPipeline(content);
+    if (pipelineResult.verdict == AgentVerdict.blocked) {
+      final userMsg = userMessage(content);
+      final blockedMsg = errorMessage(
+        '🚫 **Action Blocked by Agent Pipeline**\n\n${pipelineResult.summary}',
+      );
+      state = state.copyWith(
+        messages: [...state.messages, userMsg, blockedMsg],
+        isLoading: false,
+        lastPipelineResult: pipelineResult,
+        error: 'Pipeline blocked',
+      );
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     final isAvailable = await _ollamaService.isAvailable();
     if (!isAvailable) {
       final userMsg = userMessage(content);
       final errorMsg = errorMessage(
-        '❌ Ollama Service Unavailable\n\n'
-        'The AI assistant requires Ollama to be running.\n\n'
-        'To start Ollama:\n'
+        '❌ Local LLM Server Unavailable\n\n'
+        'The AI assistant requires the local LLM server to be running.\n\n'
+        'To start it:\n'
         '1. Open a terminal\n'
-        '2. Run: ollama serve\n'
-        '3. Ensure it\'s accessible at: http://localhost:11434\n\n'
+        '2. Run: ./scripts/local-llm.sh start\n'
+        '3. Ensure it\'s accessible at: http://localhost:8080\n\n'
         'Then try your message again.',
       );
       state = state.copyWith(
         messages: [...state.messages, userMsg, errorMsg],
         isLoading: false,
+        lastPipelineResult: pipelineResult,
         error: 'Ollama unavailable',
       );
       return;
@@ -184,9 +241,23 @@ class AiChatController extends StateNotifier<AiChatState> {
 
     final decision = _orchestrator.route(content);
     final userMsg = userMessage(content);
+
+    // Inject pipeline warning message before streaming starts
+    final preMessages = [...state.messages, userMsg];
+    if (pipelineResult.verdict == AgentVerdict.warning) {
+      preMessages.add(
+        assistantMessage(
+          '⚠️ **Pipeline Warnings**\n\n${pipelineResult.summary}',
+          agentId: 'coordinator',
+          intent: 'review',
+        ),
+      );
+    }
+
     state = state.copyWith(
-      messages: [...state.messages, userMsg],
+      messages: preMessages,
       isLoading: true,
+      lastPipelineResult: pipelineResult,
       error: null,
     );
 
@@ -209,8 +280,9 @@ class AiChatController extends StateNotifier<AiChatState> {
           intent: decision.intent,
         );
 
-        final messages =
-            state.messages.where((m) => m.id != streamMsgId).toList();
+        final messages = state.messages
+            .where((m) => m.id != streamMsgId)
+            .toList();
         messages.add(updatedMsg);
 
         state = state.copyWith(messages: messages);
@@ -230,16 +302,13 @@ class AiChatController extends StateNotifier<AiChatState> {
         intent: decision.intent,
       );
 
-      final messages =
-          state.messages.where((m) => m.id != streamMsgId).toList();
+      final messages = state.messages
+          .where((m) => m.id != streamMsgId)
+          .toList();
       messages.add(finalizedMsg);
 
-      state = state.copyWith(
-        messages: messages,
-        isLoading: false,
-      );
+      state = state.copyWith(messages: messages, isLoading: false);
     } catch (e) {
-      // If no chunks received, try fallback to non-streaming
       if (!receivedChunk) {
         try {
           final response = await _ollamaService.chat(chatMessages);
@@ -257,17 +326,14 @@ class AiChatController extends StateNotifier<AiChatState> {
             intent: decision.intent,
           );
 
-          final messages =
-              state.messages.where((m) => m.id != streamMsgId).toList();
+          final messages = state.messages
+              .where((m) => m.id != streamMsgId)
+              .toList();
           messages.add(fallbackMsg);
 
-          state = state.copyWith(
-            messages: messages,
-            isLoading: false,
-          );
+          state = state.copyWith(messages: messages, isLoading: false);
           return;
         } catch (fallbackError) {
-          // Fallback also failed - show detailed error
           final errorMsg = errorMessage(
             '⚠️ Failed to get AI response\n\n'
             'Error: ${_extractErrorMessage(e)}\n\n'
@@ -289,7 +355,6 @@ class AiChatController extends StateNotifier<AiChatState> {
         }
       }
 
-      // Chunks were received but stream failed mid-way
       final errorMsg = errorMessage(
         '⚠️ Stream interrupted\n\n'
         'The connection was lost while receiving the response.\n\n'
@@ -337,9 +402,7 @@ class AiChatController extends StateNotifier<AiChatState> {
 
   /// Build chat history for Ollama API
   List<ChatMessage> _buildChatHistory(String systemPrompt) {
-    final history = <ChatMessage>[
-      ChatMessage.system(systemPrompt),
-    ];
+    final history = <ChatMessage>[ChatMessage.system(systemPrompt)];
 
     // Add last 10 messages for context
     final recentMessages = state.messages.reversed.take(10).toList().reversed;

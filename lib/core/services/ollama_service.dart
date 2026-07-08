@@ -2,222 +2,199 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 
-/// Service for interacting with Ollama API
+/// Service for interacting with an OpenAI-compatible local LLM server.
+///
+/// Despite the historical name, this talks the OpenAI Chat Completions API
+/// (`/v1/chat/completions`, `/v1/models`), NOT Ollama's native `/api/*`
+/// protocol. This one code path works against:
+///   - llama.cpp server (`--host ... /v1`) — the default local backend
+///   - LiteLLM proxy
+///   - Ollama's own OpenAI-compatible endpoint (`/v1`)
+///
+/// The base URL is configurable (settings / Android LAN IP). Default points at
+/// the local llama.cpp container on :8080.
 class OllamaService {
   final Dio _dio;
   final String baseUrl;
   final String model;
 
-  OllamaService({
-    String? baseUrl,
-    String? model,
-  })  : baseUrl = _normalizeBaseUrl(baseUrl ?? 'http://localhost:11434'),
-        model = model ?? 'qwen2.5-coder:14b',
-        _dio = Dio(BaseOptions(
+  OllamaService({String? baseUrl, String? model})
+    : baseUrl = _normalizeBaseUrl(baseUrl ?? 'http://localhost:8080'),
+      model = (model == null || model.trim().isEmpty) ? 'local-model' : model,
+      _dio = Dio(
+        BaseOptions(
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 120),
-        ));
+        ),
+      );
 
   static String _normalizeBaseUrl(String value) {
     var trimmed = value.trim();
     if (trimmed.isEmpty) {
-      return 'http://localhost:11434';
+      return 'http://localhost:8080';
     }
     if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
       trimmed = 'http://$trimmed';
     }
     trimmed = trimmed.replaceAll(RegExp(r'/+$'), '');
+    // Accept URLs typed with or without an /v1 or /api suffix.
+    trimmed = trimmed.replaceAll(RegExp(r'/v1$'), '');
     return trimmed.replaceAll(RegExp(r'/api/?$'), '');
   }
 
   bool _isNotFound(DioException e) => e.response?.statusCode == 404;
 
-  /// Generate code from a prompt (non-streaming)
-  Future<String> generateCode(String prompt, {
+  /// Generate text from a single prompt (non-streaming).
+  Future<String> generateCode(
+    String prompt, {
     double temperature = 0.7,
     int maxTokens = 2000,
   }) async {
-    try {
-      final response = await _dio.post(
-        '$baseUrl/api/generate',
-        data: {
-          'model': model,
-          'prompt': prompt,
-          'stream': false,
-          'options': {
-            'temperature': temperature,
-            'num_predict': maxTokens,
-          },
-        },
-      );
-
-      return response.data['response'] as String;
-    } on DioException catch (e) {
-      if (_isNotFound(e)) {
-        throw OllamaException(
-          'Ollama endpoint not found at $baseUrl/api/generate. '
-          'Verify the base URL and that the Ollama server is running.',
-        );
-      }
-      if (e.error is SocketException) {
-        throw OllamaException(
-          'Cannot reach Ollama at $baseUrl. Is the server running?',
-        );
-      }
-      throw OllamaException('Failed to generate code: $e');
-    } catch (e) {
-      throw OllamaException('Failed to generate code: $e');
-    }
+    return chat(
+      [ChatMessage.user(prompt)],
+      temperature: temperature,
+      maxTokens: maxTokens,
+    );
   }
 
-  /// Chat completion (non-streaming)
-  Future<String> chat(List<ChatMessage> messages, {
+  /// Chat completion (non-streaming) via OpenAI /v1/chat/completions.
+  Future<String> chat(
+    List<ChatMessage> messages, {
     double temperature = 0.7,
+    int? maxTokens,
   }) async {
     try {
       final response = await _dio.post(
-        '$baseUrl/api/chat',
+        '$baseUrl/v1/chat/completions',
         data: {
           'model': model,
           'messages': messages.map((m) => m.toJson()).toList(),
           'stream': false,
-          'options': {
-            'temperature': temperature,
-          },
+          'temperature': temperature,
+          'max_tokens': ?maxTokens,
         },
       );
 
-      final data = response.data;
-      if (data is! Map || data['message'] == null || data['message']['content'] == null) {
-        throw OllamaException('Invalid response format from Ollama chat API');
-      }
-      return data['message']['content'] as String;
-    } on DioException catch (e) {
-      if (_isNotFound(e)) {
-        try {
-          return await _generateFromMessages(messages, temperature: temperature);
-        } catch (fallbackError) {
-          throw OllamaException(
-            'Ollama chat endpoint not available. Check base URL and server. '
-            'Fallback failed: $fallbackError',
-          );
-        }
-      }
-      if (e.error is SocketException) {
+      final content = _extractContent(response.data);
+      if (content == null) {
         throw OllamaException(
-          'Cannot reach Ollama at $baseUrl. Is the server running?',
+          'Invalid response format from chat completions API',
         );
       }
-      throw OllamaException('Failed to chat: $e');
+      return content;
+    } on DioException catch (e) {
+      throw _mapDioError(e, 'chat');
     } catch (e) {
+      if (e is OllamaException) rethrow;
       throw OllamaException('Failed to chat: $e');
     }
   }
 
-  /// Stream chat completion
-  Stream<String> chatStream(List<ChatMessage> messages, {
+  /// Stream a chat completion via OpenAI Server-Sent Events.
+  Stream<String> chatStream(
+    List<ChatMessage> messages, {
     double temperature = 0.7,
+    int? maxTokens,
   }) async* {
     try {
       final response = await _dio.post(
-        '$baseUrl/api/chat',
+        '$baseUrl/v1/chat/completions',
         data: {
           'model': model,
           'messages': messages.map((m) => m.toJson()).toList(),
           'stream': true,
-          'options': {
-            'temperature': temperature,
-          },
+          'temperature': temperature,
+          'max_tokens': ?maxTokens,
         },
-        options: Options(
-          responseType: ResponseType.stream,
-        ),
+        options: Options(responseType: ResponseType.stream),
       );
 
       final stream = response.data.stream;
+      var buffer = '';
       await for (final chunk in stream) {
-        final lines = utf8.decode(chunk).split('\n');
-        for (final line in lines) {
-          if (line.trim().isEmpty) continue;
+        buffer += utf8.decode(chunk as List<int>, allowMalformed: true);
+        // SSE events are line-delimited; process only complete lines and keep
+        // any partial trailing line in the buffer for the next chunk.
+        int newlineIndex;
+        while ((newlineIndex = buffer.indexOf('\n')) >= 0) {
+          final line = buffer.substring(0, newlineIndex).trim();
+          buffer = buffer.substring(newlineIndex + 1);
+          if (line.isEmpty || !line.startsWith('data:')) continue;
+          final payload = line.substring(5).trim();
+          if (payload == '[DONE]') return;
           try {
-            final json = jsonDecode(line);
-            if (json['message']?['content'] != null) {
-              yield json['message']['content'] as String;
+            final json = jsonDecode(payload);
+            final delta = json['choices']?[0]?['delta']?['content'];
+            if (delta is String && delta.isNotEmpty) {
+              yield delta;
             }
           } catch (_) {
-            // Skip malformed JSON
+            // Skip a malformed SSE chunk rather than aborting the stream.
           }
         }
       }
     } on DioException catch (e) {
-      if (_isNotFound(e)) {
-        try {
-          final fallback = await _generateFromMessages(messages, temperature: temperature);
-          yield fallback;
-          return;
-        } catch (fallbackError) {
-          throw OllamaException(
-            'Ollama chat stream endpoint not available. '
-            'Check base URL and server. Fallback failed: $fallbackError',
-          );
-        }
-      }
-      if (e.error is SocketException) {
-        throw OllamaException(
-          'Cannot reach Ollama at $baseUrl. Is the server running?',
-        );
-      }
-      throw OllamaException('Failed to stream chat: $e');
+      throw _mapDioError(e, 'stream chat');
     } catch (e) {
+      if (e is OllamaException) rethrow;
       throw OllamaException('Failed to stream chat: $e');
     }
   }
 
-  Future<String> _generateFromMessages(
-    List<ChatMessage> messages, {
-    double temperature = 0.7,
-  }) async {
-    final prompt = _buildPromptFromMessages(messages);
-    return generateCode(prompt, temperature: temperature);
+  /// Extract the assistant text from a chat-completions response body.
+  String? _extractContent(dynamic data) {
+    if (data is! Map) return null;
+    final choices = data['choices'];
+    if (choices is! List || choices.isEmpty) return null;
+    final message = choices.first['message'];
+    if (message is! Map) return null;
+    final content = message['content'];
+    return content is String ? content : null;
   }
 
-  String _buildPromptFromMessages(List<ChatMessage> messages) {
-    final buffer = StringBuffer();
-    for (final message in messages) {
-      buffer.writeln('${message.role.toUpperCase()}: ${message.content}');
+  OllamaException _mapDioError(DioException e, String op) {
+    if (_isNotFound(e)) {
+      return OllamaException(
+        'LLM endpoint not found at $baseUrl/v1/chat/completions. '
+        'Verify the base URL and that the server is running.',
+      );
     }
-    buffer.writeln('ASSISTANT:');
-    return buffer.toString();
+    if (e.error is SocketException) {
+      return OllamaException(
+        'Cannot reach the LLM server at $baseUrl. Is it running?',
+      );
+    }
+    return OllamaException('Failed to $op: $e');
   }
 
-  /// Check if Ollama is available
+  /// Check if the LLM server is reachable.
   Future<bool> isAvailable() async {
     try {
-      final response = await _dio.get('$baseUrl/api/version');
+      final response = await _dio.get('$baseUrl/v1/models');
       return response.statusCode == 200;
     } catch (e) {
       return false;
     }
   }
 
-  /// List available models
+  /// List available model ids.
   Future<List<String>> listModels() async {
     try {
-      final response = await _dio.get('$baseUrl/api/tags');
-      final models = response.data['models'] as List;
-      return models.map((m) => m['name'] as String).toList();
+      final response = await _dio.get('$baseUrl/v1/models');
+      final data = response.data['data'] as List;
+      return data.map((m) => m['id'] as String).toList();
     } catch (e) {
       throw OllamaException('Failed to list models: $e');
     }
   }
 
-  /// List available models with detailed info
+  /// List available models with detailed info.
   Future<List<OllamaModel>> listModelsDetailed() async {
     try {
-      final response = await _dio.get('$baseUrl/api/tags');
-      final models = response.data['models'] as List;
-      return models
-          .map((m) => OllamaModel.fromJson(m as Map<String, dynamic>))
+      final response = await _dio.get('$baseUrl/v1/models');
+      final data = response.data['data'] as List;
+      return data
+          .map((m) => OllamaModel.fromOpenAiJson(m as Map<String, dynamic>))
           .toList();
     } catch (e) {
       throw OllamaException('Failed to list models: $e');
@@ -225,7 +202,7 @@ class OllamaService {
   }
 }
 
-/// Model info from Ollama
+/// Model info from an OpenAI-compatible `/v1/models` entry.
 class OllamaModel {
   final String name;
   final int sizeBytes;
@@ -259,52 +236,41 @@ class OllamaModel {
   /// Get size in MB
   int get sizeMB => (sizeBytes / (1024 * 1024)).round();
 
-  factory OllamaModel.fromJson(Map<String, dynamic> json) {
+  /// Parse an OpenAI `/v1/models` entry (`{id, created, meta:{size}}`).
+  factory OllamaModel.fromOpenAiJson(Map<String, dynamic> json) {
+    final meta = json['meta'];
+    final created = json['created'];
     return OllamaModel(
-      name: json['name'] as String,
-      sizeBytes: json['size'] as int? ?? 0,
-      modifiedAt: DateTime.tryParse(json['modified_at'] as String? ?? '') ??
-          DateTime.now(),
-      digest: json['digest'] as String?,
+      name: json['id'] as String? ?? 'unknown',
+      sizeBytes: (meta is Map ? meta['size'] as int? : null) ?? 0,
+      modifiedAt: created is int
+          ? DateTime.fromMillisecondsSinceEpoch(created * 1000)
+          : DateTime.now(),
+      digest: null,
     );
   }
-
-  @override
-  String toString() => '$name (${sizeFormatted})';
 }
 
-/// Chat message model for Ollama API
+/// Chat message model (OpenAI shape: role + content).
 class ChatMessage {
   final String role; // 'system', 'user', 'assistant'
   final String content;
 
-  ChatMessage({
-    required this.role,
-    required this.content,
-  });
+  ChatMessage({required this.role, required this.content});
 
-  Map<String, dynamic> toJson() => {
-        'role': role,
-        'content': content,
-      };
+  Map<String, dynamic> toJson() => {'role': role, 'content': content};
 
-  factory ChatMessage.system(String content) => ChatMessage(
-        role: 'system',
-        content: content,
-      );
+  factory ChatMessage.system(String content) =>
+      ChatMessage(role: 'system', content: content);
 
-  factory ChatMessage.user(String content) => ChatMessage(
-        role: 'user',
-        content: content,
-      );
+  factory ChatMessage.user(String content) =>
+      ChatMessage(role: 'user', content: content);
 
-  factory ChatMessage.assistant(String content) => ChatMessage(
-        role: 'assistant',
-        content: content,
-      );
+  factory ChatMessage.assistant(String content) =>
+      ChatMessage(role: 'assistant', content: content);
 }
 
-/// Custom exception for Ollama errors
+/// Custom exception for local LLM errors.
 class OllamaException implements Exception {
   final String message;
   OllamaException(this.message);

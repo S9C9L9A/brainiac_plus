@@ -53,7 +53,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
 
     if (_endpointController.text.isEmpty) {
       _endpointController.text =
-          settings.ollamaEndpoint ?? 'http://localhost:11434';
+          settings.ollamaEndpoint ?? 'http://localhost:8080';
     }
 
     if (_modelsPathController.text.isEmpty) {
@@ -187,7 +187,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
             _buildTextField(
               label: 'Endpoint',
               controller: _endpointController,
-              hintText: 'http://localhost:11434',
+              hintText: 'http://localhost:8080',
             ),
             const SizedBox(height: 12),
             _buildTextField(
@@ -410,7 +410,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
         final allRatedAsync = ref.watch(allRatedModelsProvider);
         final endpoint = _endpointController.text.isNotEmpty
             ? _endpointController.text
-            : 'http://localhost:11434';
+            : 'http://localhost:8080';
         final installedAsync = ref.watch(
           ollamaAvailableModelsProvider(endpoint),
         );
@@ -812,7 +812,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
 
   /// Build model details info
   Widget _buildModelDetails(List<OllamaModelInfo> allModels) {
-    OllamaModelInfo? selectedModel;
+    final OllamaModelInfo selectedModel;
     try {
       selectedModel = allModels.firstWhere(
         (m) => m.name == _modelController.text,
@@ -820,8 +820,6 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     } catch (e) {
       return const SizedBox.shrink();
     }
-
-    if (selectedModel == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(8),

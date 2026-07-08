@@ -5,8 +5,8 @@ void main() {
   group('OllamaService', () {
     test('creates with default values', () {
       final service = OllamaService();
-      expect(service.baseUrl, 'http://localhost:11434');
-      expect(service.model, 'codellama:7b');
+      expect(service.baseUrl, 'http://localhost:8080');
+      expect(service.model, 'local-model');
     });
 
     test('creates with custom values', () {
@@ -16,6 +16,28 @@ void main() {
       );
       expect(service.baseUrl, 'http://custom:1234');
       expect(service.model, 'llama3');
+    });
+
+    test('normalizes base URL (trailing slash, /v1 and /api suffixes)', () {
+      expect(
+        OllamaService(baseUrl: 'http://host:8080/').baseUrl,
+        'http://host:8080',
+      );
+      expect(
+        OllamaService(baseUrl: 'http://host:8080/v1').baseUrl,
+        'http://host:8080',
+      );
+      expect(
+        OllamaService(baseUrl: 'http://host:8080/api').baseUrl,
+        'http://host:8080',
+      );
+      expect(OllamaService(baseUrl: 'host:8080').baseUrl, 'http://host:8080');
+    });
+
+    test('blank base URL and model fall back to defaults', () {
+      final service = OllamaService(baseUrl: '   ', model: '  ');
+      expect(service.baseUrl, 'http://localhost:8080');
+      expect(service.model, 'local-model');
     });
   });
 
