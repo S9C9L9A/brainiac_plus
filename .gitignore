@@ -73,3 +73,10 @@ test-results/
 ollama_models/
 *.gguf
 
+# Claude Code local config
+.claude/settings.local.json*
+.claude/worktrees/
+
+# LibreOffice lock files
+.~lock.*#
+
