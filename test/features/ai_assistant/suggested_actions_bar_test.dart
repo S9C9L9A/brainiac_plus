@@ -108,6 +108,43 @@ void main() {
     expect(find.text('Refresh System Metrics'), findsNothing);
   });
 
+  testWidgets('navigation passes action params as route arguments', (
+    tester,
+  ) async {
+    final log = <String>[];
+    Object? receivedArguments;
+    await tester.pumpWidget(
+      MaterialApp(
+        onGenerateRoute: (settings) {
+          log.add(settings.name ?? '');
+          receivedArguments = settings.arguments;
+          return MaterialPageRoute(
+            settings: settings,
+            builder: (_) => const Scaffold(body: Text('target')),
+          );
+        },
+        home: Scaffold(
+          body: SuggestedActionsBar(
+            actions: const [
+              AgentAction(
+                id: 'new_task',
+                label: 'Create New Automation Task',
+                domain: 'automation',
+                params: {'cron': '0 9 * * *'},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Create New Automation Task'));
+    await tester.pumpAndSettle();
+
+    expect(log, contains('/automation/create'));
+    expect(receivedArguments, {'cron': '0 9 * * *'});
+  });
+
   testWidgets('tapping a chip navigates to the mapped route', (tester) async {
     final log = <String>[];
     await tester.pumpWidget(

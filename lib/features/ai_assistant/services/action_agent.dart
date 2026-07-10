@@ -1,3 +1,4 @@
+import '../../automation/services/schedule_parser.dart';
 import '../models/agent_task.dart';
 
 /// Maps user intents to concrete [AgentAction]s executable within the app.
@@ -117,6 +118,11 @@ class ActionAgent {
     final actions = <AgentAction>[];
     final seen = <String>{};
     final newFindings = <AgentFinding>[...task.findings];
+    // A schedule phrased in the request ("ogni giorno alle 9") becomes a
+    // cron param on scheduling actions, so the create screen can prefill it.
+    final cron = ScheduleParser().tryParse(task.userInput);
+    const schedulingActions = {'new_task', 'new_backup_task'};
+
     for (final entry in _actionMap.entries) {
       if (_matches(lower, entry.key)) {
         for (final actionDef in entry.value) {
@@ -127,6 +133,9 @@ class ActionAgent {
                 id: actionId,
                 label: actionDef[2],
                 domain: actionDef[0],
+                params: cron != null && schedulingActions.contains(actionId)
+                    ? {'cron': cron}
+                    : const {},
               ),
             );
           }

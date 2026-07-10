@@ -39,7 +39,11 @@ class SuggestedActionsBar extends StatelessWidget {
   void _execute(BuildContext context, AgentAction action) {
     switch (_executor.kindOf(action)) {
       case AgentActionKind.navigation:
-        Navigator.pushNamed(context, _executor.routeFor(action)!);
+        Navigator.pushNamed(
+          context,
+          _executor.routeFor(action)!,
+          arguments: action.params.isEmpty ? null : action.params,
+        );
       case AgentActionKind.state:
         onStateAction?.call(action);
       case AgentActionKind.unsupported:

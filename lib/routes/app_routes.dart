@@ -126,6 +126,12 @@ class AppRoutes {
           initialAutomationTabIndex: automationTabIndex,
         );
       },
+      // Automation create tab (index 2 of the automation screen); route
+      // arguments (e.g. a pre-parsed cron) are read by the tab itself.
+      automationCreate: (context) => const DashboardScreen.withIndex(
+        initialTabIndex: 2,
+        initialAutomationTabIndex: 2,
+      ),
       fileManager: (context) => const FileManagerScreen(),
       packages: (context) => const PackagesScreen(),
       aiChat: (context) => const AiChatScreen(),

@@ -312,6 +312,26 @@ int c() {}
       );
     });
 
+    test('attaches the parsed cron to scheduling actions', () {
+      final out = agent.evaluate(
+        task(userInput: 'pianifica un backup ogni giorno alle 9'),
+      );
+
+      final newTask = out.suggestedActions.firstWhere(
+        (a) => a.id == 'new_task',
+      );
+      expect(newTask.params['cron'], '0 9 * * *');
+    });
+
+    test('scheduling actions carry no cron when none is parseable', () {
+      final out = agent.evaluate(task(userInput: 'crea una automazione'));
+
+      final newTask = out.suggestedActions.firstWhere(
+        (a) => a.id == 'new_task',
+      );
+      expect(newTask.params.containsKey('cron'), isFalse);
+    });
+
     test('does not fire on substrings inside other words', () {
       // 'hai'/'mai' must not trigger the short 'ai' keyword.
       expect(
