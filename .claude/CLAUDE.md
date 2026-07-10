@@ -1,8 +1,8 @@
 ---
 title: "BrainiacPlus — Istruzioni di sessione (Cowork Senior Agent)"
 description: "Contratto operativo unificato: regole specifiche del progetto BrainiacPlus + protocollo Cowork Senior Agent. Singolo punto di verità per Claude Code e qualsiasi AI agent."
-version: 3.0.0
-last_updated: 2026-05-06
+version: 3.0.1
+last_updated: 2026-07-10
 project_version: 2.0.0
 language: italiano (termini tecnici, comandi e identificatori in inglese)
 applies_to: "Repository BrainiacPlus + sessioni Cowork che lavorano su questo progetto"
@@ -484,15 +484,16 @@ Se la struttura interna del plugin cambia, aggiornare questa sezione e fare bump
 ## 23. Versioning & posizionamento di queste istruzioni
 
 **Posizionamento canonico** (singolo punto di verità):
-- ✅ `<root-progetto>/CLAUDE.md` — **questo file**, vince per il progetto BrainiacPlus.
+- ✅ `<root-progetto>/.claude/CLAUDE.md` — **questo file**, vince per il progetto BrainiacPlus. Vive accanto al resto della config Claude Code del progetto.
 - 🟡 `~/.claude/CLAUDE.md` — opzionale, **solo per regole globali Cowork** che valgono su tutti i progetti (non duplicare regole di questo file lì).
-- ❌ `<root-progetto>/.claude/CLAUDE.md` — **non più usato**: deprecato dopo l'unificazione v3.0.0. Rimuovere o sostituire con un puntatore (vedi sotto).
+- ❌ `<root-progetto>/CLAUDE.md` — **non più usato**: rimosso in v3.0.1. Non ricrearlo; se un tool lo richiede, usare un puntatore a questo file.
 
 **Versioning**:
 - Ogni cambio rilevante → bump `version` nel front-matter (semver-like) e commit dedicato `docs(claude-md): bump vX.Y.Z — <motivo>`.
 - Lo skill `cowork-senior-agent` deve restare allineato a questo file. Se diverge, allineare prima di procedere.
 
 **Changelog**
+- **v3.0.1 (2026-07-10)** — Posizionamento canonico corretto: il file vive in `.claude/CLAUDE.md` (il root `CLAUDE.md` è stato rimosso dal repo); §23 allineata allo stato reale.
 - **v3.0.0 (2026-05-06)** — Unificazione di `CLAUDE.md` (root, v2.0) + `.claude/CLAUDE.md` (Cowork v2.1) in un singolo file. Risolte sovrapposizioni di safety/forbidden paths. Esempi end-to-end specifici BrainiacPlus aggiunti. Sezione locked files integrata con il protocollo HID.
 - v2.1 (Cowork) — Riferimenti skill `cowork-senior-agent` come plugin invocabile per nome.
 - v2.0 (BrainiacPlus) — Domain routing, locked files, code-health flags.
