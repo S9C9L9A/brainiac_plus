@@ -299,13 +299,14 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: RawKeyboardListener(
+              child: KeyboardListener(
                 focusNode: FocusNode(),
-                onKey: (RawKeyEvent event) {
-                  if (event is RawKeyDownEvent) {
-                    if (event.logicalKey.keyLabel == 'Arrow Up') {
+                onKeyEvent: (KeyEvent event) {
+                  if (event is KeyDownEvent) {
+                    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
                       _navigateHistory(true);
-                    } else if (event.logicalKey.keyLabel == 'Arrow Down') {
+                    } else if (event.logicalKey ==
+                        LogicalKeyboardKey.arrowDown) {
                       _navigateHistory(false);
                     }
                   }
