@@ -1,4 +1,5 @@
 import 'package:brainiac_plus/core/platform/shell_service.dart';
+import 'package:brainiac_plus/features/activity/models/activity_entry.dart';
 import 'package:brainiac_plus/features/terminal/controllers/terminal_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -63,4 +64,18 @@ void main() {
       expect(controller.state.last.output.join(), contains('⚠️'));
     },
   );
+
+  test('executed commands are reported to the activity log', () async {
+    final logged = <ActivityEntry>[];
+    final c = TerminalController(shellService: shell, onActivity: logged.add);
+
+    await c.executeCommand('ls -la');
+    await c.executeCommand('rm -rf /tmp/x'); // blocked: must NOT be logged
+
+    expect(logged, hasLength(1));
+    expect(logged.single.type, ActivityType.terminal);
+    expect(logged.single.description, 'ls -la');
+
+    c.dispose();
+  });
 }

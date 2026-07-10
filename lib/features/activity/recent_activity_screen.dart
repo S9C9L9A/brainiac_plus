@@ -5,6 +5,8 @@ import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
 import '../../core/theme/app_icons.dart';
 import '../dashboard/dashboard_screen.dart';
+import 'controllers/activity_log_controller.dart';
+import 'models/activity_entry.dart';
 
 class RecentActivityScreen extends ConsumerWidget {
   const RecentActivityScreen({super.key});
@@ -12,6 +14,7 @@ class RecentActivityScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activities = ref.watch(activityLogProvider);
 
     return Scaffold(
       body: Container(
@@ -20,9 +23,7 @@ class RecentActivityScreen extends ConsumerWidget {
           child: Column(
             children: [
               _buildHeader(context),
-              Expanded(
-                child: _buildActivityList(),
-              ),
+              Expanded(child: _buildActivityList(activities)),
             ],
           ),
         ),
@@ -54,10 +55,7 @@ class RecentActivityScreen extends ConsumerWidget {
                 ),
                 Text(
                   'Track all your system activities',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -73,45 +71,28 @@ class RecentActivityScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActivityList() {
-    // Mock data for now - will be replaced with real activity tracking
-    final activities = [
-      ActivityItem(
-        icon: Icons.terminal,
-        title: 'Terminal Command Executed',
-        description: 'ls -la /home/user',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-        type: ActivityType.terminal,
-      ),
-      ActivityItem(
-        icon: Icons.folder_open,
-        title: 'File Accessed',
-        description: 'brainiac_plus/lib/main.dart',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
-        type: ActivityType.file,
-      ),
-      ActivityItem(
-        icon: Icons.auto_awesome,
-        title: 'AI Query Processed',
-        description: 'How to optimize Flutter performance?',
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-        type: ActivityType.ai,
-      ),
-      ActivityItem(
-        icon: Icons.play_circle,
-        title: 'Automation Started',
-        description: 'Instagram Post Automation',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: ActivityType.automation,
-      ),
-      ActivityItem(
-        icon: Icons.settings,
-        title: 'Settings Updated',
-        description: 'API keys configured',
-        timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-        type: ActivityType.settings,
-      ),
-    ];
+  Widget _buildActivityList(List<ActivityEntry> activities) {
+    if (activities.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.history, color: Colors.white38, size: 48),
+            SizedBox(height: 12),
+            Text(
+              'No activity yet',
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Commands, package operations and automations will appear here.',
+              style: TextStyle(color: Colors.white38, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, kBottomNavHeight),
@@ -123,7 +104,24 @@ class RecentActivityScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActivityItem(ActivityItem activity) {
+  IconData _getIcon(ActivityType type) {
+    switch (type) {
+      case ActivityType.terminal:
+        return Icons.terminal;
+      case ActivityType.file:
+        return Icons.folder_open;
+      case ActivityType.ai:
+        return Icons.auto_awesome;
+      case ActivityType.automation:
+        return Icons.play_circle;
+      case ActivityType.settings:
+        return Icons.settings;
+      case ActivityType.packages:
+        return Icons.inventory_2;
+    }
+  }
+
+  Widget _buildActivityItem(ActivityEntry activity) {
     return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -138,7 +136,7 @@ class RecentActivityScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                activity.icon,
+                _getIcon(activity.type),
                 color: Colors.white,
                 size: 24,
               ),
@@ -159,28 +157,19 @@ class RecentActivityScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     activity.description,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _formatTimestamp(activity.timestamp),
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white60, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right,
-              color: Colors.white60,
-            ),
+            const Icon(Icons.chevron_right, color: Colors.white60),
           ],
         ),
       ),
@@ -196,9 +185,14 @@ class RecentActivityScreen extends ConsumerWidget {
       case ActivityType.ai:
         return [Colors.purple, Colors.blue];
       case ActivityType.automation:
-        return [AppColors.systemOrange, AppColors.systemOrange.withOpacity(0.6)];
+        return [
+          AppColors.systemOrange,
+          AppColors.systemOrange.withOpacity(0.6),
+        ];
       case ActivityType.settings:
         return [Colors.grey.shade700, Colors.grey.shade600];
+      case ActivityType.packages:
+        return [Colors.teal, Colors.teal.withOpacity(0.6)];
     }
   }
 
@@ -218,28 +212,4 @@ class RecentActivityScreen extends ConsumerWidget {
       return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
     }
   }
-}
-
-class ActivityItem {
-  final IconData icon;
-  final String title;
-  final String description;
-  final DateTime timestamp;
-  final ActivityType type;
-
-  ActivityItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.timestamp,
-    required this.type,
-  });
-}
-
-enum ActivityType {
-  terminal,
-  file,
-  ai,
-  automation,
-  settings,
 }

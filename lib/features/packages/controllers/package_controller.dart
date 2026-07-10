@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/package_service.dart';
+import '../../activity/controllers/activity_log_controller.dart';
+import '../../activity/models/activity_entry.dart';
 
 class PackageManagerState {
   final List<PackageInfo> packages;
@@ -65,7 +67,10 @@ class PackageManagerState {
 class PackageController extends StateNotifier<PackageManagerState> {
   final PackageService _packageService;
 
-  PackageController({PackageService? packageService})
+  /// Reports install/remove outcomes to the app-wide activity log.
+  final void Function(ActivityEntry entry)? onActivity;
+
+  PackageController({PackageService? packageService, this.onActivity})
     : _packageService = packageService ?? PackageService(),
       super(PackageManagerState()) {
     loadPackages();
@@ -97,6 +102,7 @@ class PackageController extends StateNotifier<PackageManagerState> {
   Future<void> installPackage(String name, String source) async {
     state = state.copyWith(isLoading: true);
     final result = await _packageService.installPackage(name, source);
+    _logOperation('Package install', '$name ($source): $result');
     if (result.toLowerCase().contains('success')) {
       await loadPackages();
       state = state.copyWith(lastOperationMessage: result);
@@ -109,12 +115,25 @@ class PackageController extends StateNotifier<PackageManagerState> {
   Future<void> removePackage(String name, String source) async {
     state = state.copyWith(isLoading: true);
     final result = await _packageService.removePackage(name, source);
+    _logOperation('Package removal', '$name ($source): $result');
     if (result.toLowerCase().contains('success')) {
       await loadPackages();
       state = state.copyWith(lastOperationMessage: result);
     } else {
       state = state.copyWith(isLoading: false, error: result);
     }
+  }
+
+  /// Both successes and failures are logged — the log is an audit trail.
+  void _logOperation(String title, String description) {
+    onActivity?.call(
+      ActivityEntry(
+        type: ActivityType.packages,
+        title: title,
+        description: description,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   void clearError() {
@@ -134,5 +153,8 @@ class PackageController extends StateNotifier<PackageManagerState> {
 
 final packageProvider =
     StateNotifierProvider<PackageController, PackageManagerState>((ref) {
-      return PackageController();
+      return PackageController(
+        onActivity: (entry) =>
+            ref.read(activityLogProvider.notifier).log(entry),
+      );
     });

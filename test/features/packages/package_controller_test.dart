@@ -1,4 +1,5 @@
 import 'package:brainiac_plus/core/platform/package_service.dart';
+import 'package:brainiac_plus/features/activity/models/activity_entry.dart';
 import 'package:brainiac_plus/features/packages/controllers/package_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -85,4 +86,28 @@ void main() {
 
     expect(controller.state.error, isNull);
   });
+
+  test(
+    'install and remove operations are reported to the activity log',
+    () async {
+      final logged = <ActivityEntry>[];
+      final c = PackageController(
+        packageService: service,
+        onActivity: logged.add,
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      await c.installPackage('htop', 'apt');
+      service.removeResult = 'Removal failed: dependency issue';
+      await c.removePackage('libfoo', 'apt');
+
+      expect(logged, hasLength(2));
+      expect(logged[0].type, ActivityType.packages);
+      expect(logged[0].description, contains('htop'));
+      // Failures are logged too — the log is an audit trail.
+      expect(logged[1].description, contains('libfoo'));
+
+      c.dispose();
+    },
+  );
 }

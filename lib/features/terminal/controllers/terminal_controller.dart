@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/shell_service.dart';
+import '../../activity/controllers/activity_log_controller.dart';
+import '../../activity/models/activity_entry.dart';
 import '../services/command_guard.dart';
 
 class TerminalSession {
@@ -34,13 +36,17 @@ class TerminalSession {
 class TerminalController extends StateNotifier<List<TerminalSession>> {
   final ShellService _shellService;
   final CommandGuard _guard = CommandGuard();
+
+  /// Reports executed commands to the app-wide activity log.
+  final void Function(ActivityEntry entry)? onActivity;
+
   int _sessionCounter = 0;
   StreamSubscription? _outputSubscription;
 
   /// Dangerous command awaiting confirm-by-repeat, if any.
   String? _pendingDangerousCommand;
 
-  TerminalController({ShellService? shellService})
+  TerminalController({ShellService? shellService, this.onActivity})
     : _shellService = shellService ?? ShellService(),
       super([]) {
     _createNewSession();
@@ -101,6 +107,15 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
     newState[newState.length - 1] = updatedSession;
     state = newState;
 
+    onActivity?.call(
+      ActivityEntry(
+        type: ActivityType.terminal,
+        title: 'Command executed',
+        description: command,
+        timestamp: DateTime.now(),
+      ),
+    );
+
     await _shellService.executeCommand(command);
 
     if (state.isNotEmpty) {
@@ -151,5 +166,8 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
 
 final terminalProvider =
     StateNotifierProvider<TerminalController, List<TerminalSession>>((ref) {
-      return TerminalController();
+      return TerminalController(
+        onActivity: (entry) =>
+            ref.read(activityLogProvider.notifier).log(entry),
+      );
     });
