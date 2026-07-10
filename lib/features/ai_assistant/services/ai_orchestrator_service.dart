@@ -45,7 +45,11 @@ class AiOrchestratorService {
 
   /// Run the full multi-agent pipeline on user input,
   /// returning a finalized [AgentTask] with verdict + summary.
-  AgentTask runPipeline(String userContent, {String? codeSnippet, List<String>? referencedFiles}) {
+  AgentTask runPipeline(
+    String userContent, {
+    String? codeSnippet,
+    List<String>? referencedFiles,
+  }) {
     final intent = _inferIntent(userContent);
     final task = AgentTask(
       userInput: userContent,
@@ -60,15 +64,75 @@ class AiOrchestratorService {
     return guardrails.filterFilePaths(decision.agent, paths);
   }
 
+  /// Intent → keyword stems (Italian + English), in priority order: bug
+  /// wording beats review wording, review beats test, and so on. Multi-word
+  /// entries match as phrases.
+  static const _intentPatterns = <String, List<String>>{
+    'bugfix': [
+      'fix',
+      'bug',
+      'error',
+      'errore',
+      'correggi',
+      'aggiusta',
+      'crash',
+      'non funziona',
+      'broken',
+      'rotto',
+    ],
+    'refactor': [
+      'refactor',
+      'cleanup',
+      'rifattorizza',
+      'riscrivi',
+      'semplifica',
+      'pulisci',
+    ],
+    'review': ['review', 'verifica', 'analizza', 'controlla', 'ispeziona'],
+    'test': ['test', 'coverage', 'copertura'],
+    'action': [
+      'apri',
+      'open',
+      'esegui',
+      'run',
+      'launch',
+      'avvia',
+      'mostra',
+      'show',
+    ],
+    'feature': [
+      'aggiungi',
+      'add',
+      'crea',
+      'create',
+      'build',
+      'implementa',
+      'implement',
+      'nuova',
+      'nuovo',
+      'new',
+    ],
+  };
+
+  /// Same word-boundary semantics as ActionAgent: short keys must be whole
+  /// words, longer keys match as word-start stems, phrases as substrings.
+  static bool _matchesKeyword(String input, String key) {
+    if (key.contains(' ')) return input.contains(key);
+    final escaped = RegExp.escape(key);
+    final pattern = key.length <= 3 ? '\\b$escaped\\b' : '\\b$escaped';
+    return RegExp(pattern).hasMatch(input);
+  }
+
   String _inferIntent(String content) {
     final lower = content.toLowerCase();
-    if (lower.contains('fix') || lower.contains('bug') || lower.contains('error')) {
-      return 'bugfix';
+    for (final entry in _intentPatterns.entries) {
+      if (entry.value.any((key) => _matchesKeyword(lower, key))) {
+        return entry.key;
+      }
     }
-    if (lower.contains('refactor') || lower.contains('cleanup')) {
-      return 'refactor';
-    }
-    return 'feature';
+    // Small talk, questions, anything unclassified: let downstream agents
+    // skip code-oriented recommendations instead of assuming 'feature'.
+    return 'unknown';
   }
 
   String _buildSystemPrompt(AgentProfile agent) {
