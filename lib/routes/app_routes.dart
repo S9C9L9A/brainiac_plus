@@ -3,6 +3,7 @@ import '../features/dashboard/dashboard_screen.dart';
 import '../features/dashboard/screens/cpu_detail_screen.dart';
 import '../features/dashboard/screens/ram_detail_screen.dart';
 import '../features/dashboard/screens/disk_detail_screen.dart';
+import '../features/dashboard/screens/gpu_detail_screen.dart';
 import '../features/terminal/terminal_screen.dart';
 import '../features/automation/automation_screen.dart';
 import '../features/file_manager/file_manager_screen.dart';
@@ -52,6 +53,9 @@ class AppRoutes {
   /// Disk detail screen
   static const String diskDetail = '/disk-detail';
 
+  /// GPU detail screen
+  static const String gpuDetail = '/gpu-detail';
+
   // ========== FUTURE ROUTES (Placeholder) ==========
 
   /// Automation create/edit
@@ -66,7 +70,7 @@ class AppRoutes {
   static const String settingsAI = '/settings/ai';
   static const String settingsAutomation = '/settings/automation';
   static const String settingsAppearance = '/settings/appearance';
-  
+
   /// Service configuration
   static const String serviceConfig = '/service-config';
 
@@ -156,6 +160,7 @@ class AppRoutes {
       cpuDetail: (context) => const CpuDetailScreen(),
       ramDetail: (context) => const RamDetailScreen(),
       diskDetail: (context) => const DiskDetailScreen(),
+      gpuDetail: (context) => const GpuDetailScreen(),
 
       // Onboarding
       setupWizard: (context) => const SetupWizardScreen(),
@@ -173,11 +178,7 @@ class AppRoutes {
     String routeName, {
     Object? arguments,
   }) {
-    return Navigator.pushNamed<T>(
-      context,
-      routeName,
-      arguments: arguments,
-    );
+    return Navigator.pushNamed<T>(context, routeName, arguments: arguments);
   }
 
   /// Navigate to route and remove all previous routes
@@ -229,14 +230,12 @@ class AppRoutes {
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(
-          CurveTween(curve: curve),
-        );
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
 
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
+        return SlideTransition(position: animation.drive(tween), child: child);
       },
     );
   }
@@ -247,10 +246,7 @@ class AppRoutes {
       settings: settings,
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
       },
     );
   }
@@ -262,14 +258,9 @@ class AppRoutes {
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const curve = Curves.easeInOut;
-        var tween = Tween(begin: 0.0, end: 1.0).chain(
-          CurveTween(curve: curve),
-        );
+        var tween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
-        return ScaleTransition(
-          scale: animation.drive(tween),
-          child: child,
-        );
+        return ScaleTransition(scale: animation.drive(tween), child: child);
       },
     );
   }
@@ -350,4 +341,3 @@ class AppRoutesList {
     ),
   ];
 }
-

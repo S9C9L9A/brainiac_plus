@@ -40,3 +40,31 @@ final gpuMetricsProvider =
     StateNotifierProvider<GpuMetricsNotifier, GpuMetrics?>((ref) {
       return GpuMetricsNotifier(ref.watch(gpuMetricsServiceProvider));
     });
+
+/// Polls every amdgpu card (discrete + integrated) for the GPU detail
+/// screen; same 2-second cadence as the primary-GPU notifier.
+class GpuListNotifier extends StateNotifier<List<GpuMetrics>> {
+  final GpuMetricsService _service;
+  Timer? _refreshTimer;
+
+  GpuListNotifier(this._service) : super(const []) {
+    _load();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) => _load());
+  }
+
+  Future<void> _load() async {
+    final gpus = await _service.readAll();
+    if (mounted) state = gpus;
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+}
+
+final gpuListProvider =
+    StateNotifierProvider<GpuListNotifier, List<GpuMetrics>>((ref) {
+      return GpuListNotifier(ref.watch(gpuMetricsServiceProvider));
+    });

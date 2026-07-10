@@ -14,7 +14,7 @@ void main() {
       'show_cpu': '/cpu-detail',
       'show_ram': '/ram-detail',
       'show_disk': '/disk-detail',
-      'show_gpu': '/dashboard',
+      'show_gpu': '/gpu-detail',
       'open_terminal': '/terminal',
       'open_packages': '/packages',
       'open_automation': '/automation',
