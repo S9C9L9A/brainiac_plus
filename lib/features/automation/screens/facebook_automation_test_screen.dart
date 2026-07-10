@@ -431,18 +431,28 @@ class _FacebookAutomationTestScreenState
                     ),
                     if (_pages != null) ...[
                       const SizedBox(height: 12),
-                      ..._pages!.map(
-                        (page) => RadioListTile(
-                          title: Text(page['name']),
-                          subtitle: Text('ID: ${page['id']}'),
-                          value: page['id'],
-                          groupValue: _selectedPageId,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedPageId = value as String;
-                              _selectedPageToken = page['access_token'];
-                            });
-                          },
+                      RadioGroup<String>(
+                        groupValue: _selectedPageId,
+                        onChanged: (value) {
+                          if (value == null) return;
+                          final page = _pages!.firstWhere(
+                            (p) => p['id'] == value,
+                          );
+                          setState(() {
+                            _selectedPageId = value;
+                            _selectedPageToken = page['access_token'];
+                          });
+                        },
+                        child: Column(
+                          children: _pages!
+                              .map(
+                                (page) => RadioListTile<String>(
+                                  title: Text(page['name']),
+                                  subtitle: Text('ID: ${page['id']}'),
+                                  value: page['id'] as String,
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                     ],
