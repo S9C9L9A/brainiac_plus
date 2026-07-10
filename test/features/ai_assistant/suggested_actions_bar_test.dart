@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Widget host(List<AgentAction> actions, {required List<String> pushedLog}) {
+  Widget host(
+    List<AgentAction> actions, {
+    required List<String> pushedLog,
+    void Function(AgentAction)? onStateAction,
+  }) {
     return MaterialApp(
       onGenerateRoute: (settings) {
         pushedLog.add(settings.name ?? '');
@@ -13,7 +17,12 @@ void main() {
           builder: (_) => const Scaffold(body: Text('target')),
         );
       },
-      home: Scaffold(body: SuggestedActionsBar(actions: actions)),
+      home: Scaffold(
+        body: SuggestedActionsBar(
+          actions: actions,
+          onStateAction: onStateAction,
+        ),
+      ),
     );
   }
 
@@ -38,7 +47,51 @@ void main() {
     expect(find.text('Open Package Manager'), findsOneWidget);
   });
 
-  testWidgets('hides non-navigable actions and renders nothing when empty', (
+  testWidgets('hides unsupported actions and renders nothing when empty', (
+    tester,
+  ) async {
+    final log = <String>[];
+    await tester.pumpWidget(
+      host(const [
+        AgentAction(
+          id: 'not_a_real_action',
+          label: 'Mystery Action',
+          domain: 'dashboard',
+        ),
+      ], pushedLog: log),
+    );
+
+    expect(find.text('Mystery Action'), findsNothing);
+    expect(find.byType(ActionChip), findsNothing);
+  });
+
+  testWidgets('state actions render a chip and invoke the callback on tap', (
+    tester,
+  ) async {
+    final log = <String>[];
+    final executed = <String>[];
+    await tester.pumpWidget(
+      host(
+        const [
+          AgentAction(
+            id: 'refresh_metrics',
+            label: 'Refresh System Metrics',
+            domain: 'dashboard',
+          ),
+        ],
+        pushedLog: log,
+        onStateAction: (a) => executed.add(a.id),
+      ),
+    );
+
+    await tester.tap(find.text('Refresh System Metrics'));
+    await tester.pumpAndSettle();
+
+    expect(executed, ['refresh_metrics']);
+    expect(log, isEmpty); // no navigation happened
+  });
+
+  testWidgets('state actions are hidden when no callback is provided', (
     tester,
   ) async {
     final log = <String>[];
@@ -53,7 +106,6 @@ void main() {
     );
 
     expect(find.text('Refresh System Metrics'), findsNothing);
-    expect(find.byType(ActionChip), findsNothing);
   });
 
   testWidgets('tapping a chip navigates to the mapped route', (tester) async {

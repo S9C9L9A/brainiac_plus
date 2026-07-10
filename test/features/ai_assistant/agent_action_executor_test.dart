@@ -49,4 +49,24 @@ void main() {
       expect(executor.isNavigable(action('refresh_metrics')), isFalse);
     });
   });
+
+  group('AgentActionExecutor.kindOf', () {
+    test('classifies routed actions as navigation', () {
+      expect(
+        executor.kindOf(action('open_terminal')),
+        AgentActionKind.navigation,
+      );
+    });
+
+    test('classifies refresh_metrics as a state action', () {
+      expect(executor.kindOf(action('refresh_metrics')), AgentActionKind.state);
+    });
+
+    test('classifies unknown ids as unsupported', () {
+      expect(
+        executor.kindOf(action('does_not_exist')),
+        AgentActionKind.unsupported,
+      );
+    });
+  });
 }

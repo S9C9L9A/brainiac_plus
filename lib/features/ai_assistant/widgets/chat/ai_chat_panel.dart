@@ -2,7 +2,10 @@ import 'package:brainiac_plus/core/theme/app_icons.dart';
 import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controller.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/chat_input_bar.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/message_bubble.dart';
+import 'package:brainiac_plus/features/ai_assistant/models/agent_task.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/suggested_actions_bar.dart';
+import 'package:brainiac_plus/features/dashboard/controllers/gpu_metrics_provider.dart';
+import 'package:brainiac_plus/features/dashboard/controllers/system_metrics_provider.dart';
 import 'package:brainiac_plus/features/settings/models/extended_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +45,20 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
     _glowController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Executes state-mutating actions suggested by the pipeline.
+  void _executeStateAction(AgentAction action) {
+    if (action.id == 'refresh_metrics') {
+      ref.read(systemMetricsProvider.notifier).refresh();
+      ref.read(gpuMetricsProvider.notifier).refresh();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('System metrics refreshed'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _scrollToBottom() {
@@ -151,11 +168,13 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             ),
             if (chatState.isLoading) _buildTypingIndicator(),
             // Actions suggested by the multi-agent pipeline for the last
-            // message — tapping one navigates straight to the target screen.
+            // message — tapping one navigates straight to the target screen
+            // or executes the state change (e.g. refreshing metrics).
             if (!chatState.isLoading)
               SuggestedActionsBar(
                 actions:
                     chatState.lastPipelineResult?.suggestedActions ?? const [],
+                onStateAction: _executeStateAction,
               ),
             ChatInputBar(
               onSend: (text) {

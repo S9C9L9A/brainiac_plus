@@ -1,6 +1,18 @@
 import '../../../routes/app_routes.dart';
 import '../models/agent_task.dart';
 
+/// How an [AgentAction] is executed.
+enum AgentActionKind {
+  /// Navigates to a screen via a named route.
+  navigation,
+
+  /// Mutates app state (e.g. refreshing providers) without navigating.
+  state,
+
+  /// No known way to execute this action id.
+  unsupported,
+}
+
 /// Resolves [AgentAction]s produced by the Action Agent into app navigation.
 ///
 /// Keeps the pipeline decoupled from Flutter navigation: agents emit abstract
@@ -28,8 +40,19 @@ class AgentActionExecutor {
     'open_facebook': AppRoutes.automation,
   };
 
+  /// Action ids that mutate app state instead of navigating. Their concrete
+  /// effect is owned by the widget layer (which has provider access) via the
+  /// SuggestedActionsBar onStateAction callback.
+  static const _stateActions = <String>{'refresh_metrics'};
+
   /// Route for [action], or null when it does not map to a screen.
   String? routeFor(AgentAction action) => _routes[action.id];
 
   bool isNavigable(AgentAction action) => _routes.containsKey(action.id);
+
+  AgentActionKind kindOf(AgentAction action) {
+    if (_routes.containsKey(action.id)) return AgentActionKind.navigation;
+    if (_stateActions.contains(action.id)) return AgentActionKind.state;
+    return AgentActionKind.unsupported;
+  }
 }
