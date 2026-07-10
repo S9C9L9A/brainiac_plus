@@ -290,7 +290,7 @@ class ExtendedAppSettings {
   }
 
   factory ExtendedAppSettings.fromJson(Map<String, dynamic> json) {
-    DateTime? _parseDate(String key) {
+    DateTime? parseDate(String key) {
       final value = json[key];
       if (value is String && value.isNotEmpty) {
         return DateTime.tryParse(value);
@@ -307,25 +307,25 @@ class ExtendedAppSettings {
       instagramAccessToken: json['instagramAccessToken'] as String?,
       instagramUserId: json['instagramUserId'] as String?,
       instagramUsername: json['instagramUsername'] as String?,
-      instagramTokenExpiry: _parseDate('instagramTokenExpiry'),
+      instagramTokenExpiry: parseDate('instagramTokenExpiry'),
       facebookAccessToken: json['facebookAccessToken'] as String?,
       facebookUserId: json['facebookUserId'] as String?,
-      facebookTokenExpiry: _parseDate('facebookTokenExpiry'),
+      facebookTokenExpiry: parseDate('facebookTokenExpiry'),
       twitterApiKey: json['twitterApiKey'] as String?,
       twitterApiSecret: json['twitterApiSecret'] as String?,
       twitterAccessToken: json['twitterAccessToken'] as String?,
       twitterAccessSecret: json['twitterAccessSecret'] as String?,
       tiktokAccessToken: json['tiktokAccessToken'] as String?,
-      tiktokTokenExpiry: _parseDate('tiktokTokenExpiry'),
+      tiktokTokenExpiry: parseDate('tiktokTokenExpiry'),
       linkedinAccessToken: json['linkedinAccessToken'] as String?,
-      linkedinTokenExpiry: _parseDate('linkedinTokenExpiry'),
+      linkedinTokenExpiry: parseDate('linkedinTokenExpiry'),
       youtubeApiKey: json['youtubeApiKey'] as String?,
       youtubeAccessToken: json['youtubeAccessToken'] as String?,
       notionApiKey: json['notionApiKey'] as String?,
       notionWorkspaceId: json['notionWorkspaceId'] as String?,
       googleAccessToken: json['googleAccessToken'] as String?,
       googleRefreshToken: json['googleRefreshToken'] as String?,
-      googleTokenExpiry: _parseDate('googleTokenExpiry'),
+      googleTokenExpiry: parseDate('googleTokenExpiry'),
       slackBotToken: json['slackBotToken'] as String?,
       slackWorkspaceId: json['slackWorkspaceId'] as String?,
       discordBotToken: json['discordBotToken'] as String?,
@@ -345,7 +345,7 @@ class ExtendedAppSettings {
   }
 
   Map<String, dynamic> toJson() {
-    String? _formatDate(DateTime? value) => value?.toIso8601String();
+    String? formatDate(DateTime? value) => value?.toIso8601String();
 
     return {
       'higgsfieldApiKey': higgsfieldApiKey,
@@ -356,25 +356,25 @@ class ExtendedAppSettings {
       'instagramAccessToken': instagramAccessToken,
       'instagramUserId': instagramUserId,
       'instagramUsername': instagramUsername,
-      'instagramTokenExpiry': _formatDate(instagramTokenExpiry),
+      'instagramTokenExpiry': formatDate(instagramTokenExpiry),
       'facebookAccessToken': facebookAccessToken,
       'facebookUserId': facebookUserId,
-      'facebookTokenExpiry': _formatDate(facebookTokenExpiry),
+      'facebookTokenExpiry': formatDate(facebookTokenExpiry),
       'twitterApiKey': twitterApiKey,
       'twitterApiSecret': twitterApiSecret,
       'twitterAccessToken': twitterAccessToken,
       'twitterAccessSecret': twitterAccessSecret,
       'tiktokAccessToken': tiktokAccessToken,
-      'tiktokTokenExpiry': _formatDate(tiktokTokenExpiry),
+      'tiktokTokenExpiry': formatDate(tiktokTokenExpiry),
       'linkedinAccessToken': linkedinAccessToken,
-      'linkedinTokenExpiry': _formatDate(linkedinTokenExpiry),
+      'linkedinTokenExpiry': formatDate(linkedinTokenExpiry),
       'youtubeApiKey': youtubeApiKey,
       'youtubeAccessToken': youtubeAccessToken,
       'notionApiKey': notionApiKey,
       'notionWorkspaceId': notionWorkspaceId,
       'googleAccessToken': googleAccessToken,
       'googleRefreshToken': googleRefreshToken,
-      'googleTokenExpiry': _formatDate(googleTokenExpiry),
+      'googleTokenExpiry': formatDate(googleTokenExpiry),
       'slackBotToken': slackBotToken,
       'slackWorkspaceId': slackWorkspaceId,
       'discordBotToken': discordBotToken,

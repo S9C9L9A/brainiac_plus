@@ -140,10 +140,3 @@ final systemMetricsServiceProvider = Provider<SystemMetricsService>((ref) {
 String formatBytes(int bytes) {
   return RealtimeSystemMetrics.formatBytes(bytes);
 }
-
-void debugPrint(String message) {
-  // Simple debug print function
-  if (const bool.fromEnvironment('dart.vm.product') == false) {
-    print('[SystemMetrics] $message');
-  }
-}

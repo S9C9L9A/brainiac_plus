@@ -300,7 +300,7 @@ class _AutomationDetailScreenState extends ConsumerState<AutomationDetailScreen>
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, kBottomNavHeight),
       itemCount: executions.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final execution = executions[index];
         return GlassCard(
@@ -377,7 +377,7 @@ class _AutomationDetailScreenState extends ConsumerState<AutomationDetailScreen>
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, kBottomNavHeight),
       itemCount: errors.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final error = errors[index];
         return GlassCard(
@@ -580,7 +580,7 @@ class _AutomationDetailScreenState extends ConsumerState<AutomationDetailScreen>
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

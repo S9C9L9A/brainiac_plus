@@ -210,7 +210,7 @@ class StorageController extends StateNotifier<AsyncValue<List<MountPoint>>> {
         availableGB: 0,
         averagePercentage: 0,
       ),
-      error: (_, __) => StorageOverview(
+      error: (_, _) => StorageOverview(
         totalGB: 0,
         usedGB: 0,
         availableGB: 0,

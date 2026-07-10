@@ -9,11 +9,11 @@ class PublishPostScreen extends StatefulWidget {
   final String pageName;
 
   const PublishPostScreen({
-    Key? key,
+    super.key,
     required this.pageID,
     required this.pageToken,
     required this.pageName,
-  }) : super(key: key);
+  });
 
   @override
   State<PublishPostScreen> createState() => _PublishPostScreenState();

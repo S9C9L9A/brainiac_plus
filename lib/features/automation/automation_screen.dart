@@ -176,7 +176,7 @@ class AutomationScreen extends ConsumerWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
           const SizedBox(height: 24),
         ],
         const Text(
@@ -247,7 +247,7 @@ class AutomationScreen extends ConsumerWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

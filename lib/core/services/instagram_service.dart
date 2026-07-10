@@ -30,7 +30,7 @@ class InstagramService {
         data: {
           'image_url': await _uploadToTemporaryStorage(imageFile),
           'caption': caption,
-          if (location != null) 'location_id': location,
+          'location_id': ?location,
           'access_token': accessToken,
         },
       );

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/social_media_service.dart';
 import '../../settings/models/extended_settings.dart';
 import '../../settings/providers/extended_settings_provider.dart';
+import 'package:flutter/foundation.dart';
 
 /// Provider per i servizi social media
 final socialMediaServicesProvider =
@@ -191,7 +192,7 @@ class SocialMediaServicesController
         );
       }
     } catch (e) {
-      print('Error syncing Facebook metrics: $e');
+      debugPrint('Error syncing Facebook metrics: $e');
     }
 
     return null;

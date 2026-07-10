@@ -24,7 +24,7 @@
 /// Navigator.pushNamed(context, AppRoutes.fileManager, arguments: path);
 /// ```
 
-library routes;
+library;
 
 // Core routing
 export 'app_routes.dart';

@@ -85,7 +85,7 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
           child: ListView.separated(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, kBottomNavHeight),
             itemCount: filtered.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            separatorBuilder: (_, _) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               return _buildMarketplaceCard(filtered[index]);
             },

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import '../lib/core/services/instagram_cli_service.dart';
+import 'package:brainiac_plus/core/services/instagram_cli_service.dart';
 
 void main(List<String> args) async {
   final parser = ArgParser()
@@ -36,7 +36,9 @@ void main(List<String> args) async {
   switch (result.command?.name) {
     case 'check':
       final available = await service.isAvailable();
-      stdout.writeln(available ? 'instagram-cli: available' : 'instagram-cli: missing');
+      stdout.writeln(
+        available ? 'instagram-cli: available' : 'instagram-cli: missing',
+      );
       exit(available ? 0 : 1);
     case 'feed':
       await _run(service.feed());
@@ -89,7 +91,9 @@ void _printUsage(ArgParser parser) {
   stdout.writeln('  dart tool/instagram_cli_runner.dart feed');
   stdout.writeln('  dart tool/instagram_cli_runner.dart stories');
   stdout.writeln('  dart tool/instagram_cli_runner.dart notify');
-  stdout.writeln('  dart tool/instagram_cli_runner.dart chat --user <username> [--title <title>]');
+  stdout.writeln(
+    '  dart tool/instagram_cli_runner.dart chat --user <username> [--title <title>]',
+  );
   stdout.writeln('  dart tool/instagram_cli_runner.dart raw --args <args...>');
   stdout.writeln('');
   stdout.writeln(parser.usage);

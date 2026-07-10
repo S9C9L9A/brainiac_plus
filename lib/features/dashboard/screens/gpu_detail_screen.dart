@@ -35,7 +35,7 @@ class GpuDetailScreen extends ConsumerWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.all(20),
                         itemCount: gpus.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        separatorBuilder: (_, _) => const SizedBox(height: 16),
                         itemBuilder: (context, index) =>
                             _GpuCard(gpu: gpus[index]),
                       ),

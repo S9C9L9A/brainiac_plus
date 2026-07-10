@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:system_info2/system_info2.dart';
 import 'gpu_detection_service.dart';
+import 'package:flutter/foundation.dart';
 
 /// Classe unificata per metriche di sistema in tempo reale
 class RealtimeSystemMetrics {
@@ -323,7 +324,7 @@ class SystemMetricsService {
 
   void _debugPrint(String message) {
     if (const bool.fromEnvironment('dart.vm.product') == false) {
-      print('[SystemMetrics] $message');
+      debugPrint('[SystemMetrics] $message');
     }
   }
 }

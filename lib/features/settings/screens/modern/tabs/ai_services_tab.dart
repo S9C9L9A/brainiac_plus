@@ -502,7 +502,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
             // Recommended models dropdown
             recommendedAsync.when(
@@ -711,7 +711,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     return Column(
       children: [
         DropdownButtonFormField<String>(
-          value: currentValue,
+          initialValue: currentValue,
           // Expand to the parent width so the Expanded inside each item gets a
           // bounded constraint; without this the dropdown computes intrinsic
           // widths over an unbounded Expanded and trips rendering/semantics

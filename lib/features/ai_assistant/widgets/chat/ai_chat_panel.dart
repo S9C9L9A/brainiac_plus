@@ -263,7 +263,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
               isConfigured && isUp ? Colors.green : Colors.orange,
             ),
             loading: () => _buildStatusPill('Checking', Colors.blueGrey),
-            error: (_, __) => _buildStatusPill('Offline', Colors.orange),
+            error: (_, _) => _buildStatusPill('Offline', Colors.orange),
           ),
           const SizedBox(width: 10),
           IconButton(

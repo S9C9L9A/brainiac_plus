@@ -37,7 +37,7 @@ class AuthProvider extends ChangeNotifier {
         _currentUser = result['user'];
         _isAuthenticated = true;
 
-        print('✅ Autenticato: ${_currentUser?['name']}');
+        debugPrint('✅ Autenticato: ${_currentUser?['name']}');
         notifyListeners();
         return true;
       } else {
@@ -47,7 +47,7 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Errore: $e';
-      print('❌ Errore login: $e');
+      debugPrint('❌ Errore login: $e');
       notifyListeners();
       return false;
     } finally {
@@ -62,7 +62,7 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = null;
     _isAuthenticated = false;
     _errorMessage = null;
-    print('👋 Logout effettuato');
+    debugPrint('👋 Logout effettuato');
     notifyListeners();
   }
 

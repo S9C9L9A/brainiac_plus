@@ -91,7 +91,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: AutomationCategory.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final category = AutomationCategory.values[index];
           final isSelected = _selectedCategory == category;

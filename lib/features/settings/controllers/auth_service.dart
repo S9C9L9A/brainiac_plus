@@ -1,4 +1,5 @@
 import '../../../core/network/api_client.dart';
+import 'package:flutter/foundation.dart';
 
 /// Servizio di autenticazione con Facebook via backend Go
 class AuthService {
@@ -8,7 +9,7 @@ class AuthService {
     required String userID,
   }) async {
     try {
-      print('🔐 Autenticazione con backend...');
+      debugPrint('🔐 Autenticazione con backend...');
 
       final response = await FacebookAuthService.authenticateWithFacebook(
         accessToken,
@@ -16,8 +17,8 @@ class AuthService {
       );
 
       if (response['valid'] == true) {
-        print('✅ Autenticazione riuscita!');
-        print('📦 Utente: ${response['user']['name']}');
+        debugPrint('✅ Autenticazione riuscita!');
+        debugPrint('📦 Utente: ${response['user']['name']}');
 
         // Salva i dati localmente (TODO: implementare con secure_storage)
         // await _storage.write(
@@ -38,7 +39,7 @@ class AuthService {
         };
       }
     } catch (e) {
-      print('❌ Errore: $e');
+      debugPrint('❌ Errore: $e');
       return {
         'success': false,
         'message': 'Errore durante l\'autenticazione: $e',
@@ -51,7 +52,7 @@ class AuthService {
     try {
       return await FacebookAuthService.getUserPages();
     } catch (e) {
-      print('❌ Errore nel recupero pagine: $e');
+      debugPrint('❌ Errore nel recupero pagine: $e');
       return [];
     }
   }
@@ -65,7 +66,7 @@ class AuthService {
     try {
       return await FacebookAuthService.postToPage(pageID, pageToken, message);
     } catch (e) {
-      print('❌ Errore nella pubblicazione: $e');
+      debugPrint('❌ Errore nella pubblicazione: $e');
       return null;
     }
   }

@@ -51,7 +51,7 @@ class LocalAiInstaller {
     bool usePkexec = false,
     Map<String, String>? env,
   }) async {
-    final mergedEnv = {...Platform.environment, if (env != null) ...env};
+    final mergedEnv = {...Platform.environment, ...?env};
     final executable = usePkexec ? 'pkexec' : command.first;
     final args = usePkexec ? command : command.sublist(1);
 

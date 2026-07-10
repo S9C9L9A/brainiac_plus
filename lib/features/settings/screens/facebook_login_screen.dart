@@ -5,7 +5,7 @@ import '../controllers/auth_provider.dart';
 
 /// Screen di accesso con Facebook
 class FacebookLoginScreen extends StatefulWidget {
-  const FacebookLoginScreen({Key? key}) : super(key: key);
+  const FacebookLoginScreen({super.key});
 
   @override
   State<FacebookLoginScreen> createState() => _FacebookLoginScreenState();

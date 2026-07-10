@@ -123,7 +123,7 @@ class LinuxPlatform {
       if (validPartitions > 0) {
         final avgPercentage = totalPercentage ~/ validPartitions;
         return {
-          'filesystem': '${validPartitions} device(s)',
+          'filesystem': '$validPartitions device(s)',
           'size': '${totalSizeGB.toStringAsFixed(1)}G',
           'used': '${totalUsedGB.toStringAsFixed(1)}G',
           'available': '${(totalSizeGB - totalUsedGB).toStringAsFixed(1)}G',

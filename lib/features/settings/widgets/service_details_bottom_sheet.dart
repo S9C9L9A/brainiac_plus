@@ -305,7 +305,7 @@ class _ServiceDetailsBottomSheetState
                                 onChanged: (value) {
                                   // TODO: Update setting
                                 },
-                                activeColor: AppColors.systemGreen,
+                                activeThumbColor: AppColors.systemGreen,
                               )
                             else
                               const Icon(
