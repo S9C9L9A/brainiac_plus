@@ -2,18 +2,19 @@ import 'package:brainiac_plus/core/services/ollama_service.dart';
 
 import '../../../features/automation/models/automation.dart';
 import '../../../features/automation/models/automation_enums.dart';
+import '../../../features/automation/services/schedule_parser.dart';
 
 /// Service to help create automations using Ollama AI
 class AutomationAssistantService {
   final OllamaService _ollama;
 
   AutomationAssistantService({String? model})
-      : _ollama = OllamaService(model: model ?? 'mistral-medium-3.5:latest');
+    : _ollama = OllamaService(model: model ?? 'mistral-medium-3.5:latest');
 
   /// Generate automation suggestions based on user description
   Future<AutomationSuggestion> suggestAutomation(String userDescription) async {
     final prompt = _buildSuggestionPrompt(userDescription);
-    
+
     final response = await _ollama.generateCode(
       prompt,
       temperature: 0.3, // Lower temperature for more focused suggestions
@@ -25,11 +26,8 @@ class AutomationAssistantService {
   /// Generate configuration options for an automation
   Future<Map<String, dynamic>> suggestConfig(Automation automation) async {
     final prompt = _buildConfigPrompt(automation);
-    
-    final response = await _ollama.generateCode(
-      prompt,
-      temperature: 0.5,
-    );
+
+    final response = await _ollama.generateCode(prompt, temperature: 0.5);
 
     return _parseConfigSuggestion(response);
   }
@@ -67,9 +65,17 @@ Provide clear, concise suggestions. Format your responses as structured JSON whe
     yield* _ollama.chatStream(messages);
   }
 
-  /// Suggest cron schedule based on natural language
+  /// Suggest cron schedule based on natural language.
+  ///
+  /// Common Italian/English phrasings are parsed locally (instant, works
+  /// without Ollama, cannot hallucinate); the LLM is only consulted for
+  /// exotic phrasing and its output is validated before being returned.
   Future<String?> suggestCronSchedule(String naturalLanguage) async {
-    final prompt = '''
+    final local = ScheduleParser().tryParse(naturalLanguage);
+    if (local != null) return local;
+
+    final prompt =
+        '''
 Convert this natural language time description to a cron expression:
 "$naturalLanguage"
 
@@ -84,12 +90,16 @@ Cron format: minute hour day month weekday
 ''';
 
     final response = await _ollama.generateCode(prompt, temperature: 0.1);
-    
+
     // Extract cron expression from response
-    final cronPattern = RegExp(r'[\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+');
+    final cronPattern = RegExp(
+      r'[\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+ [\d\*\/\-\,]+',
+    );
     final match = cronPattern.firstMatch(response);
-    
-    return match?.group(0);
+
+    // Never hand an unvalidated LLM expression to the scheduler.
+    final cron = match?.group(0);
+    return (cron != null && ScheduleParser.isValidCron(cron)) ? cron : null;
   }
 
   /// Suggest best automation mode for a given task
@@ -98,8 +108,9 @@ Cron format: minute hour day month weekday
     String taskDescription,
   ) async {
     final hasAPI = service.supportsAPI;
-    
-    final prompt = '''
+
+    final prompt =
+        '''
 Given this automation task: "$taskDescription"
 Service: ${service.label}
 Has Official API: $hasAPI
@@ -113,9 +124,9 @@ Respond with ONLY one word: API, BROWSER, or HYBRID
 ''';
 
     final response = await _ollama.generateCode(prompt, temperature: 0.2);
-    
+
     final normalized = response.trim().toUpperCase();
-    
+
     if (normalized.contains('BROWSER')) return AutomationMode.browser;
     if (normalized.contains('API')) return AutomationMode.api;
     return AutomationMode.hybrid;
@@ -167,7 +178,7 @@ Provide configuration suggestions as key-value pairs.
     // Try to extract JSON from response
     final jsonPattern = RegExp(r'\{[^}]+\}', dotAll: true);
     final match = jsonPattern.firstMatch(response);
-    
+
     if (match == null) {
       // Fallback to heuristics
       return _fallbackSuggestion(originalDescription);
@@ -176,14 +187,15 @@ Provide configuration suggestions as key-value pairs.
     try {
       // Parse JSON (simplified - in production use json.decode)
       final jsonText = match.group(0)!;
-      
+
       return AutomationSuggestion(
         category: _extractCategory(jsonText),
         service: _extractService(jsonText),
         mode: _extractMode(jsonText),
         trigger: _extractTrigger(jsonText),
         name: _extractField(jsonText, 'name') ?? 'New Automation',
-        description: _extractField(jsonText, 'description') ?? originalDescription,
+        description:
+            _extractField(jsonText, 'description') ?? originalDescription,
         confidence: _extractConfidence(jsonText),
       );
     } catch (e) {
@@ -194,7 +206,7 @@ Provide configuration suggestions as key-value pairs.
   /// Parse config suggestion
   Map<String, dynamic> _parseConfigSuggestion(String response) {
     final config = <String, dynamic>{};
-    
+
     // Simple key:value parser
     final lines = response.split('\n');
     for (final line in lines) {
@@ -207,7 +219,7 @@ Provide configuration suggestions as key-value pairs.
         }
       }
     }
-    
+
     return config;
   }
 
