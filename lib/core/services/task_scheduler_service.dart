@@ -1,22 +1,19 @@
-import 'dart:async';
 import 'package:cron/cron.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/automation/models/automation.dart';
-import '../../features/automation/controllers/automation_controller.dart';
 
 /// Provider for task scheduler
 final taskSchedulerProvider = Provider<TaskSchedulerService>((ref) {
-  return TaskSchedulerService(ref);
+  return TaskSchedulerService();
 });
 
 /// Task Scheduler using cron for automation scheduling
 class TaskSchedulerService {
-  final Ref _ref;
   final Cron _cron = Cron();
   final Map<String, ScheduledTask> _scheduledTasks = {};
 
-  TaskSchedulerService(this._ref);
+  TaskSchedulerService();
 
   /// Schedule automation based on its cron expression
   void scheduleAutomation(Automation automation) {

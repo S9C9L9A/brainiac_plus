@@ -10,7 +10,6 @@ import '../models/automation_templates.dart';
 import '../providers/automation_template_selection_provider.dart';
 import '../providers/automation_assistant_provider.dart';
 import '../services/automation_create_args.dart';
-import '../../../core/services/automation_assistant_service.dart';
 
 class CreateAutomationTab extends ConsumerStatefulWidget {
   const CreateAutomationTab({super.key});

@@ -5,7 +5,6 @@ import '../features/dashboard/screens/ram_detail_screen.dart';
 import '../features/dashboard/screens/disk_detail_screen.dart';
 import '../features/dashboard/screens/gpu_detail_screen.dart';
 import '../features/terminal/terminal_screen.dart';
-import '../features/automation/automation_screen.dart';
 import '../features/file_manager/file_manager_screen.dart';
 import '../features/packages/packages_screen.dart';
 import '../features/ai_assistant/screens/ai_chat_screen.dart';

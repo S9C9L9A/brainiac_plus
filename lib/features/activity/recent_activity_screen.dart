@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/glassmorphism.dart';
-import '../../core/theme/app_icons.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'controllers/activity_log_controller.dart';
 import 'models/activity_entry.dart';

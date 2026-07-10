@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/colors.dart';
 import '../dashboard/dashboard_screen.dart'; // For kBottomNavHeight
 import 'controllers/automation_controller.dart';
 import 'models/automation_enums.dart';

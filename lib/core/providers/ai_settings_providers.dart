@@ -1,10 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/hardware_detection_service.dart';
 import '../services/model_suggestions_service.dart';
-import '../services/system_metrics_service.dart'
-    show SystemMetricsService, RealtimeSystemMetrics;
-import '../services/ollama_service.dart'
-    show OllamaService, OllamaModel, OllamaException;
+import '../services/ollama_service.dart' show OllamaService, OllamaModel;
 
 /// Hardware detection service provider
 final hardwareDetectionProvider = Provider<HardwareDetectionService>((ref) {

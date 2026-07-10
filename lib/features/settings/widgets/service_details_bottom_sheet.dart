@@ -848,20 +848,4 @@ class _ServiceDetailsBottomSheetState
       ),
     );
   }
-
-  static void show(
-    BuildContext context,
-    ServiceProvider serviceType,
-    ExtendedAppSettings settings,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ServiceDetailsBottomSheet(
-        serviceType: serviceType,
-        settings: settings,
-      ),
-    );
-  }
 }

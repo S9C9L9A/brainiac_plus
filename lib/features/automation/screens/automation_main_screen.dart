@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/theme/colors.dart';
 import '../../../routes/app_routes.dart';
 import 'active_automations_tab.dart';
 import 'templates_tab.dart';

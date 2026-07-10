@@ -296,15 +296,6 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
     TemplateDetailsBottomSheet.show(context, template);
   }
 
-  void _useTemplate(AutomationTemplate template) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Setting up ${template.name}...'),
-        backgroundColor: AppColors.systemBlue,
-      ),
-    );
-  }
-
   void _goToSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const ModernSettingsScreen()),

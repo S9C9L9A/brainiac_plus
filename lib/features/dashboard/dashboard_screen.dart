@@ -5,7 +5,6 @@ import 'package:brainiac_plus/features/dashboard/widgets/social_media/social_med
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/app_icons.dart';
 import '../../core/navigation/navigation_service.dart';
 import 'controllers/dashboard_customization_controller.dart';
 import 'controllers/social_media_controller.dart';
@@ -45,7 +44,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
   int _settingsTabIndex = 0;
   int _automationTabIndex = 0;
-  bool _showAIChat = false;
 
   @override
   void initState() {
@@ -75,7 +73,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final customState = ref.watch(dashboardCustomizationProvider);
 
     return Scaffold(
       body: Container(
@@ -104,14 +101,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Positioned(
               right: 20,
               bottom: 100,
-              child: AIChatFAB(
-                onPressed: () {
-                  setState(() {
-                    _showAIChat = true;
-                  });
-                  _showAIChatBottomSheet();
-                },
-              ),
+              child: AIChatFAB(onPressed: _showAIChatBottomSheet),
             ),
           ],
         ),
@@ -259,157 +249,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title, bool isDark) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 20,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Colors.purple, Colors.blue],
-            ),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActions(bool isDark) {
-    final actions = [
-      {'icon': AppIcons.terminal, 'label': 'Terminal', 'index': 1},
-      {'icon': AppIcons.folder, 'label': 'Files', 'index': 3},
-      {'icon': AppIcons.automation, 'label': 'Automation', 'index': 2},
-      {'icon': AppIcons.settings, 'label': 'Settings', 'index': 4},
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: actions.length,
-      itemBuilder: (context, index) {
-        final action = actions[index];
-        return _buildQuickActionCard(
-          icon: action['icon'] as IconData,
-          label: action['label'] as String,
-          onTap: () {
-            setState(() {
-              _currentIndex = action['index'] as int;
-            });
-          },
-          isDark: isDark,
-        );
-      },
-    );
-  }
-
-  Widget _buildQuickActionCard({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: 0.1),
-              Colors.white.withValues(alpha: 0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivity(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.1),
-            Colors.white.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.history,
-              size: 48,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'No recent activity',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showAIChatBottomSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AIChatOverlay(
-        onClose: () {
-          Navigator.pop(context);
-          setState(() {
-            _showAIChat = false;
-          });
-        },
-      ),
+      builder: (context) =>
+          AIChatOverlay(onClose: () => Navigator.pop(context)),
     );
   }
 }

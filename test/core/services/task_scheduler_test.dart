@@ -67,10 +67,8 @@ void main() {
     });
 
     test('reschedule replaces existing task', () {
-      var firstCalled = false;
-      var secondCalled = false;
-      scheduler.scheduleTask(1, '@hourly', () => firstCalled = true);
-      scheduler.scheduleTask(1, '@daily', () => secondCalled = true);
+      scheduler.scheduleTask(1, '@hourly', () {});
+      scheduler.scheduleTask(1, '@daily', () {});
       scheduler.cancelTask(1);
     });
   });

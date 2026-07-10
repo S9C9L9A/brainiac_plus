@@ -18,14 +18,13 @@ void main() {
       requiredFields: ['Caption', 'Hashtags'],
     );
 
-    container.read(automationTemplateSelectionProvider.notifier).state = template;
+    container.read(automationTemplateSelectionProvider.notifier).state =
+        template;
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(
-          home: Scaffold(body: CreateAutomationTab()),
-        ),
+        child: const MaterialApp(home: Scaffold(body: CreateAutomationTab())),
       ),
     );
 

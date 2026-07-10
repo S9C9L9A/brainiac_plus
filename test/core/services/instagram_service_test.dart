@@ -37,19 +37,27 @@ void main() {
         'data': [
           {
             'name': 'engagement',
-            'values': [{'value': 150}],
+            'values': [
+              {'value': 150},
+            ],
           },
           {
             'name': 'impressions',
-            'values': [{'value': 5000}],
+            'values': [
+              {'value': 5000},
+            ],
           },
           {
             'name': 'reach',
-            'values': [{'value': 3000}],
+            'values': [
+              {'value': 3000},
+            ],
           },
           {
             'name': 'saved',
-            'values': [{'value': 25}],
+            'values': [
+              {'value': 25},
+            ],
           },
         ],
       };
@@ -63,10 +71,7 @@ void main() {
     test('fromJson handles empty values list', () {
       final json = {
         'data': [
-          {
-            'name': 'engagement',
-            'values': [],
-          },
+          {'name': 'engagement', 'values': []},
         ],
       };
       final insights = MediaInsights.fromJson(json);
@@ -77,9 +82,7 @@ void main() {
     });
 
     test('fromJson handles missing metrics', () {
-      final json = {
-        'data': [],
-      };
+      final json = {'data': []};
       final insights = MediaInsights.fromJson(json);
       expect(insights.engagement, 0);
       expect(insights.impressions, 0);
