@@ -65,6 +65,52 @@ class AgentRegistry {
       keywords: ['theme', 'database', 'sqlite', 'platform', 'settings', 'core'],
       systemPrompt: 'You are the Core Agent. Focus on shared services and platform layers.',
     ),
+    // ── Specialized pipeline agents ──────────────────────────────────────
+    const AgentProfile(
+      id: 'code_review',
+      name: 'Code Review Agent',
+      description: 'Analyzes code for smells, secrets, and async safety.',
+      domainPaths: ['lib/'],
+      allowedPaths: ['lib/'],
+      keywords: ['review', 'verifica', 'analizza', 'smell', 'bug', 'quality', 'codice'],
+      systemPrompt: 'You are the Code Review Agent. Analyze code quality, find smells, secrets, and async issues.',
+    ),
+    const AgentProfile(
+      id: 'test',
+      name: 'Test Agent',
+      description: 'Generates test recommendations and coverage targets.',
+      domainPaths: ['test/'],
+      allowedPaths: ['test/', 'lib/'],
+      keywords: ['test', 'coverage', 'unit test', 'widget test', 'copertura'],
+      systemPrompt: 'You are the Test Agent. Recommend tests and enforce coverage targets.',
+    ),
+    const AgentProfile(
+      id: 'safety',
+      name: 'Safety Agent',
+      description: 'Blocks dangerous operations and locked file access.',
+      domainPaths: [],
+      allowedPaths: [],
+      keywords: ['delete', 'remove', 'rm', 'force push', 'dangerous', 'pericoloso'],
+      systemPrompt: 'You are the Safety Agent. Block dangerous operations and enforce locked-file rules.',
+    ),
+    const AgentProfile(
+      id: 'action',
+      name: 'Action Agent',
+      description: 'Maps user requests to executable app actions.',
+      domainPaths: ['lib/features/'],
+      allowedPaths: ['lib/features/'],
+      keywords: ['apri', 'esegui', 'open', 'run', 'launch', 'avvia', 'show', 'mostra'],
+      systemPrompt: 'You are the Action Agent. Map user requests to concrete app operations.',
+    ),
+    const AgentProfile(
+      id: 'coordinator',
+      name: 'Coordinator Agent',
+      description: 'Orchestrates the full multi-agent verification pipeline.',
+      domainPaths: ['lib/'],
+      allowedPaths: ['lib/'],
+      keywords: ['pipeline', 'verifica tutto', 'check all', 'coordinatore'],
+      systemPrompt: 'You are the Coordinator Agent. Run all specialized agents and aggregate results.',
+    ),
   ];
 
   List<AgentProfile> get agents => List.unmodifiable(_agents);
