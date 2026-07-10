@@ -2,6 +2,7 @@ import 'package:brainiac_plus/core/theme/app_icons.dart';
 import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controller.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/chat_input_bar.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/message_bubble.dart';
+import 'package:brainiac_plus/features/ai_assistant/widgets/chat/suggested_actions_bar.dart';
 import 'package:brainiac_plus/features/settings/models/extended_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,8 @@ class AiChatPanel extends ConsumerStatefulWidget {
   ConsumerState<AiChatPanel> createState() => _AiChatPanelState();
 }
 
-class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProviderStateMixin {
+class _AiChatPanelState extends ConsumerState<AiChatPanel>
+    with SingleTickerProviderStateMixin {
   final _scrollController = ScrollController();
   late final AnimationController _glowController;
   late final Animation<double> _glowAnimation;
@@ -126,7 +128,10 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
           children: [
             _buildHeader(settings, availability),
             if (!isConfigured || !isOnline)
-              _buildConnectionNotice(isConfigured: isConfigured, isOnline: isOnline),
+              _buildConnectionNotice(
+                isConfigured: isConfigured,
+                isOnline: isOnline,
+              ),
             Expanded(
               child: chatState.messages.isEmpty
                   ? _buildEmptyState(canSend)
@@ -138,13 +143,20 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
                         final message = chatState.messages[index];
                         return MessageBubble(
                           message: message,
-                          onDelete: () => chatController.deleteMessage(message.id),
+                          onDelete: () =>
+                              chatController.deleteMessage(message.id),
                         );
                       },
                     ),
             ),
-            if (chatState.isLoading)
-              _buildTypingIndicator(),
+            if (chatState.isLoading) _buildTypingIndicator(),
+            // Actions suggested by the multi-agent pipeline for the last
+            // message — tapping one navigates straight to the target screen.
+            if (!chatState.isLoading)
+              SuggestedActionsBar(
+                actions:
+                    chatState.lastPipelineResult?.suggestedActions ?? const [],
+              ),
             ChatInputBar(
               onSend: (text) {
                 chatController.sendMessageStream(text);
@@ -158,10 +170,14 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
     );
   }
 
-  Widget _buildHeader(ExtendedAppSettings settings, AsyncValue<bool> availability) {
+  Widget _buildHeader(
+    ExtendedAppSettings settings,
+    AsyncValue<bool> availability,
+  ) {
     final modelLabel = settings.ollamaModelName ?? 'No model selected';
     final endpointLabel = settings.ollamaEndpoint ?? 'Endpoint not set';
-    final isConfigured = settings.hasOllamaEndpoint && settings.hasOllamaModelName;
+    final isConfigured =
+        settings.hasOllamaEndpoint && settings.hasOllamaModelName;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -258,10 +274,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(
@@ -294,10 +307,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
           const SizedBox(width: 12),
           Text(
             'Neural response...',
-            style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
           ),
         ],
       ),
@@ -383,11 +393,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
                 ),
               ],
             ),
-            child: Icon(
-              AppIcons.ai,
-              size: 64,
-              color: Colors.white,
-            ),
+            child: Icon(AppIcons.ai, size: 64, color: Colors.white),
           ),
           const SizedBox(height: 24),
           const Text(
@@ -401,10 +407,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel> with SingleTickerProv
           const SizedBox(height: 8),
           Text(
             'Ask me to add features, fix bugs, or automate tasks',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade400,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
