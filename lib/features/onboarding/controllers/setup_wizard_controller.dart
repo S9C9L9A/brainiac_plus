@@ -5,11 +5,26 @@ import '../models/setup_models.dart';
 class SetupWizardController extends StateNotifier<SetupWizardState> {
   SetupWizardController() : super(SetupWizardState.initial());
 
-  /// Verifica se il setup iniziale è stato completato
+  static String _serviceKey(String serviceName) =>
+      'setup_service_${serviceName}_connected';
+
+  /// Verifica se il setup iniziale è stato completato e ripristina i flag
+  /// di connessione dei servizi persistiti (mai le credenziali).
   Future<bool> checkSetupCompleted() async {
     final prefs = await SharedPreferences.getInstance();
     final completed = prefs.getBool('setup_completed') ?? false;
-    state = state.copyWith(isSetupCompleted: completed);
+
+    final services = Map<String, ServiceConnectionStatus>.from(state.services);
+    for (final name in services.keys) {
+      if (prefs.getBool(_serviceKey(name)) ?? false) {
+        services[name] = ServiceConnectionStatus(
+          serviceName: name,
+          isConnected: true,
+        );
+      }
+    }
+
+    state = state.copyWith(isSetupCompleted: completed, services: services);
     return completed;
   }
 
@@ -24,11 +39,21 @@ class SetupWizardController extends StateNotifier<SetupWizardState> {
   Future<void> resetSetup() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('setup_completed', false);
+    for (final name in state.services.keys) {
+      await prefs.remove(_serviceKey(name));
+    }
     state = SetupWizardState.initial();
   }
 
-  /// Aggiorna lo stato di connessione di un servizio
-  void updateServiceStatus(String serviceName, bool isConnected, {Map<String, dynamic>? credentials}) {
+  /// Aggiorna lo stato di connessione di un servizio.
+  ///
+  /// Il flag di connessione viene persistito così da sopravvivere al
+  /// riavvio; le credenziali restano SOLO in memoria (mai su disco).
+  void updateServiceStatus(
+    String serviceName,
+    bool isConnected, {
+    Map<String, dynamic>? credentials,
+  }) {
     final services = Map<String, ServiceConnectionStatus>.from(state.services);
     services[serviceName] = ServiceConnectionStatus(
       serviceName: serviceName,
@@ -37,6 +62,10 @@ class SetupWizardController extends StateNotifier<SetupWizardState> {
       lastSync: isConnected ? DateTime.now() : null,
     );
     state = state.copyWith(services: services);
+
+    SharedPreferences.getInstance().then(
+      (prefs) => prefs.setBool(_serviceKey(serviceName), isConnected),
+    );
   }
 
   /// Passa allo step successivo
@@ -116,5 +145,5 @@ class SetupWizardState {
 // Provider
 final setupWizardControllerProvider =
     StateNotifierProvider<SetupWizardController, SetupWizardState>((ref) {
-  return SetupWizardController();
-});
+      return SetupWizardController();
+    });
