@@ -8,7 +8,7 @@ class AutomationAssistantService {
   final OllamaService _ollama;
 
   AutomationAssistantService({String? model})
-      : _ollama = OllamaService(model: model ?? 'qwen2.5-coder:14b');
+      : _ollama = OllamaService(model: model ?? 'mistral-medium-3.5:latest');
 
   /// Generate automation suggestions based on user description
   Future<AutomationSuggestion> suggestAutomation(String userDescription) async {
