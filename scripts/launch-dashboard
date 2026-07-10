@@ -1,0 +1,27 @@
+#!/bin/bash
+# Launch BrainiacPlus Terminal Dashboard with GPU env
+
+set -e
+
+# Load GPU config
+if [ -f "$HOME/.bashrc.ollama-gpu" ]; then
+    source "$HOME/.bashrc.ollama-gpu"
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DASHBOARD="$SCRIPT_DIR/brainiac-dashboard.py"
+
+# Check Python + Rich
+if ! command -v python3 &>/dev/null; then
+    echo "❌ Python3 not found. Install it first."
+    exit 1
+fi
+
+if ! python3 -c "import rich" 2>/dev/null; then
+    echo "📦 Installing Rich library..."
+    pip3 install rich --quiet
+fi
+
+# Run dashboard
+echo "🚀 Starting BrainiacPlus Dashboard..."
+python3 "$DASHBOARD"
