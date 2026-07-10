@@ -13,6 +13,8 @@ void main() {
       'open_dashboard': '/dashboard',
       'show_cpu': '/cpu-detail',
       'show_ram': '/ram-detail',
+      'show_disk': '/disk-detail',
+      'show_gpu': '/dashboard',
       'open_terminal': '/terminal',
       'open_packages': '/packages',
       'open_automation': '/automation',

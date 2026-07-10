@@ -12,6 +12,9 @@ class AgentActionExecutor {
     'open_dashboard': AppRoutes.dashboard,
     'show_cpu': AppRoutes.cpuDetail,
     'show_ram': AppRoutes.ramDetail,
+    'show_disk': AppRoutes.diskDetail,
+    // The live GPU card lives on the dashboard; there is no /gpu-detail yet.
+    'show_gpu': AppRoutes.dashboard,
     'open_terminal': AppRoutes.terminal,
     'open_packages': AppRoutes.packages,
     'open_automation': AppRoutes.automation,

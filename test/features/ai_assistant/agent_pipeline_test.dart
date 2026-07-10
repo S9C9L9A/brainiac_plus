@@ -249,6 +249,83 @@ int c() {}
       expect(out.suggestedActions, isEmpty);
       expect(out.findings, isEmpty);
     });
+
+    test('matches Italian phrasing for common actions', () {
+      expect(
+        agent
+            .evaluate(task(userInput: 'apri il terminale'))
+            .suggestedActions
+            .any((a) => a.id == 'open_terminal'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'installa un pacchetto'))
+            .suggestedActions
+            .any((a) => a.id == 'open_packages'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'mostra le impostazioni'))
+            .suggestedActions
+            .any((a) => a.id == 'open_settings'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'crea una automazione di backup'))
+            .suggestedActions
+            .any((a) => a.id == 'open_automation'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'apri la cartella dei progetti'))
+            .suggestedActions
+            .any((a) => a.id == 'open_file_manager'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'quanta memoria sto usando?'))
+            .suggestedActions
+            .any((a) => a.id == 'show_ram'),
+        isTrue,
+      );
+    });
+
+    test('suggests disk and GPU detail actions', () {
+      expect(
+        agent
+            .evaluate(task(userInput: 'quanto spazio su disco resta?'))
+            .suggestedActions
+            .any((a) => a.id == 'show_disk'),
+        isTrue,
+      );
+      expect(
+        agent
+            .evaluate(task(userInput: 'temperatura della gpu?'))
+            .suggestedActions
+            .any((a) => a.id == 'show_gpu'),
+        isTrue,
+      );
+    });
+
+    test('does not fire on substrings inside other words', () {
+      // 'hai'/'mai' must not trigger the short 'ai' keyword.
+      expect(
+        agent.evaluate(task(userInput: 'cosa hai fatto?')).suggestedActions,
+        isEmpty,
+      );
+      // 'profile' must not trigger the 'file' keyword.
+      expect(
+        agent
+            .evaluate(task(userInput: 'update my profile picture'))
+            .suggestedActions,
+        isEmpty,
+      );
+    });
   });
 
   group('AgentCoordinator', () {
