@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/file_service.dart';
 
@@ -37,19 +38,28 @@ class FileManagerState {
     );
   }
 
-  factory FileManagerState.initial() {
+  factory FileManagerState.initial({String? startPath}) {
+    // The home directory must be resolved at RUNTIME: the previous
+    // String.fromEnvironment('USER') was a compile-time lookup that always
+    // fell back to the non-existent /home/user in normal builds.
+    final home =
+        startPath ??
+        Platform.environment['HOME'] ??
+        '/home/${Platform.environment['USER'] ?? 'user'}';
     return FileManagerState(
-      currentPath: '/home/${const String.fromEnvironment('USER', defaultValue: 'user')}',
+      currentPath: home,
       files: [],
-      navigationHistory: ['/home/${const String.fromEnvironment('USER', defaultValue: 'user')}'],
+      navigationHistory: [home],
     );
   }
 }
 
 class FileManagerController extends StateNotifier<FileManagerState> {
-  final FileService _fileService = FileService();
+  final FileService _fileService;
 
-  FileManagerController() : super(FileManagerState.initial()) {
+  FileManagerController({FileService? fileService, String? initialPath})
+    : _fileService = fileService ?? FileService(),
+      super(FileManagerState.initial(startPath: initialPath)) {
     loadFiles();
   }
 
@@ -76,8 +86,14 @@ class FileManagerController extends StateNotifier<FileManagerState> {
 
   Future<void> navigateBack() async {
     if (state.navigationHistory.length > 1) {
-      final newHistory = state.navigationHistory.sublist(0, state.navigationHistory.length - 1);
-      state = state.copyWith(currentPath: newHistory.last, navigationHistory: newHistory);
+      final newHistory = state.navigationHistory.sublist(
+        0,
+        state.navigationHistory.length - 1,
+      );
+      state = state.copyWith(
+        currentPath: newHistory.last,
+        navigationHistory: newHistory,
+      );
       await loadFiles();
     }
   }
@@ -125,6 +141,7 @@ class FileManagerController extends StateNotifier<FileManagerState> {
   }
 }
 
-final fileManagerProvider = StateNotifierProvider<FileManagerController, FileManagerState>((ref) {
-  return FileManagerController();
-});
+final fileManagerProvider =
+    StateNotifierProvider<FileManagerController, FileManagerState>((ref) {
+      return FileManagerController();
+    });
