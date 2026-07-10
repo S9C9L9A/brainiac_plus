@@ -32,7 +32,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   void _onCommandChanged() {
     setState(() {
-      _suggestions = CommandSuggestions.getSuggestions(_commandController.text);
+      _suggestions = CommandSuggestions.getSuggestions(
+        _commandController.text,
+        history: ref.read(terminalProvider.notifier).getHistory(),
+      );
     });
   }
 
@@ -73,11 +76,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   void _showCommandHistory(BuildContext context) {
     final history = ref.read(terminalProvider.notifier).getHistory();
-    
+
     if (history.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No command history')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No command history')));
       return;
     }
 
@@ -204,7 +207,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            const Icon(AppIcons.terminal, color: Colors.white, size: AppIcons.defaultSize),
+            const Icon(
+              AppIcons.terminal,
+              color: Colors.white,
+              size: AppIcons.defaultSize,
+            ),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
@@ -217,21 +224,33 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(AppIcons.history, color: Colors.white, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.history,
+                color: Colors.white,
+                size: AppIcons.defaultSize,
+              ),
               tooltip: 'Command History',
               onPressed: () {
                 _showCommandHistory(context);
               },
             ),
             IconButton(
-              icon: const Icon(AppIcons.clear, color: Colors.white, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.clear,
+                color: Colors.white,
+                size: AppIcons.defaultSize,
+              ),
               tooltip: 'Clear Output',
               onPressed: () {
                 ref.read(terminalProvider.notifier).clearOutput();
               },
             ),
             IconButton(
-              icon: const Icon(AppIcons.stop, color: AppColors.systemRed, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.stop,
+                color: AppColors.systemRed,
+                size: AppIcons.defaultSize,
+              ),
               tooltip: 'Kill Process',
               onPressed: () {
                 ref.read(terminalProvider.notifier).killProcess();
@@ -258,7 +277,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   Widget _buildCommandInput() {
     final sessions = ref.watch(terminalProvider);
-    final isRunning = sessions.isNotEmpty ? sessions.last.isProcessRunning : false;
+    final isRunning = sessions.isNotEmpty
+        ? sessions.last.isProcessRunning
+        : false;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, kBottomNavHeight),
@@ -269,7 +290,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             Text(
               '\$',
               style: TextStyle(
-                color: isRunning ? AppColors.systemYellow : AppColors.systemGreen,
+                color: isRunning
+                    ? AppColors.systemYellow
+                    : AppColors.systemGreen,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -297,10 +320,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
-                    hintText: isRunning ? 'Process running...' : 'Enter command (↑/↓ for history)',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                    ),
+                    hintText: isRunning
+                        ? 'Process running...'
+                        : 'Enter command (↑/↓ for history)',
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                     border: InputBorder.none,
                   ),
                   onSubmitted: (_) => _executeCommand(),

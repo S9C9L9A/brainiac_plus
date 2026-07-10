@@ -49,13 +49,34 @@ class CommandSuggestions {
     'java -version',
   ];
 
-  static List<String> getSuggestions(String input) {
+  static const _maxSuggestions = 5;
+
+  /// Prefix-matching suggestions for [input]. Commands the user actually ran
+  /// ([history], oldest→newest as recorded by ShellService) rank first, most
+  /// recent on top, deduplicated against the static common list.
+  static List<String> getSuggestions(
+    String input, {
+    List<String> history = const [],
+  }) {
     if (input.isEmpty) return [];
-    
-    return commonCommands
-        .where((cmd) => cmd.startsWith(input))
-        .take(5)
-        .toList();
+
+    final seen = <String>{};
+    final results = <String>[];
+
+    for (final cmd in history.reversed) {
+      final trimmed = cmd.trim();
+      if (trimmed.startsWith(input) && seen.add(trimmed)) {
+        results.add(trimmed);
+        if (results.length == _maxSuggestions) return results;
+      }
+    }
+    for (final cmd in commonCommands) {
+      if (cmd.startsWith(input) && seen.add(cmd)) {
+        results.add(cmd);
+        if (results.length == _maxSuggestions) break;
+      }
+    }
+    return results;
   }
 }
 
@@ -78,9 +99,7 @@ class SuggestionsList extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.7),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -88,10 +107,7 @@ class SuggestionsList extends StatelessWidget {
           return InkWell(
             onTap: () => onSelected(suggestion),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
                   const Icon(
