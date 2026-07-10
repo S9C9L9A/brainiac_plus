@@ -9,13 +9,15 @@ import '../controllers/automation_controller.dart';
 import '../models/automation_templates.dart';
 import '../providers/automation_template_selection_provider.dart';
 import '../providers/automation_assistant_provider.dart';
+import '../services/automation_create_args.dart';
 import '../../../core/services/automation_assistant_service.dart';
 
 class CreateAutomationTab extends ConsumerStatefulWidget {
   const CreateAutomationTab({super.key});
 
   @override
-  ConsumerState<CreateAutomationTab> createState() => _CreateAutomationTabState();
+  ConsumerState<CreateAutomationTab> createState() =>
+      _CreateAutomationTabState();
 }
 
 class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
@@ -35,11 +37,29 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   AutomationTemplate? _selectedTemplate;
   String? _appliedTemplateId;
   final Map<String, String> _templateFieldValues = {};
-  
+
   // AI Assistant state
   bool _isAiAssisting = false;
   String _aiPrompt = '';
   final _aiPromptController = TextEditingController();
+
+  /// Route arguments (e.g. a chat-parsed cron) are consumed only once.
+  bool _routeArgsConsumed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_routeArgsConsumed) return;
+    _routeArgsConsumed = true;
+
+    final args = AutomationCreateArgs.from(
+      ModalRoute.of(context)?.settings.arguments,
+    );
+    if (args.cron != null) {
+      _cronSchedule = args.cron;
+      _triggerType = TriggerType.scheduled;
+    }
+  }
 
   @override
   void initState() {
@@ -86,11 +106,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
         children: [
           _buildProgressIndicator(),
           const SizedBox(height: 24),
-          Expanded(
-            child: SingleChildScrollView(
-              child: _buildCurrentStep(),
-            ),
-          ),
+          Expanded(child: SingleChildScrollView(child: _buildCurrentStep())),
           _buildNavigationButtons(),
         ],
       ),
@@ -114,7 +130,9 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                             colors: [Colors.purple, Colors.blue],
                           )
                         : null,
-                    color: isActive ? null : Colors.white.withValues(alpha: 0.2),
+                    color: isActive
+                        ? null
+                        : Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -166,10 +184,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                       SizedBox(height: 8),
                       Text(
                         'Let\'s start by giving your automation a name and description',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                     ],
                   ),
@@ -180,7 +195,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple.withValues(alpha: 0.3),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -225,7 +243,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                prefixIcon: const Icon(Icons.description, color: Colors.white70),
+                prefixIcon: const Icon(
+                  Icons.description,
+                  color: Colors.white70,
+                ),
               ),
               onChanged: (value) => setState(() => _description = value),
             ),
@@ -289,10 +310,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             const SizedBox(height: 8),
             const Text(
               'Choose which service this automation will work with',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 24),
             GridView.builder(
@@ -319,7 +337,9 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                               colors: [Colors.purple, Colors.blue],
                             )
                           : null,
-                      color: isSelected ? null : Colors.white.withValues(alpha: 0.1),
+                      color: isSelected
+                          ? null
+                          : Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected
@@ -342,7 +362,9 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.white70,
                             fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -386,7 +408,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isSelected 
+                      color: isSelected
                           ? AppColors.systemBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
@@ -461,7 +483,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isSelected 
+                      color: isSelected
                           ? AppColors.systemBlue.withValues(alpha: 0.2)
                           : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
@@ -539,14 +561,12 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             _buildReviewItem('Trigger', _triggerType.name),
             if (_cronSchedule != null && _cronSchedule!.isNotEmpty)
               _buildReviewItem('Schedule', _cronSchedule!),
-            if (_selectedTemplate != null && _templateFieldValues.isNotEmpty) ...[
+            if (_selectedTemplate != null &&
+                _templateFieldValues.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Text(
                 'Template Inputs',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
               const SizedBox(height: 8),
               ..._templateFieldValues.entries.map(
@@ -570,10 +590,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   Expanded(
                     child: Text(
                       'Ready to create! You can configure additional settings after creation.',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 14),
                     ),
                   ),
                 ],
@@ -595,10 +612,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
           ),
           Expanded(
@@ -786,12 +800,15 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
       _selectedService = template.service;
       _selectedMode = template.preferredMode;
       _cronSchedule = template.cronSchedule;
-      _triggerType = template.cronSchedule != null && template.cronSchedule!.isNotEmpty
+      _triggerType =
+          template.cronSchedule != null && template.cronSchedule!.isNotEmpty
           ? TriggerType.scheduled
           : TriggerType.manual;
       _templateFieldValues
         ..clear()
-        ..addEntries(template.requiredFields.map((field) => MapEntry(field, '')));
+        ..addEntries(
+          template.requiredFields.map((field) => MapEntry(field, '')),
+        );
       _currentStep = 2;
     });
   }
@@ -913,7 +930,11 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: Colors.purple, size: 28),
+                      const Icon(
+                        Icons.auto_awesome,
+                        color: Colors.purple,
+                        size: 28,
+                      ),
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
@@ -952,10 +973,7 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                   ] else ...[
                     const Text(
                       'Describe what you want to automate in natural language:',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -963,8 +981,12 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                       style: const TextStyle(color: Colors.white),
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'e.g., "Post to Instagram every day at 9am" or "Send a Slack message when I receive an email"',
-                        hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                        hintText:
+                            'e.g., "Post to Instagram every day at 9am" or "Send a Slack message when I receive an email"',
+                        hintStyle: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 13,
+                        ),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
                         border: OutlineInputBorder(
@@ -995,7 +1017,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.purple,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -1016,7 +1041,10 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
   }
 
   /// Get AI suggestion and apply it to the form
-  void _getAiSuggestion(BuildContext dialogContext, StateSetter setDialogState) async {
+  void _getAiSuggestion(
+    BuildContext dialogContext,
+    StateSetter setDialogState,
+  ) async {
     final prompt = _aiPrompt.trim();
     if (prompt.isEmpty) return;
 
@@ -1052,15 +1080,17 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
       // Show success message with confidence indicator
       if (!mounted) return;
       final confidenceEmoji = suggestion.isHighConfidence ? '✨' : '💡';
-      final confidenceText = suggestion.isHighConfidence ? 'High confidence' : 'Low confidence';
-      
+      final confidenceText = suggestion.isHighConfidence
+          ? 'High confidence'
+          : 'Low confidence';
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             '$confidenceEmoji AI suggestion applied! ($confidenceText: ${(suggestion.confidence * 100).toStringAsFixed(0)}%)',
           ),
-          backgroundColor: suggestion.isHighConfidence 
-              ? AppColors.systemGreen 
+          backgroundColor: suggestion.isHighConfidence
+              ? AppColors.systemGreen
               : AppColors.systemOrange,
           duration: const Duration(seconds: 4),
         ),
