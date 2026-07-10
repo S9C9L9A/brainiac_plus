@@ -6,11 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Builds a fake `/sys/class/drm` tree inside [root].
 ///
 /// Mirrors the real amdgpu sysfs layout:
-///   card<N>/device/gpu_busy_percent
-///   card<N>/device/mem_info_vram_used / mem_info_vram_total
-///   card<N>/device/uevent (DRIVER=..., PCI_ID=...)
-///   card<N>/device/hwmon/hwmon<M>/temp1_input (millidegrees C)
-///   card<N>/device/hwmon/hwmon<M>/power1_average (microwatts)
+///   `card<N>/device/gpu_busy_percent`
+///   `card<N>/device/mem_info_vram_used` / `mem_info_vram_total`
+///   `card<N>/device/uevent` (DRIVER=..., PCI_ID=...)
+///   `card<N>/device/hwmon/hwmon<M>/temp1_input` (millidegrees C)
+///   `card<N>/device/hwmon/hwmon<M>/power1_average` (microwatts)
 void writeFakeCard(
   Directory root,
   String card, {

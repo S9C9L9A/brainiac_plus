@@ -1056,8 +1056,8 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
 
       if (!mounted) return;
 
-      // Close the dialog
-      Navigator.of(dialogContext).pop();
+      // Close the dialog (its context has a lifecycle of its own)
+      if (dialogContext.mounted) Navigator.of(dialogContext).pop();
 
       // Apply the suggestion to the form
       setState(() {
@@ -1117,8 +1117,8 @@ class _CreateAutomationTabState extends ConsumerState<CreateAutomationTab> {
         ),
       );
 
-      // Close the dialog on error
-      Navigator.of(dialogContext).pop();
+      // Close the dialog on error (its context has a lifecycle of its own)
+      if (dialogContext.mounted) Navigator.of(dialogContext).pop();
     }
   }
 }
