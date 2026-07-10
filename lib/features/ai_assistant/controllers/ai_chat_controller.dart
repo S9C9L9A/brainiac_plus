@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
 import '../models/agent_task.dart';
 import '../../../core/services/ollama_service.dart';
+import '../../activity/controllers/activity_log_controller.dart';
+import '../../activity/models/activity_entry.dart';
 import '../../settings/providers/extended_settings_provider.dart';
 import '../services/agent_registry.dart';
 import '../services/agent_coordinator.dart';
@@ -51,6 +53,8 @@ final aiChatControllerProvider =
         ref.watch(ollamaServiceProvider),
         ref.watch(aiOrchestratorProvider),
         ref.watch(agentResponseParserProvider),
+        onActivity: (entry) =>
+            ref.read(activityLogProvider.notifier).log(entry),
       );
     });
 
@@ -91,12 +95,31 @@ class AiChatController extends StateNotifier<AiChatState> {
   final AiOrchestratorService _orchestrator;
   final AgentResponseParser _responseParser;
 
+  /// Reports user queries to the app-wide activity log.
+  final void Function(ActivityEntry entry)? onActivity;
+
   AiChatController(
     this._ollamaService,
     this._orchestrator,
-    this._responseParser,
-  ) : super(AiChatState()) {
+    this._responseParser, {
+    this.onActivity,
+  }) : super(AiChatState()) {
     _initialize();
+  }
+
+  /// Logs the query as soon as the pipeline has judged it — blocked
+  /// attempts are part of the audit trail too.
+  void _logQuery(String content, AgentTask pipelineResult) {
+    onActivity?.call(
+      ActivityEntry(
+        type: ActivityType.ai,
+        title: pipelineResult.verdict == AgentVerdict.blocked
+            ? 'AI query blocked'
+            : 'AI query',
+        description: content,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   void _initialize() {
@@ -124,6 +147,7 @@ class AiChatController extends StateNotifier<AiChatState> {
 
     // ── Multi-agent pipeline ─────────────────────────────────────────────
     final pipelineResult = _orchestrator.runPipeline(content);
+    _logQuery(content, pipelineResult);
     if (pipelineResult.verdict == AgentVerdict.blocked) {
       final blockedMsg = errorMessage(
         '🚫 **Action Blocked by Agent Pipeline**\n\n${pipelineResult.summary}',
@@ -203,6 +227,7 @@ class AiChatController extends StateNotifier<AiChatState> {
 
     // ── Multi-agent pipeline ─────────────────────────────────────────────
     final pipelineResult = _orchestrator.runPipeline(content);
+    _logQuery(content, pipelineResult);
     if (pipelineResult.verdict == AgentVerdict.blocked) {
       final userMsg = userMessage(content);
       final blockedMsg = errorMessage(
