@@ -141,13 +141,27 @@ class PackageController extends StateNotifier<PackageManagerState> {
   }
 
   Future<void> updateLists() async {
-    await _packageService.updatePackageLists();
-    await loadPackages();
+    state = state.copyWith(isLoading: true);
+    final result = await _packageService.updatePackageLists();
+    _logOperation('Package lists update', result);
+    if (result.toLowerCase().contains('updated')) {
+      await loadPackages();
+      state = state.copyWith(lastOperationMessage: result);
+    } else {
+      state = state.copyWith(isLoading: false, error: result);
+    }
   }
 
   Future<void> upgradeAll() async {
-    await _packageService.upgradePackages();
-    await loadPackages();
+    state = state.copyWith(isLoading: true);
+    final result = await _packageService.upgradePackages();
+    _logOperation('Package upgrade', result);
+    if (result.toLowerCase().contains('success')) {
+      await loadPackages();
+      state = state.copyWith(lastOperationMessage: result);
+    } else {
+      state = state.copyWith(isLoading: false, error: result);
+    }
   }
 }
 

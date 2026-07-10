@@ -7,6 +7,8 @@ class FakePackageService extends PackageService {
   List<PackageInfo> aptPackages = [];
   String installResult = 'Package installed successfully';
   String removeResult = 'Package removed successfully';
+  String updateResult = 'Package lists updated';
+  String upgradeResult = 'Packages upgraded successfully';
   int listCalls = 0;
 
   @override
@@ -25,6 +27,12 @@ class FakePackageService extends PackageService {
   @override
   Future<String> removePackage(String packageName, String source) async =>
       removeResult;
+
+  @override
+  Future<String> updatePackageLists() async => updateResult;
+
+  @override
+  Future<String> upgradePackages() async => upgradeResult;
 }
 
 PackageInfo pkg(String name) =>
@@ -85,6 +93,32 @@ void main() {
     controller.clearError();
 
     expect(controller.state.error, isNull);
+  });
+
+  test('failed list update surfaces the error', () async {
+    service.updateResult = 'Update failed: mirror unreachable';
+
+    await controller.updateLists();
+
+    expect(controller.state.error, contains('Update failed'));
+    expect(controller.state.isLoading, isFalse);
+  });
+
+  test('successful upgrade surfaces the message and logs activity', () async {
+    final logged = <ActivityEntry>[];
+    final c = PackageController(
+      packageService: service,
+      onActivity: logged.add,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    await c.upgradeAll();
+
+    expect(c.state.lastOperationMessage, contains('upgraded'));
+    expect(c.state.error, isNull);
+    expect(logged.map((e) => e.title), contains('Package upgrade'));
+
+    c.dispose();
   });
 
   test(
