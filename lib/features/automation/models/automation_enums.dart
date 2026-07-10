@@ -1,20 +1,13 @@
 /// Execution mode for automation
 enum AutomationMode {
-  api,      // Use official APIs
-  browser,  // Browser automation (Linux/Windows/macOS only)
-  app,      // App automation via ADB/Intents (Android only)
-  hybrid,   // Try API first, fallback to browser/app
+  api, // Use official APIs
+  browser, // Browser automation (Linux/Windows/macOS only)
+  app, // App automation via ADB/Intents (Android only)
+  hybrid, // Try API first, fallback to browser/app
 }
 
 /// Automation execution status
-enum AutomationStatus {
-  idle,
-  running,
-  paused,
-  completed,
-  failed,
-  scheduled,
-}
+enum AutomationStatus { idle, running, paused, completed, failed, scheduled }
 
 /// Service provider type
 enum ServiceProvider {
@@ -35,10 +28,10 @@ enum ServiceProvider {
 
 /// Automation trigger type
 enum TriggerType {
-  manual,     // User-initiated
-  scheduled,  // Time-based (cron)
-  event,      // Event-driven (webhook, file change, etc.)
-  condition,  // Condition-based (if X then Y)
+  manual, // User-initiated
+  scheduled, // Time-based (cron)
+  event, // Event-driven (webhook, file change, etc.)
+  condition, // Condition-based (if X then Y)
 }
 
 /// Automation category

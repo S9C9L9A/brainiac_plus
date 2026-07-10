@@ -7,14 +7,14 @@ class PlatformHelper {
   static bool get isWindows => Platform.isWindows;
   static bool get isMacOS => Platform.isMacOS;
   static bool get isIOS => Platform.isIOS;
-  
+
   static bool get isDesktop => isLinux || isWindows || isMacOS;
   static bool get isMobile => isAndroid || isIOS;
-  
+
   static bool get supportsBrowserAutomation => isLinux || isWindows || isMacOS;
   static bool get supportsADB => isAndroid;
   static bool get supportsProcessExecution => isDesktop;
-  
+
   static String get platformName {
     if (isLinux) return 'Linux';
     if (isAndroid) return 'Android';

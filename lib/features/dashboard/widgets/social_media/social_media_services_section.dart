@@ -9,10 +9,7 @@ import '../../models/social_media_service.dart';
 class SocialMediaServicesSection extends StatelessWidget {
   final List<SocialMediaService> services;
 
-  const SocialMediaServicesSection({
-    super.key,
-    required this.services,
-  });
+  const SocialMediaServicesSection({super.key, required this.services});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +19,10 @@ class SocialMediaServicesSection extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final gridSpec = _gridSpecForWidth(constraints.maxWidth, services.length);
+        final gridSpec = _gridSpecForWidth(
+          constraints.maxWidth,
+          services.length,
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,15 +88,15 @@ class SocialMediaServicesSection extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.purple.withOpacity(0.2),
-                Colors.blue.withOpacity(0.2),
+                Colors.purple.withValues(alpha: 0.2),
+                Colors.blue.withValues(alpha: 0.2),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               width: 1,
             ),
           ),
@@ -107,15 +107,15 @@ class SocialMediaServicesSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.white.withOpacity(0.15),
-                      Colors.white.withOpacity(0.05),
+                      Colors.white.withValues(alpha: 0.15),
+                      Colors.white.withValues(alpha: 0.05),
                     ],
                   ),
                   shape: BoxShape.circle,
                 ),
                 child: FaIcon(
                   FontAwesomeIcons.shareNodes,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   size: iconSize,
                 ),
               ),
@@ -134,7 +134,7 @@ class SocialMediaServicesSection extends StatelessWidget {
                 'Connect your social media accounts to monitor\nyour online presence and engagement',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.75),
+                  color: Colors.white.withValues(alpha: 0.75),
                   fontSize: bodySize,
                   height: 1.5,
                 ),

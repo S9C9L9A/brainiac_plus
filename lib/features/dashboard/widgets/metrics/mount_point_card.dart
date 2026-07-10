@@ -36,7 +36,7 @@ class MountPointCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: usageColor.withOpacity(0.2),
+                  color: usageColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(deviceIcon, color: usageColor, size: 24),
@@ -49,9 +49,11 @@ class MountPointCard extends StatelessWidget {
                     Text(
                       mountPoint.device,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -60,22 +62,30 @@ class MountPointCard extends StatelessWidget {
                       children: [
                         Text(
                           mountPoint.fsType,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isDark
+                                    ? AppColors.textTertiaryDark
+                                    : AppColors.textTertiary,
                               ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           '•',
                           style: TextStyle(
-                            color: (isDark ? AppColors.textTertiaryDark : AppColors.textTertiary),
+                            color: (isDark
+                                ? AppColors.textTertiaryDark
+                                : AppColors.textTertiary),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           mountPoint.size,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondary,
                                 fontWeight: FontWeight.w500,
                               ),
                         ),
@@ -87,9 +97,9 @@ class MountPointCard extends StatelessWidget {
               Text(
                 '${mountPoint.percentage}%',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: usageColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: usageColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -102,15 +112,19 @@ class MountPointCard extends StatelessWidget {
               Icon(
                 AppIcons.folder,
                 size: 16,
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondary,
               ),
               const SizedBox(width: 6),
               Text(
                 mountPoint.mountPoint,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                      fontStyle: FontStyle.italic,
-                    ),
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
@@ -125,7 +139,7 @@ class MountPointCard extends StatelessWidget {
                 Container(
                   height: 8,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -135,10 +149,7 @@ class MountPointCard extends StatelessWidget {
                     height: 8,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          usageColor,
-                          usageColor.withOpacity(0.7),
-                        ],
+                        colors: [usageColor, usageColor.withValues(alpha: 0.7)],
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -157,16 +168,16 @@ class MountPointCard extends StatelessWidget {
               Text(
                 '${mountPoint.used} used',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 11,
-                    ),
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
               ),
               Text(
                 '${mountPoint.available} available',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 11,
-                    ),
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
               ),
             ],
           ),
@@ -223,11 +234,9 @@ class MountPointCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

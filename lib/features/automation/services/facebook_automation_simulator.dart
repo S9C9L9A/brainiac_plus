@@ -15,17 +15,21 @@ class FacebookAutomationSimulator {
   });
 
   /// Simula l'esecuzione di un'automazione
-  Future<AutomationSimulationResult> simulateAutomation(Automation automation) async {
+  Future<AutomationSimulationResult> simulateAutomation(
+    Automation automation,
+  ) async {
     final startTime = DateTime.now();
     final steps = <SimulationStep>[];
 
     try {
       // Step 1: Verifica token
-      steps.add(const SimulationStep(
-        name: 'Token Validation',
-        status: SimulationStatus.running,
-        message: 'Validating Facebook token...',
-      ));
+      steps.add(
+        const SimulationStep(
+          name: 'Token Validation',
+          status: SimulationStatus.running,
+          message: 'Validating Facebook token...',
+        ),
+      );
 
       final isValid = await _validateToken();
       steps.last = steps.last.copyWith(
@@ -43,11 +47,13 @@ class FacebookAutomationSimulator {
       }
 
       // Step 2: Recupera pagine
-      steps.add(const SimulationStep(
-        name: 'Fetch Pages',
-        status: SimulationStatus.running,
-        message: 'Fetching Facebook pages...',
-      ));
+      steps.add(
+        const SimulationStep(
+          name: 'Fetch Pages',
+          status: SimulationStatus.running,
+          message: 'Fetching Facebook pages...',
+        ),
+      );
 
       final pages = await _fetchPages();
       steps.last = steps.last.copyWith(
@@ -57,11 +63,13 @@ class FacebookAutomationSimulator {
       );
 
       // Step 3: Simula generazione contenuto
-      steps.add(const SimulationStep(
-        name: 'Content Generation',
-        status: SimulationStatus.running,
-        message: 'Generating post content...',
-      ));
+      steps.add(
+        const SimulationStep(
+          name: 'Content Generation',
+          status: SimulationStatus.running,
+          message: 'Generating post content...',
+        ),
+      );
 
       final content = _generateContent(automation);
       steps.last = steps.last.copyWith(
@@ -71,11 +79,13 @@ class FacebookAutomationSimulator {
       );
 
       // Step 4: SIMULA pubblicazione
-      steps.add(const SimulationStep(
-        name: 'Publish Simulation',
-        status: SimulationStatus.running,
-        message: 'Simulating post publication...',
-      ));
+      steps.add(
+        const SimulationStep(
+          name: 'Publish Simulation',
+          status: SimulationStatus.running,
+          message: 'Simulating post publication...',
+        ),
+      );
 
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -95,13 +105,14 @@ class FacebookAutomationSimulator {
         duration: DateTime.now().difference(startTime),
         simulatedPostContent: content,
       );
-
     } catch (e) {
-      steps.add(SimulationStep(
-        name: 'Error',
-        status: SimulationStatus.failed,
-        message: 'Error: $e',
-      ));
+      steps.add(
+        SimulationStep(
+          name: 'Error',
+          status: SimulationStatus.failed,
+          message: 'Error: $e',
+        ),
+      );
 
       return AutomationSimulationResult(
         success: false,
@@ -115,7 +126,9 @@ class FacebookAutomationSimulator {
   Future<bool> _validateToken() async {
     try {
       final response = await http.get(
-        Uri.parse('https://graph.facebook.com/v18.0/me?access_token=$facebookToken'),
+        Uri.parse(
+          'https://graph.facebook.com/v18.0/me?access_token=$facebookToken',
+        ),
       );
       return response.statusCode == 200;
     } catch (e) {
@@ -126,7 +139,9 @@ class FacebookAutomationSimulator {
   Future<List<Map<String, dynamic>>> _fetchPages() async {
     try {
       final response = await http.get(
-        Uri.parse('https://graph.facebook.com/v18.0/me/accounts?access_token=$facebookToken'),
+        Uri.parse(
+          'https://graph.facebook.com/v18.0/me/accounts?access_token=$facebookToken',
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -140,12 +155,18 @@ class FacebookAutomationSimulator {
   }
 
   String _generateContent(Automation automation) {
-    final template = automation.config['message_template'] as String? ?? 
+    final template =
+        automation.config['message_template'] as String? ??
         '🧠 BrainiacPlus Automated Post';
-    
+
     String content = template
         .replaceAll('{date}', DateTime.now().toString().split(' ')[0])
-        .replaceAll('{time}', TimeOfDay.fromDateTime(DateTime.now()).format(TimeOfDayFormat.H_colon_mm as BuildContext))
+        .replaceAll(
+          '{time}',
+          TimeOfDay.fromDateTime(
+            DateTime.now(),
+          ).format(TimeOfDayFormat.H_colon_mm as BuildContext),
+        )
         .replaceAll('{automation_name}', automation.name);
 
     return content;
@@ -196,10 +217,4 @@ class SimulationStep {
   }
 }
 
-enum SimulationStatus {
-  pending,
-  running,
-  success,
-  failed,
-  skipped,
-}
+enum SimulationStatus { pending, running, success, failed, skipped }

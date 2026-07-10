@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/hardware_detection_service.dart';
 import '../services/model_suggestions_service.dart';
-import '../services/system_metrics_service.dart' show SystemMetricsService, RealtimeSystemMetrics;
-import '../services/ollama_service.dart' show OllamaService, OllamaModel, OllamaException;
+import '../services/system_metrics_service.dart'
+    show SystemMetricsService, RealtimeSystemMetrics;
+import '../services/ollama_service.dart'
+    show OllamaService, OllamaModel, OllamaException;
 
 /// Hardware detection service provider
 final hardwareDetectionProvider = Provider<HardwareDetectionService>((ref) {
@@ -29,29 +31,35 @@ final modelSuggestionsProvider = Provider<ModelSuggestionsService>((ref) {
 /// All available models from Ollama (cached with invalidation)
 final ollamaAvailableModelsProvider =
     FutureProvider.family<List<OllamaModel>, String>((ref, baseUrl) async {
-  final service = OllamaService(baseUrl: baseUrl);
-  try {
-    return await service.listModelsDetailed();
-  } catch (e) {
-    return []; // Return empty list if Ollama not available
-  }
-});
+      final service = OllamaService(baseUrl: baseUrl);
+      try {
+        return await service.listModelsDetailed();
+      } catch (e) {
+        return []; // Return empty list if Ollama not available
+      }
+    });
 
 /// Recommended models based on hardware
-final recommendedModelsProvider = FutureProvider<List<OllamaModelInfo>>((ref) async {
+final recommendedModelsProvider = FutureProvider<List<OllamaModelInfo>>((
+  ref,
+) async {
   final service = ref.watch(modelSuggestionsProvider);
   return service.getRecommendedModels(limit: 5);
 });
 
 /// All models rated for current hardware
-final allRatedModelsProvider =
-    FutureProvider<List<OllamaModelInfo>>((ref) async {
+final allRatedModelsProvider = FutureProvider<List<OllamaModelInfo>>((
+  ref,
+) async {
   final service = ref.watch(modelSuggestionsProvider);
   return service.getAllModelsRated();
 });
 
 /// Model info provider by name
-final modelInfoProvider = Provider.family<OllamaModelInfo?, String>((ref, modelName) {
+final modelInfoProvider = Provider.family<OllamaModelInfo?, String>((
+  ref,
+  modelName,
+) {
   final service = ModelSuggestionsService();
   final allModels = service.getAllModels();
   try {
@@ -66,8 +74,8 @@ final modelInfoProvider = Provider.family<OllamaModelInfo?, String>((ref, modelN
 /// Download model status provider
 final modelDownloadStatusProvider =
     StateNotifierProvider<ModelDownloadNotifier, ModelDownloadState>((ref) {
-  return ModelDownloadNotifier();
-});
+      return ModelDownloadNotifier();
+    });
 
 /// Download state
 class ModelDownloadState {

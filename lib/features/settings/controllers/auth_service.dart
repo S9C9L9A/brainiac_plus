@@ -9,7 +9,7 @@ class AuthService {
   }) async {
     try {
       print('🔐 Autenticazione con backend...');
-      
+
       final response = await FacebookAuthService.authenticateWithFacebook(
         accessToken,
         userID,
@@ -18,13 +18,13 @@ class AuthService {
       if (response['valid'] == true) {
         print('✅ Autenticazione riuscita!');
         print('📦 Utente: ${response['user']['name']}');
-        
+
         // Salva i dati localmente (TODO: implementare con secure_storage)
         // await _storage.write(
         //   key: _jwtTokenKey,
         //   value: response['token'],
         // );
-        
+
         return {
           'success': true,
           'user': response['user'],
@@ -63,11 +63,7 @@ class AuthService {
     required String message,
   }) async {
     try {
-      return await FacebookAuthService.postToPage(
-        pageID,
-        pageToken,
-        message,
-      );
+      return await FacebookAuthService.postToPage(pageID, pageToken, message);
     } catch (e) {
       print('❌ Errore nella pubblicazione: $e');
       return null;

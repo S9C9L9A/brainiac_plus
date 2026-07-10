@@ -71,11 +71,7 @@ class InstagramCliService {
         stderr: 'instagram-cli not found in PATH. ${e.message}',
       );
     } on Exception catch (e) {
-      return InstagramCliResult(
-        exitCode: 1,
-        stdout: '',
-        stderr: e.toString(),
-      );
+      return InstagramCliResult(exitCode: 1, stdout: '', stderr: e.toString());
     }
   }
 
@@ -96,11 +92,9 @@ class InstagramCliService {
     }
 
     try {
-      final result = await Process.run(
-        'which',
-        [_binary],
-        environment: env,
-      ).timeout(timeout);
+      final result = await Process.run('which', [
+        _binary,
+      ], environment: env).timeout(timeout);
       if (result.exitCode == 0) {
         final path = (result.stdout ?? '').toString().trim();
         if (path.isNotEmpty) {
@@ -126,11 +120,11 @@ class InstagramCliService {
     Duration timeout = _defaultTimeout,
   }) async {
     try {
-      final result = await Process.run(
-        'npm',
-        ['config', 'get', 'prefix'],
-        environment: env,
-      ).timeout(timeout);
+      final result = await Process.run('npm', [
+        'config',
+        'get',
+        'prefix',
+      ], environment: env).timeout(timeout);
       if (result.exitCode != 0) return null;
 
       final prefix = (result.stdout ?? '').toString().trim();
@@ -185,10 +179,7 @@ class InstagramCliService {
 
   Future<InstagramCliResult> notify() => runRaw(['notify']);
 
-  Future<InstagramCliResult> chat({
-    required String username,
-    String? title,
-  }) {
+  Future<InstagramCliResult> chat({required String username, String? title}) {
     final args = ['chat', '-u', username];
     if (title != null && title.trim().isNotEmpty) {
       args.addAll(['-t', title]);
@@ -196,5 +187,6 @@ class InstagramCliService {
     return runRaw(args);
   }
 
-  bool _isDesktop() => Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+  bool _isDesktop() =>
+      Platform.isLinux || Platform.isMacOS || Platform.isWindows;
 }

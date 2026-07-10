@@ -47,28 +47,28 @@ class CodeChange {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'filePath': filePath,
-        'type': type.name,
-        'description': description,
-        'oldContent': oldContent,
-        'newContent': newContent,
-        'createdAt': createdAt.toIso8601String(),
-        'status': status.name,
-        'errorMessage': errorMessage,
-      };
+    'id': id,
+    'filePath': filePath,
+    'type': type.name,
+    'description': description,
+    'oldContent': oldContent,
+    'newContent': newContent,
+    'createdAt': createdAt.toIso8601String(),
+    'status': status.name,
+    'errorMessage': errorMessage,
+  };
 
   factory CodeChange.fromJson(Map<String, dynamic> json) => CodeChange(
-        id: json['id'] as String,
-        filePath: json['filePath'] as String,
-        type: CodeChangeType.values.byName(json['type'] as String),
-        description: json['description'] as String,
-        oldContent: json['oldContent'] as String?,
-        newContent: json['newContent'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        status: CodeChangeStatus.values.byName(json['status'] as String),
-        errorMessage: json['errorMessage'] as String?,
-      );
+    id: json['id'] as String,
+    filePath: json['filePath'] as String,
+    type: CodeChangeType.values.byName(json['type'] as String),
+    description: json['description'] as String,
+    oldContent: json['oldContent'] as String?,
+    newContent: json['newContent'] as String?,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    status: CodeChangeStatus.values.byName(json['status'] as String),
+    errorMessage: json['errorMessage'] as String?,
+  );
 }
 
 /// Type of code change

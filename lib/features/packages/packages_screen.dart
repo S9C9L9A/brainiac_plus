@@ -157,7 +157,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Search packages...',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             border: InputBorder.none,
             icon: const Icon(
               AppIcons.search,
@@ -201,7 +201,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.systemBlue
-                : Colors.white.withOpacity(0.1),
+                : Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -245,7 +245,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -253,7 +253,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _getSourceColor(package.source).withOpacity(0.2),
+                color: _getSourceColor(package.source).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

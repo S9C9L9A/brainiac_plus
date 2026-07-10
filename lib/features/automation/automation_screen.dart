@@ -24,7 +24,9 @@ class AutomationScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Expanded(
                 child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
                     : _buildContent(context, state, ref, isDark),
               ),
             ],
@@ -34,7 +36,11 @@ class AutomationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AutomationState state, bool isDark) {
+  Widget _buildHeader(
+    BuildContext context,
+    AutomationState state,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -51,7 +57,7 @@ class AutomationScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -70,7 +76,12 @@ class AutomationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, AutomationState state, WidgetRef ref, bool isDark) {
+  Widget _buildContent(
+    BuildContext context,
+    AutomationState state,
+    WidgetRef ref,
+    bool isDark,
+  ) {
     if (state.activeAutomations.isEmpty && state.templates.isEmpty) {
       return const Center(
         child: Text(
@@ -98,9 +109,9 @@ class AutomationScreen extends ConsumerWidget {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +138,7 @@ class AutomationScreen extends ConsumerWidget {
                             Text(
                               automation.description,
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
                               ),
                             ),
@@ -135,14 +146,20 @@ class AutomationScreen extends ConsumerWidget {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: _getStatusColor(automation.status),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           automation.status.label,
-                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ],
@@ -152,7 +169,7 @@ class AutomationScreen extends ConsumerWidget {
                     Text(
                       'Schedule: ${automation.cronSchedule}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -177,9 +194,9 @@ class AutomationScreen extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               children: [
@@ -203,7 +220,7 @@ class AutomationScreen extends ConsumerWidget {
                       Text(
                         template.description,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                         maxLines: 2,
@@ -213,7 +230,10 @@ class AutomationScreen extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: Colors.white,
+                  ),
                   onPressed: () async {
                     await ref
                         .read(automationControllerProvider.notifier)

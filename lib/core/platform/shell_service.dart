@@ -4,7 +4,8 @@ import 'dart:io';
 /// Shell execution service
 class ShellService {
   Process? _currentProcess;
-  final StreamController<String> _outputController = StreamController<String>.broadcast();
+  final StreamController<String> _outputController =
+      StreamController<String>.broadcast();
   final List<String> _history = [];
 
   Stream<String> get outputStream => _outputController.stream;
@@ -23,28 +24,29 @@ class ShellService {
     final actualCommand = sudo ? 'sudo -S $command' : command;
 
     try {
-      _currentProcess = await Process.start(
-        'bash',
-        ['-c', actualCommand],
-        mode: ProcessStartMode.normal,
-      );
+      _currentProcess = await Process.start('bash', [
+        '-c',
+        actualCommand,
+      ], mode: ProcessStartMode.normal);
 
       // Stream stdout
-      _currentProcess!.stdout.transform(const SystemEncoding().decoder).listen(
-        (data) {
-          _outputController.add(data);
-        },
-        onError: (error) {
-          _outputController.add('Error: $error\n');
-        },
-      );
+      _currentProcess!.stdout
+          .transform(const SystemEncoding().decoder)
+          .listen(
+            (data) {
+              _outputController.add(data);
+            },
+            onError: (error) {
+              _outputController.add('Error: $error\n');
+            },
+          );
 
       // Stream stderr
-      _currentProcess!.stderr.transform(const SystemEncoding().decoder).listen(
-        (data) {
-          _outputController.add(data);
-        },
-      );
+      _currentProcess!.stderr.transform(const SystemEncoding().decoder).listen((
+        data,
+      ) {
+        _outputController.add(data);
+      });
 
       // Wait for completion
       final exitCode = await _currentProcess!.exitCode;

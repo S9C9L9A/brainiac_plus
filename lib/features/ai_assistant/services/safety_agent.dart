@@ -1,4 +1,5 @@
 import '../models/agent_task.dart';
+
 /// Validates operations against locked files and dangerous shell patterns.
 /// Produces [AgentVerdict.blocked] for critical violations.
 class SafetyAgent {
@@ -40,22 +41,28 @@ class SafetyAgent {
     for (final file in task.referencedFiles) {
       for (final locked in _lockedPaths) {
         if (file == locked || file.startsWith(locked)) {
-          newFindings.add(AgentFinding(
-            agentId: id,
-            severity: FindingSeverity.error,
-            message: 'Locked file referenced: "$file" — explicit user approval required (CLAUDE.md §7).',
-            file: file,
-          ));
+          newFindings.add(
+            AgentFinding(
+              agentId: id,
+              severity: FindingSeverity.error,
+              message:
+                  'Locked file referenced: "$file" — explicit user approval required (CLAUDE.md §7).',
+              file: file,
+            ),
+          );
         }
       }
       for (final secret in _secretPatterns) {
         if (file.contains(secret)) {
-          newFindings.add(AgentFinding(
-            agentId: id,
-            severity: FindingSeverity.error,
-            message: 'Potential secret/credential file: "$file" — never touch without HID (CLAUDE.md §8).',
-            file: file,
-          ));
+          newFindings.add(
+            AgentFinding(
+              agentId: id,
+              severity: FindingSeverity.error,
+              message:
+                  'Potential secret/credential file: "$file" — never touch without HID (CLAUDE.md §8).',
+              file: file,
+            ),
+          );
         }
       }
     }
@@ -63,11 +70,14 @@ class SafetyAgent {
     final lower = task.userInput.toLowerCase();
     for (final cmd in _dangerousCommands) {
       if (lower.contains(cmd.toLowerCase())) {
-        newFindings.add(AgentFinding(
-          agentId: id,
-          severity: FindingSeverity.error,
-          message: 'Dangerous operation requested: "$cmd" — requires explicit approval (CLAUDE.md §19).',
-        ));
+        newFindings.add(
+          AgentFinding(
+            agentId: id,
+            severity: FindingSeverity.error,
+            message:
+                'Dangerous operation requested: "$cmd" — requires explicit approval (CLAUDE.md §19).',
+          ),
+        );
       }
     }
     // Check code snippet for dangerous patterns
@@ -75,11 +85,13 @@ class SafetyAgent {
     if (code != null && code.isNotEmpty) {
       for (final cmd in _dangerousCommands) {
         if (code.contains(cmd)) {
-          newFindings.add(AgentFinding(
-            agentId: id,
-            severity: FindingSeverity.error,
-            message: 'Dangerous shell pattern in code: "$cmd"',
-          ));
+          newFindings.add(
+            AgentFinding(
+              agentId: id,
+              severity: FindingSeverity.error,
+              message: 'Dangerous shell pattern in code: "$cmd"',
+            ),
+          );
         }
       }
     }

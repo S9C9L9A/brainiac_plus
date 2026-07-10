@@ -28,11 +28,7 @@ void main() {
       return true;
     };
 
-    runApp(
-      const ProviderScope(
-        child: BrainiacPlusApp(),
-      ),
-    );
+    runApp(const ProviderScope(child: BrainiacPlusApp()));
   });
 }
 
@@ -68,11 +64,7 @@ class _BrainiacPlusAppState extends ConsumerState<BrainiacPlusApp> {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 
@@ -88,21 +80,19 @@ class _BrainiacPlusAppState extends ConsumerState<BrainiacPlusApp> {
       },
 
       // Start with setup wizard if not completed, otherwise go to home
-      home: _isSetupComplete ? const DashboardScreen() : const SetupWizardScreen(),
+      home: _isSetupComplete
+          ? const DashboardScreen()
+          : const SetupWizardScreen(),
 
       // Advanced route generator for parametric routes and error handling
       onGenerateRoute: RouteGenerator.generateRoute,
 
       // Route observer for analytics and debugging
-      navigatorObservers: [
-        AppRouteObserver(),
-      ],
+      navigatorObservers: [AppRouteObserver()],
 
       // Fallback for unknown routes
       onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => const DashboardScreen(),
-        );
+        return MaterialPageRoute(builder: (context) => const DashboardScreen());
       },
     );
   }

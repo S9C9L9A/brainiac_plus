@@ -21,7 +21,7 @@ class FileItem {
   /// Format file size to human readable
   String get formattedSize {
     if (isDirectory) return '--';
-    
+
     if (size < 1024) return '$size B';
     if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(1)} KB';
     if (size < 1024 * 1024 * 1024) {
@@ -43,7 +43,7 @@ class FileItem {
   factory FileItem.fromFileSystemEntity(FileSystemEntity entity) {
     final stat = entity.statSync();
     final isDir = entity is Directory;
-    
+
     return FileItem(
       name: entity.path.split('/').last,
       path: entity.path,
@@ -58,7 +58,10 @@ class FileItem {
 /// File operations service
 class FileService {
   /// List files in directory
-  Future<List<FileItem>> listFiles(String path, {bool showHidden = false}) async {
+  Future<List<FileItem>> listFiles(
+    String path, {
+    bool showHidden = false,
+  }) async {
     try {
       final dir = Directory(path);
       if (!await dir.exists()) {
@@ -66,11 +69,13 @@ class FileService {
       }
 
       final entities = await dir.list().toList();
-      final items = entities.map((e) => FileItem.fromFileSystemEntity(e)).toList();
+      final items = entities
+          .map((e) => FileItem.fromFileSystemEntity(e))
+          .toList();
 
       // Filter hidden files if needed
-      final filtered = showHidden 
-          ? items 
+      final filtered = showHidden
+          ? items
           : items.where((item) => !item.isHidden).toList();
 
       // Sort: directories first, then by name
@@ -142,7 +147,7 @@ class FileService {
 
     final parentPath = path.substring(0, path.lastIndexOf('/'));
     final newPath = '$parentPath/$newName';
-    
+
     await entity.rename(newPath);
   }
 
@@ -156,9 +161,9 @@ class FileService {
     final entity = FileSystemEntity.isDirectorySync(path)
         ? Directory(path)
         : File(path);
-    
+
     final stat = await entity.stat();
-    
+
     return {
       'path': path,
       'type': entity is Directory ? 'directory' : 'file',

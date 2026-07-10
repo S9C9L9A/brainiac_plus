@@ -68,10 +68,7 @@ class ActiveAutomationsTab extends ConsumerWidget {
           const Text(
             'Start by creating your first automation\nor browse templates',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
       ),
@@ -133,7 +130,8 @@ class ActiveAutomationsTab extends ConsumerWidget {
                 Switch(
                   value: automation.isActive,
                   onChanged: (value) {
-                    ref.read(automationControllerProvider.notifier)
+                    ref
+                        .read(automationControllerProvider.notifier)
                         .toggleAutomation(automation.id);
                   },
                   activeColor: AppColors.systemGreen,
@@ -150,10 +148,7 @@ class ActiveAutomationsTab extends ConsumerWidget {
                 if (automation.executionCount > 0)
                   Text(
                     '${automation.successCount}/${automation.executionCount} ✅',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
               ],
             ),
@@ -161,18 +156,11 @@ class ActiveAutomationsTab extends ConsumerWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(
-                    Icons.schedule,
-                    color: Colors.white60,
-                    size: 16,
-                  ),
+                  const Icon(Icons.schedule, color: Colors.white60, size: 16),
                   const SizedBox(width: 6),
                   Text(
                     'Next run: ${_formatDateTime(automation.nextRun!)}',
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white60, fontSize: 12),
                   ),
                 ],
               ),
@@ -188,7 +176,8 @@ class ActiveAutomationsTab extends ConsumerWidget {
                     foregroundColor: AppColors.systemBlue,
                   ),
                   onPressed: () {
-                    ref.read(automationControllerProvider.notifier)
+                    ref
+                        .read(automationControllerProvider.notifier)
                         .runAutomation(automation.id);
                   },
                 ),
@@ -196,9 +185,7 @@ class ActiveAutomationsTab extends ConsumerWidget {
                 TextButton.icon(
                   icon: const Icon(Icons.edit, size: 18),
                   label: const Text('Edit'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white70,
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
                   onPressed: () {
                     // TODO: Navigate to edit screen
                   },
@@ -237,10 +224,7 @@ class ActiveAutomationsTab extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            status.icon,
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text(status.icon, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Text(
             status.label,
@@ -265,17 +249,11 @@ class ActiveAutomationsTab extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            mode.icon,
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text(mode.icon, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Text(
             mode.label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
           ),
         ],
       ),

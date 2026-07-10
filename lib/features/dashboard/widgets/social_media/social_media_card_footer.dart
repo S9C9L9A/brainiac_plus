@@ -18,10 +18,10 @@ class SocialMediaCardFooter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.15),
+        color: Colors.black.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -29,7 +29,7 @@ class SocialMediaCardFooter extends StatelessWidget {
         children: [
           FaIcon(
             FontAwesomeIcons.clock,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             size: layout.footerIconSize,
           ),
           const SizedBox(width: 8),
@@ -39,7 +39,7 @@ class SocialMediaCardFooter extends StatelessWidget {
                   ? 'Updated ${getTimeAgo(lastSync!)}'
                   : 'Not synced yet',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: layout.footerFontSize,
                 fontWeight: FontWeight.w500,
               ),
@@ -47,7 +47,7 @@ class SocialMediaCardFooter extends StatelessWidget {
           ),
           FaIcon(
             FontAwesomeIcons.chevronRight,
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             size: layout.footerIconSize,
           ),
         ],

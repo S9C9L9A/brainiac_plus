@@ -178,7 +178,12 @@ class Automation {
       executionCount: map['executionCount'] as int? ?? 0,
       successCount: map['successCount'] as int? ?? 0,
       failureCount: map['failureCount'] as int? ?? 0,
-      tags: (map['tags'] as String?)?.split(',').where((t) => t.isNotEmpty).toList() ?? [],
+      tags:
+          (map['tags'] as String?)
+              ?.split(',')
+              .where((t) => t.isNotEmpty)
+              .toList() ??
+          [],
     );
   }
 }
@@ -246,7 +251,12 @@ class AutomationLog {
       endTime: map['endTime'] != null ? DateTime.parse(map['endTime']) : null,
       errorMessage: map['errorMessage'] as String?,
       result: map['result'] as Map<String, dynamic>?,
-      steps: (map['steps'] as String?)?.split('|').where((s) => s.isNotEmpty).toList() ?? [],
+      steps:
+          (map['steps'] as String?)
+              ?.split('|')
+              .where((s) => s.isNotEmpty)
+              .toList() ??
+          [],
     );
   }
 }

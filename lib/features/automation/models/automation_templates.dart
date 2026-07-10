@@ -52,7 +52,8 @@ class AutomationTemplates {
     _createTemplate(
       id: 'tmpl_instagram_daily_post',
       name: 'Daily Instagram Post',
-      description: 'Automatically post to Instagram daily with AI-generated content',
+      description:
+          'Automatically post to Instagram daily with AI-generated content',
       category: AutomationCategory.socialMedia,
       service: ServiceProvider.instagram,
       cronSchedule: '0 18 * * *', // 6 PM daily
@@ -91,7 +92,8 @@ class AutomationTemplates {
     _createTemplate(
       id: 'tmpl_cross_post',
       name: 'Cross-Platform Posting',
-      description: 'Post the same content to Instagram, Facebook, Twitter, and LinkedIn',
+      description:
+          'Post the same content to Instagram, Facebook, Twitter, and LinkedIn',
       category: AutomationCategory.socialMedia,
       service: ServiceProvider.custom,
       tags: ['cross-post', 'multi-platform'],
@@ -293,7 +295,9 @@ class AutomationTemplates {
       category: category,
       service: service,
       preferredMode: AutomationMode.hybrid,
-      triggerType: cronSchedule != null ? TriggerType.scheduled : TriggerType.manual,
+      triggerType: cronSchedule != null
+          ? TriggerType.scheduled
+          : TriggerType.manual,
       status: AutomationStatus.idle,
       cronSchedule: cronSchedule,
       createdAt: DateTime.now(),
@@ -334,7 +338,8 @@ class AutomationTemplates {
     const AutomationTemplate(
       id: 'tmpl_instagram_daily',
       name: 'Daily Instagram Post',
-      description: 'Automatically post to Instagram daily with AI-generated content',
+      description:
+          'Automatically post to Instagram daily with AI-generated content',
       category: AutomationCategory.socialMedia,
       service: ServiceProvider.instagram,
       cronSchedule: '0 18 * * *',
@@ -361,7 +366,7 @@ class AutomationTemplates {
       tags: ['tiktok', 'video'],
       isPremium: true,
     ),
-    
+
     // Productivity
     const AutomationTemplate(
       id: 'tmpl_notion_sync',

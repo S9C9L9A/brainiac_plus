@@ -3,6 +3,7 @@ import 'code_review_agent.dart';
 import 'test_agent.dart';
 import 'safety_agent.dart';
 import 'action_agent.dart';
+
 /// Coordinates the multi-agent verification pipeline.
 ///
 /// Pipeline order:
@@ -21,10 +22,11 @@ class AgentCoordinator {
     CodeReviewAgent? codeReview,
     TestAgent? test,
     ActionAgent? action,
-  })  : _safety = safety ?? SafetyAgent(),
-        _codeReview = codeReview ?? CodeReviewAgent(),
-        _test = test ?? TestAgent(),
-        _action = action ?? ActionAgent();
+  }) : _safety = safety ?? SafetyAgent(),
+       _codeReview = codeReview ?? CodeReviewAgent(),
+       _test = test ?? TestAgent(),
+       _action = action ?? ActionAgent();
+
   /// Run the full pipeline and return the finalized [AgentTask].
   AgentTask run(AgentTask task) {
     var current = task;
@@ -39,6 +41,7 @@ class AgentCoordinator {
     // Stage 5 — Coordinator verdict + summary
     return _finalize(current);
   }
+
   AgentTask _finalize(AgentTask task) {
     final errors = task.findings
         .where((f) => f.severity == FindingSeverity.error)
@@ -57,6 +60,7 @@ class AgentCoordinator {
     final summary = _buildSummary(task, verdict, errors, warnings);
     return task.copyWith(verdict: verdict, summary: summary);
   }
+
   String _buildSummary(
     AgentTask task,
     AgentVerdict verdict,
@@ -71,7 +75,8 @@ class AgentCoordinator {
     };
     final label = switch (verdict) {
       AgentVerdict.ok => 'All checks passed',
-      AgentVerdict.warning => '${warnings.length} warning(s) — review before proceeding',
+      AgentVerdict.warning =>
+        '${warnings.length} warning(s) — review before proceeding',
       AgentVerdict.blocked => '${errors.length} blocker(s) — action required',
     };
     buf.writeln('$icon **Agent Pipeline Report** — $label');

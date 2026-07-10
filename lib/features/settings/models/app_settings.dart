@@ -3,19 +3,19 @@ class AppSettings {
   // API Keys
   final String? higgsfieldApiKey;
   final String? openaiApiKey;
-  
+
   // Instagram
   final String? instagramAccessToken;
   final String? instagramUserId;
   final String? instagramUsername;
   final DateTime? instagramTokenExpiry;
-  
+
   // Preferences
   final bool notificationsEnabled;
   final bool autoRefreshMetrics;
   final int refreshInterval; // seconds
   final String theme; // 'dark', 'light', 'system'
-  
+
   // Automation
   final bool automationEnabled;
   final bool retryFailedTasks;
@@ -108,10 +108,14 @@ class AppSettings {
   }
 
   // Helper methods
-  bool get hasHiggsfieldKey => higgsfieldApiKey != null && higgsfieldApiKey!.isNotEmpty;
-  bool get hasInstagramAuth => instagramAccessToken != null && instagramUserId != null;
-  bool get isInstagramTokenExpired => 
-      instagramTokenExpiry != null && DateTime.now().isAfter(instagramTokenExpiry!);
-  bool get needsInstagramRefresh => 
-      hasInstagramAuth && (isInstagramTokenExpired || instagramTokenExpiry == null);
+  bool get hasHiggsfieldKey =>
+      higgsfieldApiKey != null && higgsfieldApiKey!.isNotEmpty;
+  bool get hasInstagramAuth =>
+      instagramAccessToken != null && instagramUserId != null;
+  bool get isInstagramTokenExpired =>
+      instagramTokenExpiry != null &&
+      DateTime.now().isAfter(instagramTokenExpiry!);
+  bool get needsInstagramRefresh =>
+      hasInstagramAuth &&
+      (isInstagramTokenExpired || instagramTokenExpiry == null);
 }

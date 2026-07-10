@@ -53,7 +53,8 @@ class RouteGenerator {
       case AppRoutes.serviceConfig:
         if (args is ServiceProvider) {
           return MaterialPageRoute(
-            builder: (context) => InteractiveServiceSetupScreen(serviceType: args),
+            builder: (context) =>
+                InteractiveServiceSetupScreen(serviceType: args),
             settings: settings,
           );
         }
@@ -88,19 +89,12 @@ class RouteGenerator {
   static Route<dynamic> _errorRoute(RouteSettings settings) {
     return MaterialPageRoute(
       builder: (context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Error'),
-          backgroundColor: Colors.red,
-        ),
+        appBar: AppBar(title: const Text('Error'), backgroundColor: Colors.red),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 80,
-              ),
+              const Icon(Icons.error_outline, color: Colors.red, size: 80),
               const SizedBox(height: 20),
               Text(
                 'Route not found',
@@ -142,11 +136,7 @@ class RouteGenerator {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.construction,
-                color: Colors.orange,
-                size: 80,
-              ),
+              const Icon(Icons.construction, color: Colors.orange, size: 80),
               const SizedBox(height: 20),
               Text(
                 'Coming Soon',
@@ -194,7 +184,11 @@ class AppRouteObserver extends RouteObserver<PageRoute<dynamic>> {
     }
   }
 
-  void _logNavigation(String action, Route<dynamic> route, Route<dynamic>? previousRoute) {
+  void _logNavigation(
+    String action,
+    Route<dynamic> route,
+    Route<dynamic>? previousRoute,
+  ) {
     final routeName = route.settings.name ?? 'Unknown';
     final previousName = previousRoute?.settings.name ?? 'None';
 
@@ -241,17 +235,11 @@ class FileManagerArguments {
   final String? initialPath;
   final bool showHidden;
 
-  const FileManagerArguments({
-    this.initialPath,
-    this.showHidden = false,
-  });
+  const FileManagerArguments({this.initialPath, this.showHidden = false});
 }
 
 class AutomationEditArguments {
   final String automationId;
 
-  const AutomationEditArguments({
-    required this.automationId,
-  });
+  const AutomationEditArguments({required this.automationId});
 }
-

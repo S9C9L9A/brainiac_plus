@@ -60,7 +60,7 @@ class ResourceController extends StateNotifier<SystemStats> {
   Future<void> _fetchStats() async {
     try {
       final stats = await _platform.getSystemStats();
-      
+
       state = SystemStats(
         cpuUsage: stats['cpu'] as double,
         ramUsage: stats['ram'] as Map<String, dynamic>,
@@ -81,5 +81,5 @@ class ResourceController extends StateNotifier<SystemStats> {
 
 final resourceControllerProvider =
     StateNotifierProvider<ResourceController, SystemStats>((ref) {
-  return ResourceController();
-});
+      return ResourceController();
+    });

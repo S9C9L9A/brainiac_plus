@@ -267,9 +267,7 @@ class ModelSuggestionsService {
   }
 
   /// Get recommended models for current hardware
-  Future<List<OllamaModelInfo>> getRecommendedModels({
-    int limit = 5,
-  }) async {
+  Future<List<OllamaModelInfo>> getRecommendedModels({int limit = 5}) async {
     final hardware = await _hardwareService.getHardwareInfo();
     final available = _rateModels(hardware);
     available.sort((a, b) {
@@ -281,8 +279,9 @@ class ModelSuggestionsService {
         ModelRecommendationRating.minimal: 3,
         ModelRecommendationRating.unsuitable: 4,
       };
-      return (ratingOrder[a.rating] ?? 99)
-          .compareTo(ratingOrder[b.rating] ?? 99);
+      return (ratingOrder[a.rating] ?? 99).compareTo(
+        ratingOrder[b.rating] ?? 99,
+      );
     });
     return available.take(limit).toList();
   }
@@ -299,8 +298,9 @@ class ModelSuggestionsService {
         ModelRecommendationRating.minimal: 3,
         ModelRecommendationRating.unsuitable: 4,
       };
-      return (ratingOrder[a.rating] ?? 99)
-          .compareTo(ratingOrder[b.rating] ?? 99);
+      return (ratingOrder[a.rating] ?? 99).compareTo(
+        ratingOrder[b.rating] ?? 99,
+      );
     });
     return rated;
   }

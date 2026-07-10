@@ -77,7 +77,7 @@ class _SocialMediaCardState extends State<SocialMediaCard>
                     BoxShadow(
                       color: Color(
                         colors[0],
-                      ).withOpacity(_isHovered ? 0.5 : 0.3),
+                      ).withValues(alpha: _isHovered ? 0.5 : 0.3),
                       blurRadius: _isHovered ? 25 : 15,
                       offset: Offset(0, _isHovered ? 8 : 5),
                       spreadRadius: _isHovered ? 2 : 0,
@@ -101,8 +101,8 @@ class _SocialMediaCardState extends State<SocialMediaCard>
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.15),
-                                Colors.white.withOpacity(0.05),
+                                Colors.white.withValues(alpha: 0.15),
+                                Colors.white.withValues(alpha: 0.05),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -138,7 +138,7 @@ class _SocialMediaCardState extends State<SocialMediaCard>
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0.1),
+                                  Colors.white.withValues(alpha: 0.1),
                                   Colors.transparent,
                                 ],
                                 begin: Alignment.topLeft,

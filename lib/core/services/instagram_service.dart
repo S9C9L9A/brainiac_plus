@@ -8,14 +8,14 @@ class InstagramService {
   final String accessToken;
   final String userId;
 
-  InstagramService({
-    required this.accessToken,
-    required this.userId,
-  }) : _dio = Dio(BaseOptions(
+  InstagramService({required this.accessToken, required this.userId})
+    : _dio = Dio(
+        BaseOptions(
           baseUrl: 'https://graph.instagram.com/v18.0',
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(minutes: 5),
-        ));
+        ),
+      );
 
   /// Upload a photo to Instagram
   Future<String> uploadPhoto({
@@ -40,10 +40,7 @@ class InstagramService {
       // Step 2: Publish the container
       final publishResponse = await _dio.post(
         '/$userId/media_publish',
-        data: {
-          'creation_id': containerId,
-          'access_token': accessToken,
-        },
+        data: {'creation_id': containerId, 'access_token': accessToken},
       );
 
       return publishResponse.data['id'] as String;
@@ -81,10 +78,7 @@ class InstagramService {
       // Step 3: Publish the container
       final publishResponse = await _dio.post(
         '/$userId/media_publish',
-        data: {
-          'creation_id': containerId,
-          'access_token': accessToken,
-        },
+        data: {'creation_id': containerId, 'access_token': accessToken},
       );
 
       return publishResponse.data['id'] as String;
@@ -129,10 +123,7 @@ class InstagramService {
       // Step 3: Publish the carousel
       final publishResponse = await _dio.post(
         '/$userId/media_publish',
-        data: {
-          'creation_id': carouselId,
-          'access_token': accessToken,
-        },
+        data: {'creation_id': carouselId, 'access_token': accessToken},
       );
 
       return publishResponse.data['id'] as String;
@@ -183,10 +174,7 @@ class InstagramService {
     while (attempts < maxAttempts) {
       final response = await _dio.get(
         '/$containerId',
-        queryParameters: {
-          'fields': 'status_code',
-          'access_token': accessToken,
-        },
+        queryParameters: {'fields': 'status_code', 'access_token': accessToken},
       );
 
       final statusCode = response.data['status_code'] as String;

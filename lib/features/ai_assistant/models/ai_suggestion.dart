@@ -35,22 +35,22 @@ class AiSuggestion {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'description': description,
-        'category': category.name,
-        'prompt': prompt,
-        'isBookmarked': isBookmarked,
-      };
+    'id': id,
+    'title': title,
+    'description': description,
+    'category': category.name,
+    'prompt': prompt,
+    'isBookmarked': isBookmarked,
+  };
 
   factory AiSuggestion.fromJson(Map<String, dynamic> json) => AiSuggestion(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        description: json['description'] as String,
-        category: AiSuggestionCategory.values.byName(json['category'] as String),
-        prompt: json['prompt'] as String,
-        isBookmarked: json['isBookmarked'] as bool? ?? false,
-      );
+    id: json['id'] as String,
+    title: json['title'] as String,
+    description: json['description'] as String,
+    category: AiSuggestionCategory.values.byName(json['category'] as String),
+    prompt: json['prompt'] as String,
+    isBookmarked: json['isBookmarked'] as bool? ?? false,
+  );
 }
 
 /// Suggestion categories
@@ -87,21 +87,24 @@ final List<AiSuggestion> defaultSuggestions = [
     title: 'Network Monitor',
     description: 'Add real-time network speed monitoring',
     category: AiSuggestionCategory.feature,
-    prompt: 'Add a network monitor widget to the dashboard showing real-time upload/download speed',
+    prompt:
+        'Add a network monitor widget to the dashboard showing real-time upload/download speed',
   ),
   AiSuggestion(
     id: '2',
     title: 'Battery Monitor',
     description: 'Monitor battery health and usage',
     category: AiSuggestionCategory.monitoring,
-    prompt: 'Add battery monitoring with health status and power consumption tracking',
+    prompt:
+        'Add battery monitoring with health status and power consumption tracking',
   ),
   AiSuggestion(
     id: '3',
     title: 'Auto Cleanup',
     description: 'Automated disk cleanup task',
     category: AiSuggestionCategory.automation,
-    prompt: 'Create an automated task to clean temp files and package cache weekly',
+    prompt:
+        'Create an automated task to clean temp files and package cache weekly',
   ),
   AiSuggestion(
     id: '4',

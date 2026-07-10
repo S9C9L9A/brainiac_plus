@@ -11,10 +11,7 @@ import '../providers/extended_settings_provider.dart';
 class ServiceConfigScreen extends ConsumerStatefulWidget {
   final ServiceProvider serviceType;
 
-  const ServiceConfigScreen({
-    super.key,
-    required this.serviceType,
-  });
+  const ServiceConfigScreen({super.key, required this.serviceType});
 
   @override
   ConsumerState<ServiceConfigScreen> createState() =>
@@ -54,7 +51,12 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
     final apiSecret = _apiSecretController.text.trim();
 
     final settings = ref.read(extendedSettingsProvider);
-    final updated = _updateSettings(settings, widget.serviceType, apiKey, apiSecret);
+    final updated = _updateSettings(
+      settings,
+      widget.serviceType,
+      apiKey,
+      apiSecret,
+    );
     ref.read(extendedSettingsProvider.notifier).setSettings(updated);
 
     Future.delayed(const Duration(milliseconds: 600), () {
@@ -112,9 +114,7 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -127,10 +127,7 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
                 color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.arrow_back, color: Colors.white),
             ),
           ),
           const SizedBox(width: 16),
@@ -280,9 +277,7 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.white.withValues(alpha: 0.4),
-              ),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
               prefixIcon: Icon(
                 icon,
                 color: Colors.white.withValues(alpha: 0.6),
@@ -305,11 +300,7 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.help_outline,
-                  color: AppColors.systemBlue,
-                  size: 20,
-                ),
+                Icon(Icons.help_outline, color: AppColors.systemBlue, size: 20),
                 const SizedBox(width: 8),
                 const Text(
                   'How to get your credentials',
@@ -344,10 +335,7 @@ class _ServiceConfigScreenState extends ConsumerState<ServiceConfigScreen> {
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
-              side: const BorderSide(
-                color: Colors.white,
-                width: 1,
-              ),
+              side: const BorderSide(color: Colors.white, width: 1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -575,8 +563,5 @@ class _ServiceCredentials {
   final String apiKey;
   final String apiSecret;
 
-  const _ServiceCredentials({
-    required this.apiKey,
-    required this.apiSecret,
-  });
+  const _ServiceCredentials({required this.apiKey, required this.apiSecret});
 }

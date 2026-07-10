@@ -135,7 +135,7 @@ class _InteractiveServiceSetupScreenState
                 Text(
                   'Step ${_currentStep + 1} of 4',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
                   ),
                 ),
@@ -151,7 +151,7 @@ class _InteractiveServiceSetupScreenState
   Widget _buildHelpButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: IconButton(
@@ -186,7 +186,7 @@ class _InteractiveServiceSetupScreenState
                     decoration: BoxDecoration(
                       color: isCompleted || isCurrent
                           ? AppColors.primary
-                          : Colors.white.withOpacity(0.2),
+                          : Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -224,7 +224,7 @@ class _InteractiveServiceSetupScreenState
           Text(
             'Let\'s configure ${widget.serviceType.label} in just a few steps.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 16,
               height: 1.5,
             ),
@@ -286,7 +286,7 @@ class _InteractiveServiceSetupScreenState
             Text(
               'We need your API credentials to connect to ${widget.serviceType.label}.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 16,
                 height: 1.5,
               ),
@@ -389,7 +389,7 @@ class _InteractiveServiceSetupScreenState
                 ? 'Great! Your credentials are working perfectly.'
                 : 'Let\'s verify that your credentials are correct.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 16,
               height: 1.5,
             ),
@@ -437,7 +437,7 @@ class _InteractiveServiceSetupScreenState
           Text(
             '${widget.serviceType.label} is now configured and ready to use.',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: 16,
               height: 1.5,
             ),
@@ -501,10 +501,10 @@ class _InteractiveServiceSetupScreenState
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+          colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.1)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
       ),
       child: FaIcon(icon, color: color, size: 40),
     );
@@ -527,7 +527,7 @@ class _InteractiveServiceSetupScreenState
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
+                    color: color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: FaIcon(icon, color: color, size: 20),
@@ -564,7 +564,7 @@ class _InteractiveServiceSetupScreenState
                       child: Text(
                         item,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 14,
                           height: 1.5,
                         ),
@@ -586,12 +586,12 @@ class _InteractiveServiceSetupScreenState
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.blue.withOpacity(0.2),
-            Colors.purple.withOpacity(0.1),
+            Colors.blue.withValues(alpha: 0.2),
+            Colors.purple.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,7 +622,7 @@ class _InteractiveServiceSetupScreenState
                     '3. Copy the API Key and Secret\n'
                     '4. Paste them below',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 14,
               height: 1.6,
             ),
@@ -637,7 +637,7 @@ class _InteractiveServiceSetupScreenState
             label: const Text('Open Documentation'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.blue[300],
-              side: BorderSide(color: Colors.blue.withOpacity(0.5)),
+              side: BorderSide(color: Colors.blue.withValues(alpha: 0.5)),
             ),
           ),
         ],
@@ -676,14 +676,14 @@ class _InteractiveServiceSetupScreenState
           tooltip: 'Paste from clipboard',
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -729,7 +729,7 @@ class _InteractiveServiceSetupScreenState
               Text(
                 'Click below to verify your credentials',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                 ),
               ),
@@ -762,7 +762,7 @@ class _InteractiveServiceSetupScreenState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
+                color: Colors.green.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const FaIcon(
@@ -784,7 +784,7 @@ class _InteractiveServiceSetupScreenState
             Text(
               'Your ${widget.serviceType.label} credentials are valid',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 14,
               ),
               textAlign: TextAlign.center,
@@ -851,7 +851,10 @@ class _InteractiveServiceSetupScreenState
         const SizedBox(width: 12),
         Text(
           '$label:',
-          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 14,
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -933,7 +936,7 @@ class _InteractiveServiceSetupScreenState
       case ServiceProvider.github:
         return [const Color(0xFF24292E), const Color(0xFF1B1F23)];
       default:
-        return [AppColors.primary, AppColors.primary.withOpacity(0.7)];
+        return [AppColors.primary, AppColors.primary.withValues(alpha: 0.7)];
     }
   }
 
@@ -1232,7 +1235,7 @@ class _InteractiveServiceSetupScreenState
                   ? 'instagram-cli is available on this system.'
                   : 'instagram-cli not found. Install it to use CLI tools.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 13,
               ),
             ),

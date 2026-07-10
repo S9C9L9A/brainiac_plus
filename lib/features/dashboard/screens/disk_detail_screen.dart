@@ -44,17 +44,25 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
+                      icon: const Icon(
+                        AppIcons.arrowBack,
+                        color: Colors.white,
+                        size: AppIcons.defaultSize,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.systemOrange.withOpacity(0.2),
+                        color: AppColors.systemOrange.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(AppIcons.disk, color: AppColors.systemOrange, size: 24),
+                      child: const Icon(
+                        AppIcons.disk,
+                        color: AppColors.systemOrange,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -63,26 +71,35 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                         children: [
                           Text(
                             'Disk Space',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
                           Text(
                             'All storage devices',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
+                      icon: const Icon(
+                        AppIcons.refresh,
+                        color: Colors.white,
+                        size: AppIcons.defaultSize,
+                      ),
                       onPressed: () {
-                        ref.read(storageControllerProvider.notifier).loadAllMountPoints();
+                        ref
+                            .read(storageControllerProvider.notifier)
+                            .loadAllMountPoints();
                         if (_selectedMountPoint != null) {
-                          ref.read(directorySizesControllerProvider.notifier)
+                          ref
+                              .read(directorySizesControllerProvider.notifier)
                               .loadDirectorySizes(_selectedMountPoint!);
                         }
                       },
@@ -99,7 +116,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                       return Center(
                         child: Text(
                           'No storage devices found',
-                          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
                         ),
                       );
                     }
@@ -110,12 +129,15 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                           .reduce((a, b) => a.usedInGB > b.usedInGB ? a : b)
                           .mountPoint;
                       Future.microtask(() {
-                        ref.read(directorySizesControllerProvider.notifier)
+                        ref
+                            .read(directorySizesControllerProvider.notifier)
                             .loadDirectorySizes(_selectedMountPoint!);
                       });
                     }
 
-                    final overview = StorageOverview.fromMountPoints(mountPoints);
+                    final overview = StorageOverview.fromMountPoints(
+                      mountPoints,
+                    );
 
                     return ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -127,7 +149,8 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                         // Mount Points Section
                         Text(
                           'Storage Devices',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -135,49 +158,61 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                         const SizedBox(height: 12),
 
                         // Mount Points List
-                        ...mountPoints.map((mp) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: MountPointCard(
-                                mountPoint: mp,
-                                isDark: isDark,
-                                onOpenInFileManager: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => FileManagerScreen(
-                                        initialPath: mp.mountPoint,
-                                      ),
+                        ...mountPoints.map(
+                          (mp) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: MountPointCard(
+                              mountPoint: mp,
+                              isDark: isDark,
+                              onOpenInFileManager: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => FileManagerScreen(
+                                      initialPath: mp.mountPoint,
                                     ),
-                                  );
-                                },
-                                onEject: mp.isRemovable
-                                    ? () async {
-                                        final deviceOps = ref.read(deviceOperationsProvider);
-                                        final success = await deviceOps.ejectDevice(mp.device);
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                success
-                                                    ? 'Device ejected successfully'
-                                                    : 'Failed to eject device',
-                                              ),
-                                              backgroundColor: success
-                                                  ? AppColors.systemGreen
-                                                  : AppColors.systemRed,
+                                  ),
+                                );
+                              },
+                              onEject: mp.isRemovable
+                                  ? () async {
+                                      final deviceOps = ref.read(
+                                        deviceOperationsProvider,
+                                      );
+                                      final success = await deviceOps
+                                          .ejectDevice(mp.device);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              success
+                                                  ? 'Device ejected successfully'
+                                                  : 'Failed to eject device',
                                             ),
-                                          );
-                                          if (success) {
-                                            ref.read(storageControllerProvider.notifier).loadAllMountPoints();
-                                          }
+                                            backgroundColor: success
+                                                ? AppColors.systemGreen
+                                                : AppColors.systemRed,
+                                          ),
+                                        );
+                                        if (success) {
+                                          ref
+                                              .read(
+                                                storageControllerProvider
+                                                    .notifier,
+                                              )
+                                              .loadAllMountPoints();
                                         }
                                       }
-                                    : null,
-                                onShowInfo: () {
-                                  _showDeviceInfo(context, mp, isDark);
-                                },
-                              ),
-                            )),
+                                    }
+                                  : null,
+                              onShowInfo: () {
+                                _showDeviceInfo(context, mp, isDark);
+                              },
+                            ),
+                          ),
+                        ),
 
                         const SizedBox(height: 24),
 
@@ -192,22 +227,33 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                     );
                   },
                   loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.systemOrange),
+                    child: CircularProgressIndicator(
+                      color: AppColors.systemOrange,
+                    ),
                   ),
                   error: (error, stack) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(AppIcons.error, color: AppColors.systemRed, size: 48),
+                        const Icon(
+                          AppIcons.error,
+                          color: AppColors.systemRed,
+                          size: 48,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Error loading storage devices',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           error.toString(),
-                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -222,21 +268,31 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
     );
   }
 
-  Widget _buildStorageOverview(BuildContext context, StorageOverview overview, bool isDark) {
+  Widget _buildStorageOverview(
+    BuildContext context,
+    StorageOverview overview,
+    bool isDark,
+  ) {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(AppIcons.disk, color: AppColors.systemOrange, size: 24),
+              const Icon(
+                AppIcons.disk,
+                color: AppColors.systemOrange,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Text(
                 'Total Storage Overview',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -271,15 +327,17 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
-              value: overview.totalGB > 0 ? overview.usedGB / overview.totalGB : 0,
+              value: overview.totalGB > 0
+                  ? overview.usedGB / overview.totalGB
+                  : 0,
               minHeight: 12,
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(
                 overview.averagePercentage < 70
                     ? AppColors.systemGreen
                     : overview.averagePercentage < 85
-                        ? AppColors.systemYellow
-                        : AppColors.systemRed,
+                    ? AppColors.systemYellow
+                    : AppColors.systemRed,
               ),
             ),
           ),
@@ -287,9 +345,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
           Text(
             '${overview.averagePercentage}% average usage across all devices',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withOpacity(0.6),
-                  fontSize: 11,
-                ),
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -308,16 +366,18 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-              ),
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondary,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -338,28 +398,34 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
               child: Text(
                 'Top Directories',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             // Mount point selector dropdown
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: DropdownButton<String>(
                 value: _selectedMountPoint,
                 dropdownColor: isDark ? const Color(0xFF1a1a2e) : Colors.white,
                 underline: const SizedBox(),
                 style: TextStyle(
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
                   fontSize: 14,
                 ),
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 items: mountPoints.map((mp) {
                   return DropdownMenuItem<String>(
                     value: mp.mountPoint,
@@ -371,7 +437,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                     setState(() {
                       _selectedMountPoint = value;
                     });
-                    ref.read(directorySizesControllerProvider.notifier).loadDirectorySizes(value);
+                    ref
+                        .read(directorySizesControllerProvider.notifier)
+                        .loadDirectorySizes(value);
                   }
                 },
               ),
@@ -387,7 +455,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Text(
                     'No directories found or permission denied',
-                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                   ),
                 ),
               );
@@ -415,7 +485,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
               padding: const EdgeInsets.all(20),
               child: Text(
                 'Error loading directories',
-                style: TextStyle(color: Colors.white.withOpacity(0.6)),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
               ),
             ),
           ),
@@ -424,8 +494,15 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
     );
   }
 
-  Widget _buildDirectoryCard(BuildContext context, DirectoryInfo directory, bool isDark, double maxSize) {
-    final percentage = maxSize > 0 ? (directory.sizeInGB / maxSize * 100).clamp(0.0, 100.0) : 0.0;
+  Widget _buildDirectoryCard(
+    BuildContext context,
+    DirectoryInfo directory,
+    bool isDark,
+    double maxSize,
+  ) {
+    final percentage = maxSize > 0
+        ? (directory.sizeInGB / maxSize * 100).clamp(0.0, 100.0)
+        : 0.0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -448,9 +525,11 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                       Text(
                         directory.path,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -458,8 +537,10 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                       Text(
                         'Size: ${directory.size}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
-                            ),
+                          color: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
@@ -467,9 +548,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                 Text(
                   directory.size,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppColors.systemOrange,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.systemOrange,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -481,7 +562,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                   Container(
                     height: 8,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -493,7 +574,7 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
                         gradient: LinearGradient(
                           colors: [
                             AppColors.systemOrange,
-                            AppColors.systemOrange.withOpacity(0.7),
+                            AppColors.systemOrange.withValues(alpha: 0.7),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(8),
@@ -507,9 +588,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
             Text(
               '${percentage.toStringAsFixed(1)}% of largest directory',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 11,
-                  ),
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -549,7 +630,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
               child: Text(
                 'Device Information',
                 style: TextStyle(
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -593,7 +676,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
             child: Text(
               '$label:',
               style: TextStyle(
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.textSecondaryDark
+                    : AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -603,7 +688,9 @@ class _DiskDetailScreenState extends ConsumerState<DiskDetailScreen> {
             child: Text(
               value,
               style: TextStyle(
-                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
               ),
             ),
           ),

@@ -43,9 +43,19 @@ class ConnectedServicesTab extends ConsumerWidget {
       children: [
         _buildServiceGroup(context, 'Social Media', socialServices, settings),
         const SizedBox(height: 24),
-        _buildServiceGroup(context, 'Productivity', productivityServices, settings),
+        _buildServiceGroup(
+          context,
+          'Productivity',
+          productivityServices,
+          settings,
+        ),
         const SizedBox(height: 24),
-        _buildServiceGroup(context, 'Communication', communicationServices, settings),
+        _buildServiceGroup(
+          context,
+          'Communication',
+          communicationServices,
+          settings,
+        ),
         const SizedBox(height: 24),
         _buildServiceGroup(context, 'Development', devServices, settings),
       ],

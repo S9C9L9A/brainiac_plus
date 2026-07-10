@@ -117,4 +117,3 @@ class AgentTask {
   List<AgentFinding> findingsBy(String agentId) =>
       findings.where((f) => f.agentId == agentId).toList();
 }
-

@@ -12,13 +12,11 @@ import '../../../core/navigation/automation_navigation_service.dart';
 class AutomationMainScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
 
-  const AutomationMainScreen({
-    super.key,
-    this.initialTabIndex = 0,
-  });
+  const AutomationMainScreen({super.key, this.initialTabIndex = 0});
 
   @override
-  ConsumerState<AutomationMainScreen> createState() => _AutomationMainScreenState();
+  ConsumerState<AutomationMainScreen> createState() =>
+      _AutomationMainScreenState();
 }
 
 class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
@@ -108,10 +106,7 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
               ),
               Text(
                 'Automate everything',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ],
           ),
@@ -145,19 +140,14 @@ class _AutomationMainScreenState extends ConsumerState<AutomationMainScreen>
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Colors.purple, Colors.blue],
-          ),
+          gradient: const LinearGradient(colors: [Colors.purple, Colors.blue]),
           borderRadius: BorderRadius.circular(20),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white60,
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         tabs: const [
           Tab(text: 'Active'),
           Tab(text: 'Templates'),

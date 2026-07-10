@@ -70,8 +70,8 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              Theme.of(context).primaryColor.withValues(alpha: 0.1),
+              Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
             ],
           ),
         ),
@@ -89,8 +89,14 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                   children: [
                     WelcomeStep(onNext: _nextPage, onSkip: _skipWizard),
                     FacebookSetupStep(onNext: _nextPage, onBack: _previousPage),
-                    InstagramSetupStep(onNext: _nextPage, onBack: _previousPage),
-                    CompletionStep(onComplete: _completeWizard, onBack: _previousPage),
+                    InstagramSetupStep(
+                      onNext: _nextPage,
+                      onBack: _previousPage,
+                    ),
+                    CompletionStep(
+                      onComplete: _completeWizard,
+                      onBack: _previousPage,
+                    ),
                   ],
                 ),
               ),
@@ -124,10 +130,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
               const SizedBox(width: 16),
               const Text(
                 'BrainiacPlus Setup',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -146,7 +149,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
                   decoration: BoxDecoration(
                     color: index <= currentStep
                         ? Theme.of(context).primaryColor
-                        : Colors.grey.withOpacity(0.3),
+                        : Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -158,10 +161,7 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
           // Step counter
           Text(
             'Step ${currentStep + 1} di $totalSteps',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
         ],
       ),

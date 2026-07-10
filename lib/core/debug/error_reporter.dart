@@ -65,7 +65,8 @@ class ErrorReporter {
     // during build". Defer to after the current frame when one is in flight.
     final binding = SchedulerBinding.instance;
     final phase = binding.schedulerPhase;
-    final inFrame = phase != SchedulerPhase.idle &&
+    final inFrame =
+        phase != SchedulerPhase.idle &&
         phase != SchedulerPhase.postFrameCallbacks;
 
     if (inFrame) {

@@ -31,17 +31,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.purple.withOpacity(0.3),
-                    Colors.blue.withOpacity(0.3),
+                    Colors.purple.withValues(alpha: 0.3),
+                    Colors.blue.withValues(alpha: 0.3),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                AppIcons.ai,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: Icon(AppIcons.ai, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
             Column(
@@ -49,17 +45,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               children: [
                 const Text(
                   'AI Assistant',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
                   modelName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),

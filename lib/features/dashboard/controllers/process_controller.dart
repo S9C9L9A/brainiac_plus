@@ -42,25 +42,20 @@ class DiskInfo {
   final String size;
   final String path;
 
-  DiskInfo({
-    required this.size,
-    required this.path,
-  });
+  DiskInfo({required this.size, required this.path});
 
   factory DiskInfo.fromDuLine(String line) {
     final parts = line.trim().split(RegExp(r'\s+'));
     if (parts.length < 2) {
       return DiskInfo(size: '0', path: 'Unknown');
     }
-    return DiskInfo(
-      size: parts[0],
-      path: parts.sublist(1).join(' '),
-    );
+    return DiskInfo(size: parts[0], path: parts.sublist(1).join(' '));
   }
 
   double get sizeInGB {
     if (size.isEmpty) return 0.0;
-    final value = double.tryParse(size.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+    final value =
+        double.tryParse(size.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
     if (size.contains('G')) return value;
     if (size.contains('M')) return value / 1024;
     if (size.contains('K')) return value / (1024 * 1024);
@@ -76,7 +71,9 @@ class ProcessController extends StateNotifier<AsyncValue<List<ProcessInfo>>> {
   Future<void> loadTopCpuProcesses() async {
     state = const AsyncValue.loading();
     try {
-      final output = await _shellService.executeSync('ps aux --sort=-%cpu | head -21');
+      final output = await _shellService.executeSync(
+        'ps aux --sort=-%cpu | head -21',
+      );
       final lines = output.split('\n');
       final processes = lines
           .skip(1)
@@ -92,7 +89,9 @@ class ProcessController extends StateNotifier<AsyncValue<List<ProcessInfo>>> {
   Future<void> loadTopMemProcesses() async {
     state = const AsyncValue.loading();
     try {
-      final output = await _shellService.executeSync('ps aux --sort=-%mem | head -21');
+      final output = await _shellService.executeSync(
+        'ps aux --sort=-%mem | head -21',
+      );
       final lines = output.split('\n');
       final processes = lines
           .skip(1)
@@ -130,7 +129,7 @@ class DiskController extends StateNotifier<AsyncValue<List<DiskInfo>>> {
     state = const AsyncValue.loading();
     try {
       final output = await _shellService.executeSync(
-        'du -h --max-depth=1 /home 2>/dev/null | sort -hr | head -20'
+        'du -h --max-depth=1 /home 2>/dev/null | sort -hr | head -20',
       );
       final lines = output.split('\n');
       final directories = lines
@@ -150,10 +149,14 @@ class DiskController extends StateNotifier<AsyncValue<List<DiskInfo>>> {
   }
 }
 
-final processControllerProvider = StateNotifierProvider<ProcessController, AsyncValue<List<ProcessInfo>>>((ref) {
-  return ProcessController();
-});
+final processControllerProvider =
+    StateNotifierProvider<ProcessController, AsyncValue<List<ProcessInfo>>>((
+      ref,
+    ) {
+      return ProcessController();
+    });
 
-final diskControllerProvider = StateNotifierProvider<DiskController, AsyncValue<List<DiskInfo>>>((ref) {
-  return DiskController();
-});
+final diskControllerProvider =
+    StateNotifierProvider<DiskController, AsyncValue<List<DiskInfo>>>((ref) {
+      return DiskController();
+    });

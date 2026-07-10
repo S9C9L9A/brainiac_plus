@@ -128,7 +128,9 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.6),
+              color: isActive
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.6),
               size: 22,
             ),
             if (isActive) ...[

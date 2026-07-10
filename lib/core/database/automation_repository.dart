@@ -77,21 +77,31 @@ class AutomationRepository {
     ''');
 
     // Create indexes for better performance
-    await db.execute('CREATE INDEX idx_automation_category ON automations(category)');
-    await db.execute('CREATE INDEX idx_automation_service ON automations(service)');
-    await db.execute('CREATE INDEX idx_automation_status ON automations(status)');
-    await db.execute('CREATE INDEX idx_automation_active ON automations(is_active)');
-    await db.execute('CREATE INDEX idx_logs_automation_id ON automation_logs(automation_id)');
+    await db.execute(
+      'CREATE INDEX idx_automation_category ON automations(category)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_automation_service ON automations(service)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_automation_status ON automations(status)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_automation_active ON automations(is_active)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_logs_automation_id ON automation_logs(automation_id)',
+    );
   }
 
   /// Insert a new automation
   static Future<int> insertAutomation(Automation automation) async {
     final db = await database;
     final map = automation.toMap();
-    
+
     // SQLite doesn't support nested maps, so we need to serialize config
     map['config'] = _serializeMap(automation.config);
-    
+
     return await db.insert('automations', map);
   }
 
@@ -99,7 +109,7 @@ class AutomationRepository {
   static Future<List<Automation>> getAllAutomations() async {
     final db = await database;
     final maps = await db.query('automations', orderBy: 'created_at DESC');
-    
+
     return maps.map((map) {
       final modifiedMap = Map<String, dynamic>.from(map);
       modifiedMap['config'] = _deserializeMap(map['config'] as String);
@@ -108,7 +118,9 @@ class AutomationRepository {
   }
 
   /// Get automations by category
-  static Future<List<Automation>> getAutomationsByCategory(AutomationCategory category) async {
+  static Future<List<Automation>> getAutomationsByCategory(
+    AutomationCategory category,
+  ) async {
     final db = await database;
     final maps = await db.query(
       'automations',
@@ -116,7 +128,7 @@ class AutomationRepository {
       whereArgs: [category.name],
       orderBy: 'created_at DESC',
     );
-    
+
     return maps.map((map) {
       final modifiedMap = Map<String, dynamic>.from(map);
       modifiedMap['config'] = _deserializeMap(map['config'] as String);
@@ -133,7 +145,7 @@ class AutomationRepository {
       whereArgs: [1, 0],
       orderBy: 'created_at DESC',
     );
-    
+
     return maps.map((map) {
       final modifiedMap = Map<String, dynamic>.from(map);
       modifiedMap['config'] = _deserializeMap(map['config'] as String);
@@ -150,9 +162,9 @@ class AutomationRepository {
       whereArgs: [id],
       limit: 1,
     );
-    
+
     if (maps.isEmpty) return null;
-    
+
     final map = Map<String, dynamic>.from(maps.first);
     map['config'] = _deserializeMap(maps.first['config'] as String);
     return Automation.fromMap(map);
@@ -163,7 +175,7 @@ class AutomationRepository {
     final db = await database;
     final map = automation.toMap();
     map['config'] = _serializeMap(automation.config);
-    
+
     return await db.update(
       'automations',
       map,
@@ -175,11 +187,7 @@ class AutomationRepository {
   /// Delete an automation
   static Future<int> deleteAutomation(String id) async {
     final db = await database;
-    return await db.delete(
-      'automations',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('automations', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Insert automation log
@@ -187,12 +195,15 @@ class AutomationRepository {
     final db = await database;
     final map = log.toMap();
     map['result'] = map['result'] != null ? _serializeMap(map['result']) : null;
-    
+
     return await db.insert('automation_logs', map);
   }
 
   /// Get logs for a specific automation
-  static Future<List<AutomationLog>> getLogsForAutomation(String automationId, {int limit = 50}) async {
+  static Future<List<AutomationLog>> getLogsForAutomation(
+    String automationId, {
+    int limit = 50,
+  }) async {
     final db = await database;
     final maps = await db.query(
       'automation_logs',
@@ -201,7 +212,7 @@ class AutomationRepository {
       orderBy: 'start_time DESC',
       limit: limit,
     );
-    
+
     return maps.map((map) {
       final modifiedMap = Map<String, dynamic>.from(map);
       if (map['result'] != null) {
@@ -219,7 +230,7 @@ class AutomationRepository {
       orderBy: 'start_time DESC',
       limit: limit,
     );
-    
+
     return maps.map((map) {
       final modifiedMap = Map<String, dynamic>.from(map);
       if (map['result'] != null) {
@@ -239,23 +250,38 @@ class AutomationRepository {
   /// Get database statistics
   static Future<Map<String, dynamic>> getStats() async {
     final db = await database;
-    
-    final totalAutomations = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM automations WHERE is_template = 0')
-    ) ?? 0;
-    
-    final activeAutomations = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM automations WHERE is_active = 1 AND is_template = 0')
-    ) ?? 0;
-    
-    final totalLogs = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM automation_logs')
-    ) ?? 0;
-    
-    final successfulRuns = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM automation_logs WHERE status = ?', ['completed'])
-    ) ?? 0;
-    
+
+    final totalAutomations =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM automations WHERE is_template = 0',
+          ),
+        ) ??
+        0;
+
+    final activeAutomations =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM automations WHERE is_active = 1 AND is_template = 0',
+          ),
+        ) ??
+        0;
+
+    final totalLogs =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM automation_logs'),
+        ) ??
+        0;
+
+    final successfulRuns =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM automation_logs WHERE status = ?',
+            ['completed'],
+          ),
+        ) ??
+        0;
+
     return {
       'totalAutomations': totalAutomations,
       'activeAutomations': activeAutomations,
@@ -273,17 +299,17 @@ class AutomationRepository {
   /// Helper: Deserialize JSON string to map
   static Map<String, dynamic> _deserializeMap(String serialized) {
     if (serialized.isEmpty) return {};
-    
+
     final map = <String, dynamic>{};
     final pairs = serialized.split('|');
-    
+
     for (final pair in pairs) {
       final parts = pair.split(':');
       if (parts.length == 2) {
         map[parts[0]] = parts[1];
       }
     }
-    
+
     return map;
   }
 }

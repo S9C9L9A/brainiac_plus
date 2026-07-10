@@ -22,25 +22,56 @@ class FileIcon extends StatelessWidget {
 
   IconData _getIconForExtension(String ext) {
     switch (ext) {
-      case 'png': case 'jpg': case 'jpeg': case 'gif': case 'svg': return AppIcons.fileImage;
-      case 'mp4': case 'avi': case 'mov': return AppIcons.fileVideo;
-      case 'mp3': case 'wav': return AppIcons.fileAudio;
-      case 'pdf': return AppIcons.filePdf;
-      case 'doc': case 'docx': return AppIcons.fileText;
-      case 'txt': case 'md': return AppIcons.fileText;
-      case 'dart': case 'java': case 'py': case 'js': return AppIcons.fileCode;
-      case 'zip': case 'tar': case 'gz': return AppIcons.fileArchive;
-      default: return AppIcons.file;
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+      case 'svg':
+        return AppIcons.fileImage;
+      case 'mp4':
+      case 'avi':
+      case 'mov':
+        return AppIcons.fileVideo;
+      case 'mp3':
+      case 'wav':
+        return AppIcons.fileAudio;
+      case 'pdf':
+        return AppIcons.filePdf;
+      case 'doc':
+      case 'docx':
+        return AppIcons.fileText;
+      case 'txt':
+      case 'md':
+        return AppIcons.fileText;
+      case 'dart':
+      case 'java':
+      case 'py':
+      case 'js':
+        return AppIcons.fileCode;
+      case 'zip':
+      case 'tar':
+      case 'gz':
+        return AppIcons.fileArchive;
+      default:
+        return AppIcons.file;
     }
   }
 
   Color _getColorForExtension(String ext) {
     switch (ext) {
-      case 'png': case 'jpg': return AppColors.systemPink;
-      case 'mp4': case 'mov': return AppColors.systemPurple;
-      case 'pdf': return AppColors.systemRed;
-      case 'dart': case 'java': return AppColors.systemBlue;
-      default: return AppColors.systemGray3;
+      case 'png':
+      case 'jpg':
+        return AppColors.systemPink;
+      case 'mp4':
+      case 'mov':
+        return AppColors.systemPurple;
+      case 'pdf':
+        return AppColors.systemRed;
+      case 'dart':
+      case 'java':
+        return AppColors.systemBlue;
+      default:
+        return AppColors.systemGray3;
     }
   }
 }

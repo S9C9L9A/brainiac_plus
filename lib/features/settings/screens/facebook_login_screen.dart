@@ -26,7 +26,7 @@ class _FacebookLoginScreenState extends State<FacebookLoginScreen> {
     try {
       // TODO: Integra con il vero Facebook SDK (flutter_facebook_sdk)
       // Per ora usiamo token di test
-      
+
       // Esempio con token di test
       const String testAccessToken = 'TEST_TOKEN_DEMO';
       const String testUserID = '123456789';
@@ -98,9 +98,9 @@ class _FacebookLoginScreenState extends State<FacebookLoginScreen> {
               Text(
                 'Accedi con Facebook per gestire le tue pagine',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 48),
 
@@ -138,7 +138,10 @@ class _FacebookLoginScreenState extends State<FacebookLoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle_outline, color: Colors.green[700]),
+                      Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.green[700],
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -182,9 +185,8 @@ class _FacebookLoginScreenState extends State<FacebookLoginScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'Connesso come: ${authProvider.currentUser?['name']}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         ElevatedButton.icon(

@@ -15,11 +15,11 @@ class AvailableTemplatesWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(extendedSettingsProvider);
-    
+
     final availableTemplates = AutomationTemplates.all
         .where((template) => settings.isServiceConfigured(template.service))
         .toList();
-    
+
     final unavailableTemplates = AutomationTemplates.all
         .where((template) => !settings.isServiceConfigured(template.service))
         .toList();
@@ -31,7 +31,11 @@ class AvailableTemplatesWidget extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSummaryCard(settings, availableTemplates.length, unavailableTemplates.length),
+        _buildSummaryCard(
+          settings,
+          availableTemplates.length,
+          unavailableTemplates.length,
+        ),
         const SizedBox(height: 16),
         if (availableTemplates.isNotEmpty) ...[
           const Text(
@@ -45,10 +49,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
           const SizedBox(height: 12),
           Text(
             '${availableTemplates.length} automation${availableTemplates.length != 1 ? 's' : ''} available',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
         if (unavailableTemplates.isNotEmpty) ...[
@@ -75,10 +76,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
           const SizedBox(height: 12),
           Text(
             '${unavailableTemplates.length} more automation${unavailableTemplates.length != 1 ? 's' : ''} waiting',
-            style: const TextStyle(
-              color: Colors.white60,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white60, fontSize: 14),
           ),
         ],
       ],
@@ -110,11 +108,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.link,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: const Icon(Icons.link, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -186,10 +180,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
               const SizedBox(height: 16),
               const Text(
                 'Connected Services',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -243,9 +234,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -263,13 +252,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                ),
-              ),
+              Text(label, style: TextStyle(color: color, fontSize: 11)),
             ],
           ),
         ],
@@ -313,10 +296,7 @@ class AvailableTemplatesWidget extends ConsumerWidget {
             const Text(
               'Connect your accounts in Settings to unlock automations',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(

@@ -9,18 +9,14 @@ import '../models/automation_enums.dart';
 class AutomationDetailScreen extends ConsumerStatefulWidget {
   final Automation automation;
 
-  const AutomationDetailScreen({
-    super.key,
-    required this.automation,
-  });
+  const AutomationDetailScreen({super.key, required this.automation});
 
   @override
   ConsumerState<AutomationDetailScreen> createState() =>
       _AutomationDetailScreenState();
 }
 
-class _AutomationDetailScreenState
-    extends ConsumerState<AutomationDetailScreen>
+class _AutomationDetailScreenState extends ConsumerState<AutomationDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -245,8 +241,11 @@ class _AutomationDetailScreenState
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildConfigRow('Service', widget.automation.service.label,
-                      widget.automation.service.icon),
+                  _buildConfigRow(
+                    'Service',
+                    widget.automation.service.label,
+                    widget.automation.service.icon,
+                  ),
                   const Divider(color: Colors.white24, height: 24),
                   _buildConfigRow('Trigger', widget.automation.trigger, '⏰'),
                   const Divider(color: Colors.white24, height: 24),
@@ -392,8 +391,9 @@ class _AutomationDetailScreenState
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: _getErrorColor(error['severity'])
-                            .withValues(alpha: 0.2),
+                        color: _getErrorColor(
+                          error['severity'],
+                        ).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(
@@ -434,10 +434,7 @@ class _AutomationDetailScreenState
                   const SizedBox(height: 8),
                   Text(
                     error['details'],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
                 const SizedBox(height: 12),
@@ -452,10 +449,7 @@ class _AutomationDetailScreenState
                       onPressed: () {},
                     ),
                     const Spacer(),
-                    TextButton(
-                      child: const Text('Dismiss'),
-                      onPressed: () {},
-                    ),
+                    TextButton(child: const Text('Dismiss'), onPressed: () {}),
                   ],
                 ),
               ],
@@ -496,9 +490,7 @@ class _AutomationDetailScreenState
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: _buildStatCard('4', 'Failed', Icons.error),
-              ),
+              Expanded(child: _buildStatCard('4', 'Failed', Icons.error)),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard('2.3s', 'Avg Duration', Icons.timer),
@@ -595,7 +587,11 @@ class _AutomationDetailScreenState
   }
 
   Widget _buildMetricCard(
-      String value, String label, IconData icon, Color color) {
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -656,7 +652,11 @@ class _AutomationDetailScreenState
   }
 
   Widget _buildActionButton(
-      String label, IconData icon, Color color, VoidCallback onPressed) {
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onPressed,
+  ) {
     return ElevatedButton.icon(
       icon: Icon(icon),
       label: Text(label),
@@ -664,9 +664,7 @@ class _AutomationDetailScreenState
         backgroundColor: color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       onPressed: onPressed,
     );
@@ -728,25 +726,25 @@ class _AutomationDetailScreenState
         'action': 'Posted to Instagram',
         'time': '15 minutes ago',
         'duration': '2.3s',
-        'success': true
+        'success': true,
       },
       {
         'action': 'Posted to Instagram',
         'time': '1 hour ago',
         'duration': '1.8s',
-        'success': true
+        'success': true,
       },
       {
         'action': 'Posted to Instagram',
         'time': '2 hours ago',
         'duration': '2.1s',
-        'success': false
+        'success': false,
       },
       {
         'action': 'Posted to Instagram',
         'time': '3 hours ago',
         'duration': '1.9s',
-        'success': true
+        'success': true,
       },
     ];
   }
@@ -786,9 +784,11 @@ class _AutomationDetailScreenState
   void _toggleAutomation() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(widget.automation.isActive
-            ? 'Automation paused'
-            : 'Automation activated'),
+        content: Text(
+          widget.automation.isActive
+              ? 'Automation paused'
+              : 'Automation activated',
+        ),
         backgroundColor: AppColors.systemBlue,
       ),
     );
@@ -817,8 +817,7 @@ class _AutomationDetailScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Reset Statistics?'),
-        content:
-            const Text('This will clear all execution history and data.'),
+        content: const Text('This will clear all execution history and data.'),
         actions: [
           TextButton(
             child: const Text('Cancel'),
@@ -844,9 +843,9 @@ class _AutomationDetailScreenState
   void _handleMenuAction(String action) {
     switch (action) {
       case 'duplicate':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Automation duplicated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Automation duplicated')));
         break;
       case 'export':
         ScaffoldMessenger.of(context).showSnackBar(
@@ -865,7 +864,8 @@ class _AutomationDetailScreenState
       builder: (context) => AlertDialog(
         title: const Text('Delete Automation?'),
         content: const Text(
-            'This action cannot be undone. All history and data will be lost.'),
+          'This action cannot be undone. All history and data will be lost.',
+        ),
         actions: [
           TextButton(
             child: const Text('Cancel'),

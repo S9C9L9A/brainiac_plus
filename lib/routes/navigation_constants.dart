@@ -55,13 +55,7 @@ class NavigationConstants {
 }
 
 /// Route categories for organization
-enum RouteCategory {
-  main,
-  feature,
-  detail,
-  settings,
-  help,
-}
+enum RouteCategory { main, feature, detail, settings, help }
 
 /// Route metadata
 class RouteMetadata {
@@ -163,9 +157,7 @@ class RoutesRegistry {
 
   /// Get routes for bottom navigation
   static List<RouteMetadata> get bottomNavRoutes {
-    return allRoutes
-        .where((route) => route.bottomNavIndex != null)
-        .toList()
+    return allRoutes.where((route) => route.bottomNavIndex != null).toList()
       ..sort((a, b) => a.bottomNavIndex!.compareTo(b.bottomNavIndex!));
   }
 
@@ -183,4 +175,3 @@ class RoutesRegistry {
     }
   }
 }
-

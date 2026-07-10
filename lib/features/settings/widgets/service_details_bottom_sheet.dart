@@ -34,10 +34,7 @@ class _ServiceDetailsBottomSheetState
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1a1a2e),
-            const Color(0xFF16213e),
-          ],
+          colors: [const Color(0xFF1a1a2e), const Color(0xFF16213e)],
         ),
       ),
       child: SafeArea(
@@ -60,8 +57,9 @@ class _ServiceDetailsBottomSheetState
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: serviceInfo['gradient'][0]
-                                .withValues(alpha: 0.3),
+                            color: serviceInfo['gradient'][0].withValues(
+                              alpha: 0.3,
+                            ),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -96,8 +94,9 @@ class _ServiceDetailsBottomSheetState
                                 ),
                                 decoration: BoxDecoration(
                                   color: isConnected
-                                      ? AppColors.systemGreen
-                                          .withValues(alpha: 0.2)
+                                      ? AppColors.systemGreen.withValues(
+                                          alpha: 0.2,
+                                        )
                                       : Colors.white.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
@@ -120,7 +119,9 @@ class _ServiceDetailsBottomSheetState
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      isConnected ? 'Connected' : 'Not Connected',
+                                      isConnected
+                                          ? 'Connected'
+                                          : 'Not Connected',
                                       style: TextStyle(
                                         color: isConnected
                                             ? AppColors.systemGreen
@@ -168,8 +169,9 @@ class _ServiceDetailsBottomSheetState
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color:
-                                  AppColors.systemBlue.withValues(alpha: 0.2),
+                              color: AppColors.systemBlue.withValues(
+                                alpha: 0.2,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -230,14 +232,19 @@ class _ServiceDetailsBottomSheetState
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildInfoRow(
-                              'Username', '@demo_user', Icons.person),
+                          _buildInfoRow('Username', '@demo_user', Icons.person),
                           const Divider(color: Colors.white24, height: 24),
                           _buildInfoRow(
-                              'Connected', '2 weeks ago', Icons.calendar_today),
+                            'Connected',
+                            '2 weeks ago',
+                            Icons.calendar_today,
+                          ),
                           const Divider(color: Colors.white24, height: 24),
                           _buildInfoRow(
-                              'Automations', '3 active', Icons.auto_awesome),
+                            'Automations',
+                            '3 active',
+                            Icons.auto_awesome,
+                          ),
                         ],
                       ),
                     ),
@@ -573,8 +580,7 @@ class _ServiceDetailsBottomSheetState
         return {
           'name': 'LinkedIn',
           'icon': FontAwesomeIcons.linkedin,
-          'description':
-              'Automate professional content sharing on LinkedIn.',
+          'description': 'Automate professional content sharing on LinkedIn.',
           'website': 'https://www.linkedin.com',
           'gradient': [const Color(0xFF0077B5), const Color(0xFF005582)],
           'hasAPI': true,
@@ -815,14 +821,18 @@ class _ServiceDetailsBottomSheetState
       builder: (context) => AlertDialog(
         title: const Text('Disconnect Service?'),
         content: Text(
-            'This will disconnect your ${widget.serviceType.label} account and disable all related automations.'),
+          'This will disconnect your ${widget.serviceType.label} account and disable all related automations.',
+        ),
         actions: [
           TextButton(
             child: const Text('Cancel'),
             onPressed: () => Navigator.pop(context),
           ),
           TextButton(
-            child: const Text('Disconnect', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Disconnect',
+              style: TextStyle(color: Colors.red),
+            ),
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
@@ -840,7 +850,10 @@ class _ServiceDetailsBottomSheetState
   }
 
   static void show(
-      BuildContext context, ServiceProvider serviceType, ExtendedAppSettings settings) {
+    BuildContext context,
+    ServiceProvider serviceType,
+    ExtendedAppSettings settings,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

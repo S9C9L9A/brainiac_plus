@@ -31,10 +31,14 @@ class TaskScheduler {
     cron = cron.trim();
 
     switch (cron) {
-      case '@hourly': return const Duration(hours: 1);
-      case '@daily': return const Duration(days: 1);
-      case '@weekly': return const Duration(days: 7);
-      case '@monthly': return const Duration(days: 30);
+      case '@hourly':
+        return const Duration(hours: 1);
+      case '@daily':
+        return const Duration(days: 1);
+      case '@weekly':
+        return const Duration(days: 7);
+      case '@monthly':
+        return const Duration(days: 30);
     }
 
     final everyMinutePattern = RegExp(r'^\*/(\d+)$');
@@ -57,7 +61,8 @@ class TaskExecutor {
     if (_dangerousPatterns.hasMatch(command)) {
       return {
         'success': false,
-        'output': 'Error: Command contains disallowed characters (;, &, |, `, \$)',
+        'output':
+            'Error: Command contains disallowed characters (;, &, |, `, \$)',
         'exitCode': -1,
       };
     }
@@ -72,18 +77,14 @@ class TaskExecutor {
         };
       }
       final result = await Process.run(parts[0], parts.sublist(1));
-      
+
       return {
         'success': result.exitCode == 0,
         'output': result.stdout.toString() + result.stderr.toString(),
         'exitCode': result.exitCode,
       };
     } catch (e) {
-      return {
-        'success': false,
-        'output': 'Error: $e',
-        'exitCode': -1,
-      };
+      return {'success': false, 'output': 'Error: $e', 'exitCode': -1};
     }
   }
 }

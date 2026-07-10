@@ -25,7 +25,7 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.circular(20),
       child: BackdropFilter(
@@ -33,12 +33,16 @@ class GlassCard extends StatelessWidget {
         child: Container(
           padding: padding ?? const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(opacity),
+            color: Colors.white.withValues(alpha: opacity),
             borderRadius: borderRadius ?? BorderRadius.circular(20),
-            border: border ?? Border.all(
-              color: isDark ? AppColors.glassBorderDark : AppColors.glassBorder,
-              width: 1.5,
-            ),
+            border:
+                border ??
+                Border.all(
+                  color: isDark
+                      ? AppColors.glassBorderDark
+                      : AppColors.glassBorder,
+                  width: 1.5,
+                ),
           ),
           child: child,
         ),
@@ -68,7 +72,7 @@ class BlurContainer extends StatelessWidget {
       filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
       child: Container(
         padding: padding,
-        color: color ?? Colors.white.withOpacity(0.05),
+        color: color ?? Colors.white.withValues(alpha: 0.05),
         child: child,
       ),
     );
@@ -97,11 +101,11 @@ class NothingGlyph extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive 
+        color: isActive
             ? (activeColor ?? AppColors.glyphRed)
             : (inactiveColor ?? Colors.transparent),
         border: Border.all(
-          color: isActive 
+          color: isActive
               ? (activeColor ?? AppColors.glyphRed)
               : AppColors.systemGray3,
           width: 2,

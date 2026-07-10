@@ -39,17 +39,13 @@ class CompletionStep extends ConsumerWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
+                        color: Colors.green.withValues(alpha: 0.3),
                         blurRadius: 30,
                         spreadRadius: 10,
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    size: 80,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.check, size: 80, color: Colors.white),
                 ),
               );
             },
@@ -59,10 +55,7 @@ class CompletionStep extends ConsumerWidget {
           // Title
           Text(
             hasAnyService ? '🎉 Setup Completato!' : '✅ Tutto Pronto!',
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -72,10 +65,7 @@ class CompletionStep extends ConsumerWidget {
             hasAnyService
                 ? 'Hai collegato $connectedCount ${connectedCount == 1 ? 'servizio' : 'servizi'}'
                 : 'Puoi collegare i servizi in qualsiasi momento',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),
@@ -91,13 +81,15 @@ class CompletionStep extends ConsumerWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).primaryColor.withOpacity(0.1),
-                  Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                  Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  Theme.of(
+                    context,
+                  ).colorScheme.secondary.withValues(alpha: 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).primaryColor.withOpacity(0.3),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -120,11 +112,20 @@ class CompletionStep extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildNextStep('Esplora la Dashboard', 'Visualizza metriche e analytics'),
+                _buildNextStep(
+                  'Esplora la Dashboard',
+                  'Visualizza metriche e analytics',
+                ),
                 const SizedBox(height: 8),
-                _buildNextStep('Crea Automazioni', 'Programma post sui tuoi social'),
+                _buildNextStep(
+                  'Crea Automazioni',
+                  'Programma post sui tuoi social',
+                ),
                 const SizedBox(height: 8),
-                _buildNextStep('Collega Altri Servizi', 'YouTube, Twitter e altro'),
+                _buildNextStep(
+                  'Collega Altri Servizi',
+                  'YouTube, Twitter e altro',
+                ),
               ],
             ),
           ),
@@ -136,9 +137,9 @@ class CompletionStep extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -147,10 +148,7 @@ class CompletionStep extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       'Puoi collegare i servizi dalle Impostazioni in qualsiasi momento',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.blue[700], fontSize: 14),
                     ),
                   ),
                 ],
@@ -197,15 +195,36 @@ class CompletionStep extends ConsumerWidget {
 
   Widget _buildServicesSummary(BuildContext context, SetupWizardState state) {
     final services = [
-      {'name': 'Facebook', 'icon': Icons.facebook, 'color': const Color(0xFF1877F2), 'key': 'facebook'},
-      {'name': 'Instagram', 'icon': Icons.camera_alt, 'color': const Color(0xFFDD2A7B), 'key': 'instagram'},
-      {'name': 'YouTube', 'icon': Icons.play_circle, 'color': const Color(0xFFFF0000), 'key': 'youtube'},
-      {'name': 'Twitter', 'icon': Icons.tag, 'color': const Color(0xFF1DA1F2), 'key': 'twitter'},
+      {
+        'name': 'Facebook',
+        'icon': Icons.facebook,
+        'color': const Color(0xFF1877F2),
+        'key': 'facebook',
+      },
+      {
+        'name': 'Instagram',
+        'icon': Icons.camera_alt,
+        'color': const Color(0xFFDD2A7B),
+        'key': 'instagram',
+      },
+      {
+        'name': 'YouTube',
+        'icon': Icons.play_circle,
+        'color': const Color(0xFFFF0000),
+        'key': 'youtube',
+      },
+      {
+        'name': 'Twitter',
+        'icon': Icons.tag,
+        'color': const Color(0xFF1DA1F2),
+        'key': 'twitter',
+      },
     ];
 
     return Column(
       children: services.map((service) {
-        final isConnected = state.services[service['key']]?.isConnected ?? false;
+        final isConnected =
+            state.services[service['key']]?.isConnected ?? false;
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -213,7 +232,7 @@ class CompletionStep extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (service['color'] as Color).withOpacity(0.1),
+                  color: (service['color'] as Color).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -263,10 +282,7 @@ class CompletionStep extends ConsumerWidget {
               ),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           ),

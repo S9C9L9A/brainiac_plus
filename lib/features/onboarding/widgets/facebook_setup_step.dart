@@ -50,7 +50,9 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
       final isValid = _tokenController.text.trim().length > 50;
 
       if (isValid) {
-        ref.read(setupWizardControllerProvider.notifier).updateServiceStatus(
+        ref
+            .read(setupWizardControllerProvider.notifier)
+            .updateServiceStatus(
               'facebook',
               true,
               credentials: {'token': _tokenController.text.trim()},
@@ -133,10 +135,7 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
                     SizedBox(height: 4),
                     Text(
                       'Gestisci la tua pagina e le automazioni',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -213,7 +212,9 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Text(
@@ -227,9 +228,9 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -258,10 +259,9 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () {
-                      ref.read(setupWizardControllerProvider.notifier).updateServiceStatus(
-                            'facebook',
-                            false,
-                          );
+                      ref
+                          .read(setupWizardControllerProvider.notifier)
+                          .updateServiceStatus('facebook', false);
                     },
                     tooltip: 'Modifica',
                   ),
@@ -334,7 +334,7 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,10 +375,7 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
             padding: const EdgeInsets.only(left: 44),
             child: Text(
               description,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           if (onTap != null && buttonText != null) ...[
@@ -401,9 +398,9 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,10 +421,7 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
           const SizedBox(height: 8),
           Text(
             'Consulta la guida completa in: docs/setup/FACEBOOK_TOKEN_GUIDE.md',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.orange[900],
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.orange[900]),
           ),
         ],
       ),

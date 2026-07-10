@@ -23,9 +23,12 @@ class SocialMediaCardMetrics extends StatelessWidget {
     return Container(
       padding: layout.metricsPadding,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
@@ -42,7 +45,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
               Container(
                 width: 1,
                 height: 40,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               Expanded(
                 child: _buildMetricItem(
@@ -55,7 +58,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Divider(color: Colors.white.withOpacity(0.2), height: 1),
+          Divider(color: Colors.white.withValues(alpha: 0.2), height: 1),
           const SizedBox(height: 12),
           _buildEngagementMetric(metrics!.engagementRate),
         ],
@@ -73,7 +76,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
       children: [
         FaIcon(
           icon,
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withValues(alpha: 0.9),
           size: layout.metricIconSize,
         ),
         const SizedBox(height: 8),
@@ -108,7 +111,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: layout.metricLabelSize,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.8,
@@ -129,14 +132,14 @@ class SocialMediaCardMetrics extends StatelessWidget {
               children: [
                 FaIcon(
                   FontAwesomeIcons.chartLine,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   size: layout.metricLabelSize + 3,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'ENGAGEMENT',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: layout.engagementLabelSize,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
@@ -159,7 +162,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: LinearProgressIndicator(
             value: percentage / 100,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               getEngagementColor(percentage.toDouble()),
             ),
@@ -174,9 +177,12 @@ class SocialMediaCardMetrics extends StatelessWidget {
     return Container(
       padding: layout.emptyMetricsPadding,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -184,12 +190,12 @@ class SocialMediaCardMetrics extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: FaIcon(
               FontAwesomeIcons.arrowsRotate,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               size: layout.emptyIconSize,
             ),
           ),
@@ -197,7 +203,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
           Text(
             'Tap to sync metrics',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               fontSize: layout.engagementLabelSize + 2,
               fontWeight: FontWeight.w600,
             ),
@@ -206,7 +212,7 @@ class SocialMediaCardMetrics extends StatelessWidget {
           Text(
             'Get latest data',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: layout.engagementLabelSize,
             ),
           ),

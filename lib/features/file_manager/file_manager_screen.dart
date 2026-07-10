@@ -10,7 +10,7 @@ import 'widgets/file_list_item.dart';
 
 class FileManagerScreen extends ConsumerStatefulWidget {
   final String? initialPath;
-  
+
   const FileManagerScreen({super.key, this.initialPath});
 
   @override
@@ -52,8 +52,8 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                         child: CircularProgressIndicator(color: Colors.white),
                       )
                     : state.error != null
-                        ? _buildError(context, state.error!)
-                        : _buildFileList(context, ref, state),
+                    ? _buildError(context, state.error!)
+                    : _buildFileList(context, ref, state),
               ),
             ],
           ),
@@ -74,20 +74,26 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            const Icon(AppIcons.folderOpen, color: Colors.white, size: AppIcons.defaultSize),
+            const Icon(
+              AppIcons.folderOpen,
+              color: Colors.white,
+              size: AppIcons.defaultSize,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'File Manager',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             IconButton(
               icon: Icon(
-                state.showHidden ? AppIcons.visibilityOn : AppIcons.visibilityOff,
+                state.showHidden
+                    ? AppIcons.visibilityOn
+                    : AppIcons.visibilityOff,
                 color: Colors.white,
                 size: AppIcons.defaultSize,
               ),
@@ -96,7 +102,11 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.refresh,
+                color: Colors.white,
+                size: AppIcons.defaultSize,
+              ),
               onPressed: () {
                 ref.read(fileManagerProvider.notifier).loadFiles();
               },
@@ -112,8 +122,11 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
     WidgetRef ref,
     FileManagerState state,
   ) {
-    final parts = state.currentPath.split('/').where((p) => p.isNotEmpty).toList();
-    
+    final parts = state.currentPath
+        .split('/')
+        .where((p) => p.isNotEmpty)
+        .toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GlassCard(
@@ -136,7 +149,11 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                       ref.read(fileManagerProvider.notifier).navigateTo('/');
                     }),
                     for (int i = 0; i < parts.length; i++) ...[
-                      const Icon(AppIcons.chevronRight, color: Colors.white70, size: 16),
+                      const Icon(
+                        AppIcons.chevronRight,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
                       _buildPathSegment(context, parts[i], () {
                         final path = '/${parts.sublist(0, i + 1).join('/')}';
                         ref.read(fileManagerProvider.notifier).navigateTo(path);
@@ -152,7 +169,11 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
     );
   }
 
-  Widget _buildPathSegment(BuildContext context, String text, VoidCallback onTap) {
+  Widget _buildPathSegment(
+    BuildContext context,
+    String text,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -183,9 +204,9 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
             const SizedBox(height: 16),
             Text(
               'Empty directory',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white70,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.white70),
             ),
           ],
         ),
@@ -198,7 +219,7 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final file = state.files[index];
-        
+
         return FileListItem(
           file: file,
           onTap: () {
@@ -206,9 +227,9 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
               ref.read(fileManagerProvider.notifier).navigateTo(file.path);
             } else {
               // TODO: Open file
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Open: ${file.name}')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Open: ${file.name}')));
             }
           },
           onLongPress: () {
@@ -232,9 +253,9 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
               Text(
                 'Error',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -259,16 +280,14 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
 
   void _showCreateDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create Directory'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Directory name',
-          ),
+          decoration: const InputDecoration(hintText: 'Directory name'),
           autofocus: true,
         ),
         actions: [
@@ -324,7 +343,7 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
 
   void _showRenameDialog(BuildContext context, WidgetRef ref, file) {
     final controller = TextEditingController(text: file.name);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

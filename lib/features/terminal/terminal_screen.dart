@@ -87,7 +87,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.black.withOpacity(0.9),
+        backgroundColor: Colors.black.withValues(alpha: 0.9),
         title: const Text(
           'Command History',
           style: TextStyle(color: Colors.white),
@@ -323,7 +323,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     hintText: isRunning
                         ? 'Process running...'
                         : 'Enter command (↑/↓ for history)',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     border: InputBorder.none,
                   ),
                   onSubmitted: (_) => _executeCommand(),

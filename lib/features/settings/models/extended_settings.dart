@@ -8,61 +8,61 @@ class ExtendedAppSettings {
   final String? ollamaEndpoint;
   final String? ollamaModelName;
   final String? ollamaModelsPath;
-  
+
   // Social Media - Instagram
   final String? instagramAccessToken;
   final String? instagramUserId;
   final String? instagramUsername;
   final DateTime? instagramTokenExpiry;
-  
+
   // Social Media - Facebook
   final String? facebookAccessToken;
   final String? facebookUserId;
   final DateTime? facebookTokenExpiry;
-  
+
   // Social Media - Twitter/X
   final String? twitterApiKey;
   final String? twitterApiSecret;
   final String? twitterAccessToken;
   final String? twitterAccessSecret;
-  
+
   // Social Media - TikTok
   final String? tiktokAccessToken;
   final DateTime? tiktokTokenExpiry;
-  
+
   // Social Media - LinkedIn
   final String? linkedinAccessToken;
   final DateTime? linkedinTokenExpiry;
-  
+
   // Social Media - YouTube
   final String? youtubeApiKey;
   final String? youtubeAccessToken;
-  
+
   // Productivity - Notion
   final String? notionApiKey;
   final String? notionWorkspaceId;
-  
+
   // Productivity - Google
   final String? googleAccessToken;
   final String? googleRefreshToken;
   final DateTime? googleTokenExpiry;
-  
+
   // Communication - Slack
   final String? slackBotToken;
   final String? slackWorkspaceId;
-  
+
   // Communication - Discord
   final String? discordBotToken;
   final String? discordServerId;
-  
+
   // Communication - Telegram
   final String? telegramBotToken;
   final String? telegramChatId;
-  
+
   // Development - GitHub
   final String? githubAccessToken;
   final String? githubUsername;
-  
+
   // Preferences
   final bool notificationsEnabled;
   final bool autoRefreshMetrics;
@@ -159,7 +159,11 @@ class ExtendedAppSettings {
   /// Get services that need configuration
   List<ServiceProvider> get unconfiguredServices {
     return ServiceProvider.values
-        .where((service) => !isServiceConfigured(service) && service != ServiceProvider.custom)
+        .where(
+          (service) =>
+              !isServiceConfigured(service) &&
+              service != ServiceProvider.custom,
+        )
         .toList();
   }
 
@@ -169,20 +173,25 @@ class ExtendedAppSettings {
   }
 
   /// Helper getters
-  bool get hasHiggsfieldKey => higgsfieldApiKey != null && higgsfieldApiKey!.isNotEmpty;
+  bool get hasHiggsfieldKey =>
+      higgsfieldApiKey != null && higgsfieldApiKey!.isNotEmpty;
   bool get hasOpenAIKey => openaiApiKey != null && openaiApiKey!.isNotEmpty;
-  bool get hasOllamaEndpoint => ollamaEndpoint != null && ollamaEndpoint!.isNotEmpty;
+  bool get hasOllamaEndpoint =>
+      ollamaEndpoint != null && ollamaEndpoint!.isNotEmpty;
   bool get hasOllamaModelName =>
       ollamaModelName != null && ollamaModelName!.isNotEmpty;
   bool get hasOllamaModelsPath =>
       ollamaModelsPath != null && ollamaModelsPath!.isNotEmpty;
-  
-  bool get hasInstagramAuth => instagramAccessToken != null && instagramUserId != null;
-  bool get hasFacebookAuth => facebookAccessToken != null && facebookUserId != null;
+
+  bool get hasInstagramAuth =>
+      instagramAccessToken != null && instagramUserId != null;
+  bool get hasFacebookAuth =>
+      facebookAccessToken != null && facebookUserId != null;
   bool get hasTwitterAuth => twitterApiKey != null && twitterApiSecret != null;
   bool get hasTikTokAuth => tiktokAccessToken != null;
   bool get hasLinkedInAuth => linkedinAccessToken != null;
-  bool get hasYouTubeAuth => youtubeApiKey != null || youtubeAccessToken != null;
+  bool get hasYouTubeAuth =>
+      youtubeApiKey != null || youtubeAccessToken != null;
   bool get hasNotionKey => notionApiKey != null;
   bool get hasGoogleAuth => googleAccessToken != null;
   bool get hasSlackAuth => slackBotToken != null;

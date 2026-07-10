@@ -107,8 +107,8 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(glow),
-                          Colors.white.withOpacity(glow * 0.6),
+                          Colors.white.withValues(alpha: glow),
+                          Colors.white.withValues(alpha: glow * 0.6),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -129,8 +129,8 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                   borderRadius: BorderRadius.circular(24),
                   gradient: LinearGradient(
                     colors: [
-                      Colors.purple.withOpacity(0.18),
-                      Colors.blue.withOpacity(0.12),
+                      Colors.purple.withValues(alpha: 0.18),
+                      Colors.blue.withValues(alpha: 0.12),
                       Colors.transparent,
                     ],
                     begin: Alignment.topLeft,
@@ -202,9 +202,9 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
+        color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -217,7 +217,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.purple.withOpacity(0.35),
+                  color: Colors.purple.withValues(alpha: 0.35),
                   blurRadius: 18,
                 ),
               ],
@@ -241,7 +241,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                 Text(
                   modelLabel,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -249,7 +249,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                 Text(
                   endpointLabel,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 11,
                   ),
                 ),
@@ -283,9 +283,9 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -299,7 +299,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -348,9 +348,9 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.12),
+        color: Colors.orange.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.orange.withOpacity(0.35)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -372,7 +372,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                 Text(
                   subtitle,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 11,
                   ),
                 ),
@@ -400,14 +400,14 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.purple.withOpacity(0.3),
-                  Colors.blue.withOpacity(0.3),
+                  Colors.purple.withValues(alpha: 0.3),
+                  Colors.blue.withValues(alpha: 0.3),
                 ],
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.purple.withOpacity(0.3),
+                  color: Colors.purple.withValues(alpha: 0.3),
                   blurRadius: 24,
                 ),
               ],

@@ -128,12 +128,11 @@ class SystemMetricsNotifier extends StateNotifier<SystemMetrics> {
 /// Provider for system metrics (backwards compatible)
 final systemMetricsProvider =
     StateNotifierProvider<SystemMetricsNotifier, SystemMetrics>((ref) {
-  return SystemMetricsNotifier();
-});
+      return SystemMetricsNotifier();
+    });
 
 // Also expose the realtime service for new code
-final systemMetricsServiceProvider =
-    Provider<SystemMetricsService>((ref) {
+final systemMetricsServiceProvider = Provider<SystemMetricsService>((ref) {
   return SystemMetricsService();
 });
 

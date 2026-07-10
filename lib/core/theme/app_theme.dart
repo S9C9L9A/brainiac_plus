@@ -26,9 +26,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: AppColors.glassBg,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -46,18 +44,9 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       ),
-      bodyLarge: TextStyle(
-        fontSize: 17,
-        color: AppColors.textPrimary,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        color: AppColors.textSecondary,
-      ),
-      bodySmall: TextStyle(
-        fontSize: 13,
-        color: AppColors.textTertiary,
-      ),
+      bodyLarge: TextStyle(fontSize: 17, color: AppColors.textPrimary),
+      bodyMedium: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+      bodySmall: TextStyle(fontSize: 13, color: AppColors.textTertiary),
     ),
   );
 
@@ -85,9 +74,7 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: AppColors.glassBgDark,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     textTheme: const TextTheme(
       displayLarge: TextStyle(
@@ -105,18 +92,9 @@ class AppTheme {
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimaryDark,
       ),
-      bodyLarge: TextStyle(
-        fontSize: 17,
-        color: AppColors.textPrimaryDark,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        color: AppColors.textSecondaryDark,
-      ),
-      bodySmall: TextStyle(
-        fontSize: 13,
-        color: AppColors.textTertiaryDark,
-      ),
+      bodyLarge: TextStyle(fontSize: 17, color: AppColors.textPrimaryDark),
+      bodyMedium: TextStyle(fontSize: 15, color: AppColors.textSecondaryDark),
+      bodySmall: TextStyle(fontSize: 13, color: AppColors.textTertiaryDark),
     ),
   );
 

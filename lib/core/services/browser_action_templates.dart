@@ -7,7 +7,8 @@ class BrowserActionTemplates {
   static AutomationTemplate get searchFlights => AutomationTemplate(
     id: 'browser_search_flights',
     name: 'Cerca Voli',
-    description: 'Apri il browser e cerca voli per le date e destinazioni specificate',
+    description:
+        'Apri il browser e cerca voli per le date e destinazioni specificate',
     category: AutomationCategory.productivity,
     service: ServiceProvider.custom,
     isPremium: false,

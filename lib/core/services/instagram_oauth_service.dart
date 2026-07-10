@@ -17,16 +17,12 @@ class InstagramOAuthService {
 
   /// Step 1: Open Instagram authorization URL in browser
   Future<void> authorize() async {
-    final authUrl = Uri.https(
-      'api.instagram.com',
-      '/oauth/authorize',
-      {
-        'client_id': clientId,
-        'redirect_uri': redirectUri,
-        'scope': 'user_profile,user_media',
-        'response_type': 'code',
-      },
-    );
+    final authUrl = Uri.https('api.instagram.com', '/oauth/authorize', {
+      'client_id': clientId,
+      'redirect_uri': redirectUri,
+      'scope': 'user_profile,user_media',
+      'response_type': 'code',
+    });
 
     if (await canLaunchUrl(authUrl)) {
       await launchUrl(authUrl, mode: LaunchMode.externalApplication);
@@ -47,9 +43,7 @@ class InstagramOAuthService {
           'redirect_uri': redirectUri,
           'code': code,
         },
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-        ),
+        options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
       return InstagramTokenResponse.fromJson(response.data);
@@ -59,7 +53,9 @@ class InstagramOAuthService {
   }
 
   /// Step 3: Exchange short-lived token for long-lived token (60 days)
-  Future<LongLivedTokenResponse> getLongLivedToken(String shortLivedToken) async {
+  Future<LongLivedTokenResponse> getLongLivedToken(
+    String shortLivedToken,
+  ) async {
     try {
       final response = await _dio.get(
         'https://graph.instagram.com/access_token',
@@ -116,10 +112,7 @@ class InstagramTokenResponse {
   final String accessToken;
   final String userId;
 
-  InstagramTokenResponse({
-    required this.accessToken,
-    required this.userId,
-  });
+  InstagramTokenResponse({required this.accessToken, required this.userId});
 
   factory InstagramTokenResponse.fromJson(Map<String, dynamic> json) {
     return InstagramTokenResponse(

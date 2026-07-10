@@ -6,7 +6,7 @@ class BrowserActionsService {
   /// Execute a browser action based on automation configuration
   Future<Map<String, dynamic>> executeAction(Automation automation) async {
     final actionType = automation.config['actionType'] as String?;
-    
+
     switch (actionType) {
       case 'searchFlights':
         return await _searchFlights(automation.config);
@@ -20,17 +20,19 @@ class BrowserActionsService {
   }
 
   /// Search for flights with parameters from config
-  Future<Map<String, dynamic>> _searchFlights(Map<String, dynamic> config) async {
+  Future<Map<String, dynamic>> _searchFlights(
+    Map<String, dynamic> config,
+  ) async {
     final destination = config['destination'] as String? ?? 'Milano';
     final dateFrom = config['dateFrom'] as String? ?? '2026-02-23';
     final dateTo = config['dateTo'] as String? ?? '2026-02-26';
     final origin = config['origin'] as String? ?? 'Roma';
     final passengers = config['passengers'] as int? ?? 1;
     final cabinClass = config['cabinClass'] as String? ?? 'economy';
-    
+
     // Multiple flight search engines support
     final searchEngine = config['searchEngine'] as String? ?? 'google';
-    
+
     final String url;
     switch (searchEngine) {
       case 'google':
@@ -44,7 +46,7 @@ class BrowserActionsService {
           cabinClass: cabinClass,
         );
         break;
-      
+
       case 'skyscanner':
         // Skyscanner URL format
         url = _buildSkyscannerUrl(
@@ -56,7 +58,7 @@ class BrowserActionsService {
           cabinClass: cabinClass,
         );
         break;
-      
+
       case 'kayak':
         // Kayak URL format
         url = _buildKayakUrl(
@@ -68,7 +70,7 @@ class BrowserActionsService {
           cabinClass: cabinClass,
         );
         break;
-      
+
       default:
         url = _buildGoogleFlightsUrl(
           origin: origin,
@@ -79,17 +81,14 @@ class BrowserActionsService {
           cabinClass: cabinClass,
         );
     }
-    
+
     final uri = Uri.parse(url);
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
     if (!launched) {
       throw Exception('Failed to launch browser with URL: $url');
     }
-    
+
     return {
       'success': true,
       'url': url,
@@ -117,11 +116,11 @@ class BrowserActionsService {
   }) {
     // Google Flights format: https://www.google.com/travel/flights
     // Example: https://www.google.com/travel/flights?q=Flights%20to%20Milan%20from%20Rome%20on%202026-02-23%20through%202026-02-26
-    
+
     final query = Uri.encodeComponent(
-      'Flights to $destination from $origin on $dateFrom through $dateTo for $passengers passenger(s)'
+      'Flights to $destination from $origin on $dateFrom through $dateTo for $passengers passenger(s)',
     );
-    
+
     return 'https://www.google.com/travel/flights?q=$query';
   }
 
@@ -138,11 +137,11 @@ class BrowserActionsService {
     // Convert dates from YYYY-MM-DD to YYMMDD
     final departDate = dateFrom.replaceAll('-', '').substring(2);
     final returnDate = dateTo.replaceAll('-', '').substring(2);
-    
+
     // Get airport codes (simplified - in production use API to convert city to IATA)
     final originCode = _getCityCode(origin);
     final destCode = _getCityCode(destination);
-    
+
     return 'https://www.skyscanner.it/transport/flights/$originCode/$destCode/$departDate/$returnDate/?adults=$passengers&cabinclass=${cabinClass.toLowerCase()}';
   }
 
@@ -158,28 +157,25 @@ class BrowserActionsService {
     // Kayak format
     final originCode = _getCityCode(origin);
     final destCode = _getCityCode(destination);
-    
+
     return 'https://www.kayak.it/flights/$originCode-$destCode/$dateFrom/$dateTo/${passengers}adults?sort=bestflight_a&fs=cabinclass=${_getKayakCabinClass(cabinClass)}';
   }
 
   /// Open a generic URL
   Future<Map<String, dynamic>> _openUrl(Map<String, dynamic> config) async {
     final url = config['url'] as String?;
-    
+
     if (url == null || url.isEmpty) {
       throw ArgumentError('URL is required for openUrl action');
     }
-    
+
     final uri = Uri.parse(url);
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
     if (!launched) {
       throw Exception('Failed to launch URL: $url');
     }
-    
+
     return {
       'success': true,
       'url': url,
@@ -188,26 +184,25 @@ class BrowserActionsService {
   }
 
   /// Perform a Google search
-  Future<Map<String, dynamic>> _googleSearch(Map<String, dynamic> config) async {
+  Future<Map<String, dynamic>> _googleSearch(
+    Map<String, dynamic> config,
+  ) async {
     final query = config['query'] as String?;
-    
+
     if (query == null || query.isEmpty) {
       throw ArgumentError('Query is required for googleSearch action');
     }
-    
+
     final encodedQuery = Uri.encodeComponent(query);
     final url = 'https://www.google.com/search?q=$encodedQuery';
-    
+
     final uri = Uri.parse(url);
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
-    
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
     if (!launched) {
       throw Exception('Failed to launch Google search');
     }
-    
+
     return {
       'success': true,
       'query': query,
@@ -246,7 +241,7 @@ class BrowserActionsService {
       'berlin': 'BER',
       'berlino': 'BER',
     };
-    
+
     final lowerCity = city.toLowerCase();
     if (codes.containsKey(lowerCity)) {
       return codes[lowerCity]!;

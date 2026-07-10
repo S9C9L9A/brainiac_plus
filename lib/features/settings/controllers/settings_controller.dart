@@ -11,8 +11,8 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
 /// Provider for settings controller
 final settingsControllerProvider =
     StateNotifierProvider<SettingsController, AppSettings>((ref) {
-  return SettingsController(ref.watch(secureStorageProvider));
-});
+      return SettingsController(ref.watch(secureStorageProvider));
+    });
 
 /// Settings Controller
 class SettingsController extends StateNotifier<AppSettings> {
@@ -32,7 +32,9 @@ class SettingsController extends StateNotifier<AppSettings> {
       final instaUsername = await _storage.read(key: 'instagram_username');
       final instaExpiry = await _storage.read(key: 'instagram_token_expiry');
 
-      final notificationsStr = await _storage.read(key: 'notifications_enabled');
+      final notificationsStr = await _storage.read(
+        key: 'notifications_enabled',
+      );
       final autoRefreshStr = await _storage.read(key: 'auto_refresh_metrics');
       final refreshIntervalStr = await _storage.read(key: 'refresh_interval');
       final theme = await _storage.read(key: 'theme');
@@ -46,8 +48,8 @@ class SettingsController extends StateNotifier<AppSettings> {
         instagramAccessToken: instaToken,
         instagramUserId: instaUserId,
         instagramUsername: instaUsername,
-        instagramTokenExpiry: instaExpiry != null 
-            ? DateTime.parse(instaExpiry) 
+        instagramTokenExpiry: instaExpiry != null
+            ? DateTime.parse(instaExpiry)
             : null,
         notificationsEnabled: notificationsStr == 'true',
         autoRefreshMetrics: autoRefreshStr != 'false',
@@ -85,7 +87,10 @@ class SettingsController extends StateNotifier<AppSettings> {
     await _storage.write(key: 'instagram_access_token', value: accessToken);
     await _storage.write(key: 'instagram_user_id', value: userId);
     await _storage.write(key: 'instagram_username', value: username);
-    await _storage.write(key: 'instagram_token_expiry', value: expiresAt.toIso8601String());
+    await _storage.write(
+      key: 'instagram_token_expiry',
+      value: expiresAt.toIso8601String(),
+    );
 
     state = state.copyWith(
       instagramAccessToken: accessToken,
@@ -112,13 +117,19 @@ class SettingsController extends StateNotifier<AppSettings> {
 
   /// Toggle notifications
   Future<void> toggleNotifications(bool enabled) async {
-    await _storage.write(key: 'notifications_enabled', value: enabled.toString());
+    await _storage.write(
+      key: 'notifications_enabled',
+      value: enabled.toString(),
+    );
     state = state.copyWith(notificationsEnabled: enabled);
   }
 
   /// Toggle auto-refresh metrics
   Future<void> toggleAutoRefresh(bool enabled) async {
-    await _storage.write(key: 'auto_refresh_metrics', value: enabled.toString());
+    await _storage.write(
+      key: 'auto_refresh_metrics',
+      value: enabled.toString(),
+    );
     state = state.copyWith(autoRefreshMetrics: enabled);
   }
 

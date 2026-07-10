@@ -8,11 +8,13 @@ final extendedSettingsStorageProvider = Provider<ExtendedSettingsStorage>(
 
 final extendedSettingsProvider =
     StateNotifierProvider<ExtendedSettingsController, ExtendedAppSettings>(
-  (ref) => ExtendedSettingsController(ref.read(extendedSettingsStorageProvider)),
-);
+      (ref) =>
+          ExtendedSettingsController(ref.read(extendedSettingsStorageProvider)),
+    );
 
 class ExtendedSettingsController extends StateNotifier<ExtendedAppSettings> {
-  ExtendedSettingsController(this._storage) : super(const ExtendedAppSettings()) {
+  ExtendedSettingsController(this._storage)
+    : super(const ExtendedAppSettings()) {
     _load();
   }
 

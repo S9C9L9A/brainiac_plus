@@ -18,7 +18,8 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
     MarketplaceAutomation(
       name: 'AI Content Creator Pro',
       author: 'AutomationHub',
-      description: 'Create and publish AI-generated content across all social platforms',
+      description:
+          'Create and publish AI-generated content across all social platforms',
       downloads: 15420,
       rating: 4.8,
       price: 0,
@@ -28,7 +29,8 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
     MarketplaceAutomation(
       name: 'Instagram Growth Bot',
       author: 'GrowthExperts',
-      description: 'Automated engagement, DM responses, and follower growth strategies',
+      description:
+          'Automated engagement, DM responses, and follower growth strategies',
       downloads: 8930,
       rating: 4.6,
       price: 9.99,
@@ -39,7 +41,8 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
     MarketplaceAutomation(
       name: 'Notion Project Manager',
       author: 'ProductivityMax',
-      description: 'Sync tasks, deadlines, and team updates across Notion and other tools',
+      description:
+          'Sync tasks, deadlines, and team updates across Notion and other tools',
       downloads: 5670,
       rating: 4.9,
       price: 0,
@@ -49,7 +52,8 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
     MarketplaceAutomation(
       name: 'Email to Task Converter',
       author: 'WorkflowWizard',
-      description: 'Automatically convert emails into actionable tasks in your favorite apps',
+      description:
+          'Automatically convert emails into actionable tasks in your favorite apps',
       downloads: 3220,
       rating: 4.7,
       price: 4.99,
@@ -64,10 +68,14 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
     final filtered = _searchQuery.isEmpty
         ? _mockAutomations
         : _mockAutomations
-            .where((a) =>
-                a.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                a.description.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (a) =>
+                    a.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    a.description.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ),
+              )
+              .toList();
 
     return Column(
       children: [
@@ -228,10 +236,7 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
               const SizedBox(height: 12),
               Text(
                 automation.description,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -277,10 +282,7 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
                   const SizedBox(width: 4),
                   Text(
                     '${automation.downloads}',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const Spacer(),
                   ElevatedButton(
@@ -302,7 +304,9 @@ class _MarketplaceTabState extends ConsumerState<MarketplaceTab> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          automation.price > 0 ? Icons.shopping_cart : Icons.download,
+                          automation.price > 0
+                              ? Icons.shopping_cart
+                              : Icons.download,
                           size: 16,
                         ),
                         const SizedBox(width: 6),

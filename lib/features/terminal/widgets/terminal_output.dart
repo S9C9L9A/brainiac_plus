@@ -38,7 +38,7 @@ class _TerminalOutputState extends State<TerminalOutput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withOpacity(0.3),
+      color: Colors.black.withValues(alpha: 0.3),
       child: ListView.builder(
         controller: widget.scrollController,
         padding: const EdgeInsets.all(12),
@@ -46,7 +46,7 @@ class _TerminalOutputState extends State<TerminalOutput> {
         itemBuilder: (context, index) {
           final line = widget.lines[index];
           final isCommand = line.startsWith('\$ ');
-          
+
           return SelectableText(
             line,
             style: TextStyle(

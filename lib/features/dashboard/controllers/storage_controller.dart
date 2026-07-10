@@ -48,9 +48,12 @@ class MountPoint {
 
   /// Get icon based on device type
   String get deviceType {
-    if (device.contains('nvme') || device.contains('sda') || device.contains('sdb')) {
+    if (device.contains('nvme') ||
+        device.contains('sda') ||
+        device.contains('sdb')) {
       return 'disk';
-    } else if (device.contains('usb') || device.contains('sd') && !device.contains('sda')) {
+    } else if (device.contains('usb') ||
+        device.contains('sd') && !device.contains('sda')) {
       return 'usb';
     } else if (device.contains('nfs') || device.contains('cifs')) {
       return 'network';
@@ -69,9 +72,9 @@ class MountPoint {
 
   /// Check if device is removable (USB, external)
   bool get isRemovable {
-    return deviceType == 'usb' || 
-           mountPoint.contains('/media') || 
-           mountPoint.contains('/mnt');
+    return deviceType == 'usb' ||
+        mountPoint.contains('/media') ||
+        mountPoint.contains('/mnt');
   }
 
   /// Convert size to GB for calculations
@@ -91,7 +94,7 @@ class MountPoint {
     if (value.isEmpty) return 0.0;
     final numStr = value.replaceAll(RegExp(r'[^0-9.]'), '');
     final num = double.tryParse(numStr) ?? 0.0;
-    
+
     if (value.contains('T')) return num * 1024;
     if (value.contains('G')) return num;
     if (value.contains('M')) return num / 1024;
@@ -105,27 +108,21 @@ class DirectoryInfo {
   final String path;
   final String size;
 
-  DirectoryInfo({
-    required this.path,
-    required this.size,
-  });
+  DirectoryInfo({required this.path, required this.size});
 
   factory DirectoryInfo.fromDuLine(String line) {
     final parts = line.trim().split(RegExp(r'\s+'));
     if (parts.length < 2) {
       return DirectoryInfo(size: '0', path: 'Unknown');
     }
-    return DirectoryInfo(
-      size: parts[0],
-      path: parts.sublist(1).join(' '),
-    );
+    return DirectoryInfo(size: parts[0], path: parts.sublist(1).join(' '));
   }
 
   double get sizeInGB {
     if (size.isEmpty) return 0.0;
     final numStr = size.replaceAll(RegExp(r'[^0-9.]'), '');
     final value = double.tryParse(numStr) ?? 0.0;
-    
+
     if (size.contains('T')) return value * 1024;
     if (size.contains('G')) return value;
     if (size.contains('M')) return value / 1024;
@@ -160,8 +157,13 @@ class StorageOverview {
 
     final total = mountPoints.fold<double>(0, (sum, mp) => sum + mp.sizeInGB);
     final used = mountPoints.fold<double>(0, (sum, mp) => sum + mp.usedInGB);
-    final available = mountPoints.fold<double>(0, (sum, mp) => sum + mp.availableInGB);
-    final avgPercentage = mountPoints.fold<int>(0, (sum, mp) => sum + mp.percentage) ~/ mountPoints.length;
+    final available = mountPoints.fold<double>(
+      0,
+      (sum, mp) => sum + mp.availableInGB,
+    );
+    final avgPercentage =
+        mountPoints.fold<int>(0, (sum, mp) => sum + mp.percentage) ~/
+        mountPoints.length;
 
     return StorageOverview(
       totalGB: total,
@@ -183,15 +185,15 @@ class StorageController extends StateNotifier<AsyncValue<List<MountPoint>>> {
     state = const AsyncValue.loading();
     try {
       final output = await _shellService.executeSync(
-        'df -h --output=source,fstype,size,used,avail,pcent,target | grep -E "^/dev/"'
+        'df -h --output=source,fstype,size,used,avail,pcent,target | grep -E "^/dev/"',
       );
-      
+
       final lines = output.split('\n');
       final mountPoints = lines
           .where((line) => line.trim().isNotEmpty)
           .map((line) => MountPoint.fromDfLine(line))
           .toList();
-      
+
       state = AsyncValue.data(mountPoints);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -202,8 +204,18 @@ class StorageController extends StateNotifier<AsyncValue<List<MountPoint>>> {
   StorageOverview getOverview() {
     return state.when(
       data: (mountPoints) => StorageOverview.fromMountPoints(mountPoints),
-      loading: () => StorageOverview(totalGB: 0, usedGB: 0, availableGB: 0, averagePercentage: 0),
-      error: (_, __) => StorageOverview(totalGB: 0, usedGB: 0, availableGB: 0, averagePercentage: 0),
+      loading: () => StorageOverview(
+        totalGB: 0,
+        usedGB: 0,
+        availableGB: 0,
+        averagePercentage: 0,
+      ),
+      error: (_, __) => StorageOverview(
+        totalGB: 0,
+        usedGB: 0,
+        availableGB: 0,
+        averagePercentage: 0,
+      ),
     );
   }
 
@@ -215,7 +227,8 @@ class StorageController extends StateNotifier<AsyncValue<List<MountPoint>>> {
 }
 
 /// Controller for directory sizes in a specific mount point
-class DirectorySizesController extends StateNotifier<AsyncValue<List<DirectoryInfo>>> {
+class DirectorySizesController
+    extends StateNotifier<AsyncValue<List<DirectoryInfo>>> {
   final ShellService _shellService = ShellService();
 
   DirectorySizesController() : super(const AsyncValue.loading());
@@ -225,15 +238,15 @@ class DirectorySizesController extends StateNotifier<AsyncValue<List<DirectoryIn
     state = const AsyncValue.loading();
     try {
       final output = await _shellService.executeSync(
-        'du -h --max-depth=1 "$mountPoint" 2>/dev/null | sort -hr | head -20'
+        'du -h --max-depth=1 "$mountPoint" 2>/dev/null | sort -hr | head -20',
       );
-      
+
       final lines = output.split('\n');
       final directories = lines
           .where((line) => line.trim().isNotEmpty)
           .map((line) => DirectoryInfo.fromDuLine(line))
           .toList();
-      
+
       state = AsyncValue.data(directories);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -255,7 +268,7 @@ class DeviceOperationsController {
   Future<bool> ejectDevice(String devicePath) async {
     try {
       final output = await _shellService.executeSync(
-        'udisksctl unmount -b "$devicePath" && udisksctl power-off -b "$devicePath"'
+        'udisksctl unmount -b "$devicePath" && udisksctl power-off -b "$devicePath"',
       );
       return !output.toLowerCase().contains('error');
     } catch (e) {
@@ -267,14 +280,14 @@ class DeviceOperationsController {
   Future<Map<String, String>> getDeviceInfo(String devicePath) async {
     try {
       final output = await _shellService.executeSync(
-        'lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE,LABEL,UUID "$devicePath"'
+        'lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE,LABEL,UUID "$devicePath"',
       );
-      
+
       final lines = output.split('\n');
       if (lines.length > 1) {
         final headers = lines[0].trim().split(RegExp(r'\s+'));
         final values = lines[1].trim().split(RegExp(r'\s+'));
-        
+
         final info = <String, String>{};
         for (var i = 0; i < headers.length && i < values.length; i++) {
           info[headers[i]] = values[i];
@@ -293,13 +306,20 @@ class DeviceOperationsController {
 }
 
 // Providers
-final storageControllerProvider = StateNotifierProvider<StorageController, AsyncValue<List<MountPoint>>>((ref) {
-  return StorageController();
-});
+final storageControllerProvider =
+    StateNotifierProvider<StorageController, AsyncValue<List<MountPoint>>>((
+      ref,
+    ) {
+      return StorageController();
+    });
 
-final directorySizesControllerProvider = StateNotifierProvider<DirectorySizesController, AsyncValue<List<DirectoryInfo>>>((ref) {
-  return DirectorySizesController();
-});
+final directorySizesControllerProvider =
+    StateNotifierProvider<
+      DirectorySizesController,
+      AsyncValue<List<DirectoryInfo>>
+    >((ref) {
+      return DirectorySizesController();
+    });
 
 final deviceOperationsProvider = Provider<DeviceOperationsController>((ref) {
   return DeviceOperationsController();

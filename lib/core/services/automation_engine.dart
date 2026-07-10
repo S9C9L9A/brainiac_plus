@@ -19,10 +19,10 @@ class AutomationEngine {
     try {
       // Determine best execution mode based on platform and preferences
       final mode = _determineExecutionMode(automation);
-      
+
       // Execute based on mode
       final result = await _executeWithMode(automation, mode);
-      
+
       return log.copyWith(
         status: AutomationStatus.completed,
         endTime: DateTime.now(),
@@ -47,12 +47,12 @@ class AutomationEngine {
       if (automation.service.supportsAPI) {
         return AutomationMode.api;
       }
-      
+
       // Fallback to browser on desktop
       if (PlatformHelper.supportsBrowserAutomation) {
         return AutomationMode.browser;
       }
-      
+
       // Fallback to app on Android
       if (PlatformHelper.supportsADB) {
         return AutomationMode.app;
@@ -61,13 +61,18 @@ class AutomationEngine {
 
     // Validate platform supports requested mode
     final mode = automation.preferredMode;
-    
-    if (mode == AutomationMode.browser && !PlatformHelper.supportsBrowserAutomation) {
-      throw UnsupportedError('Browser automation not supported on ${PlatformHelper.platformName}');
+
+    if (mode == AutomationMode.browser &&
+        !PlatformHelper.supportsBrowserAutomation) {
+      throw UnsupportedError(
+        'Browser automation not supported on ${PlatformHelper.platformName}',
+      );
     }
-    
+
     if (mode == AutomationMode.app && !PlatformHelper.supportsADB) {
-      throw UnsupportedError('App automation not supported on ${PlatformHelper.platformName}');
+      throw UnsupportedError(
+        'App automation not supported on ${PlatformHelper.platformName}',
+      );
     }
 
     return mode;
@@ -104,35 +109,46 @@ class AutomationEngine {
   /// Execute via API (cross-platform)
   Future<Map<String, dynamic>> _executeViaAPI(Automation automation) async {
     // This will be implemented by service-specific handlers
-    throw UnimplementedError('API execution not yet implemented for ${automation.service.label}');
+    throw UnimplementedError(
+      'API execution not yet implemented for ${automation.service.label}',
+    );
   }
 
   /// Execute via browser automation (Linux/Windows/macOS only)
   Future<Map<String, dynamic>> _executeViaBrowser(Automation automation) async {
     if (!PlatformHelper.supportsBrowserAutomation) {
-      throw UnsupportedError('Browser automation not supported on ${PlatformHelper.platformName}');
+      throw UnsupportedError(
+        'Browser automation not supported on ${PlatformHelper.platformName}',
+      );
     }
 
     // Use BrowserActionsService for browser-based actions
     final actionType = automation.config['actionType'] as String?;
-    
-    if (actionType != null && ['searchFlights', 'openUrl', 'googleSearch'].contains(actionType)) {
+
+    if (actionType != null &&
+        ['searchFlights', 'openUrl', 'googleSearch'].contains(actionType)) {
       final browserService = BrowserActionsService();
       return await browserService.executeAction(automation);
     }
 
     // For other services, fall back to platform-specific browser automation
-    throw UnimplementedError('Browser automation not yet implemented for ${automation.service.label}');
+    throw UnimplementedError(
+      'Browser automation not yet implemented for ${automation.service.label}',
+    );
   }
 
   /// Execute via app automation (Android only)
   Future<Map<String, dynamic>> _executeViaApp(Automation automation) async {
     if (!PlatformHelper.supportsADB) {
-      throw UnsupportedError('App automation not supported on ${PlatformHelper.platformName}');
+      throw UnsupportedError(
+        'App automation not supported on ${PlatformHelper.platformName}',
+      );
     }
 
     // This will be implemented using ADB commands and intents
-    throw UnimplementedError('App automation not yet implemented for ${automation.service.label}');
+    throw UnimplementedError(
+      'App automation not yet implemented for ${automation.service.label}',
+    );
   }
 
   /// Validate automation can run on current platform

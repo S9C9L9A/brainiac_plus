@@ -179,20 +179,26 @@ class RecentActivityScreen extends ConsumerWidget {
   List<Color> _getGradientColors(ActivityType type) {
     switch (type) {
       case ActivityType.terminal:
-        return [AppColors.systemGreen, AppColors.systemGreen.withOpacity(0.6)];
+        return [
+          AppColors.systemGreen,
+          AppColors.systemGreen.withValues(alpha: 0.6),
+        ];
       case ActivityType.file:
-        return [AppColors.systemBlue, AppColors.systemBlue.withOpacity(0.6)];
+        return [
+          AppColors.systemBlue,
+          AppColors.systemBlue.withValues(alpha: 0.6),
+        ];
       case ActivityType.ai:
         return [Colors.purple, Colors.blue];
       case ActivityType.automation:
         return [
           AppColors.systemOrange,
-          AppColors.systemOrange.withOpacity(0.6),
+          AppColors.systemOrange.withValues(alpha: 0.6),
         ];
       case ActivityType.settings:
         return [Colors.grey.shade700, Colors.grey.shade600];
       case ActivityType.packages:
-        return [Colors.teal, Colors.teal.withOpacity(0.6)];
+        return [Colors.teal, Colors.teal.withValues(alpha: 0.6)];
     }
   }
 

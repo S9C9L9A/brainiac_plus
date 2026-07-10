@@ -24,19 +24,23 @@ class PackageService {
     try {
       final result = await Process.run('dpkg', ['-l']);
       final lines = result.stdout.toString().split('\n');
-      
+
       final packages = <PackageInfo>[];
       for (var line in lines) {
         if (line.startsWith('ii')) {
           final parts = line.split(RegExp(r'\s+'));
           if (parts.length >= 3) {
-            packages.add(PackageInfo(
-              name: parts[1],
-              version: parts[2],
-              description: parts.length > 3 ? parts.sublist(3).join(' ') : null,
-              isInstalled: true,
-              source: 'apt',
-            ));
+            packages.add(
+              PackageInfo(
+                name: parts[1],
+                version: parts[2],
+                description: parts.length > 3
+                    ? parts.sublist(3).join(' ')
+                    : null,
+                isInstalled: true,
+                source: 'apt',
+              ),
+            );
           }
         }
       }
@@ -51,21 +55,23 @@ class PackageService {
     try {
       final result = await Process.run('snap', ['list']);
       final lines = result.stdout.toString().split('\n');
-      
+
       final packages = <PackageInfo>[];
       for (var i = 1; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
-        
+
         final parts = line.split(RegExp(r'\s+'));
         if (parts.isNotEmpty) {
-          packages.add(PackageInfo(
-            name: parts[0],
-            version: parts.length > 1 ? parts[1] : 'unknown',
-            description: parts.length > 4 ? parts[4] : null,
-            isInstalled: true,
-            source: 'snap',
-          ));
+          packages.add(
+            PackageInfo(
+              name: parts[0],
+              version: parts.length > 1 ? parts[1] : 'unknown',
+              description: parts.length > 4 ? parts[4] : null,
+              isInstalled: true,
+              source: 'snap',
+            ),
+          );
         }
       }
       return packages;
@@ -79,7 +85,7 @@ class PackageService {
     try {
       final result = await Process.run('apt', ['search', query]);
       final lines = result.stdout.toString().split('\n');
-      
+
       final packages = <PackageInfo>[];
       for (var i = 0; i < lines.length; i++) {
         final line = lines[i];
@@ -87,13 +93,15 @@ class PackageService {
           final parts = line.split(' ');
           if (parts.isNotEmpty) {
             final namePart = parts[0].split('/')[0];
-            packages.add(PackageInfo(
-              name: namePart,
-              version: 'available',
-              description: lines.length > i + 1 ? lines[i + 1].trim() : null,
-              isInstalled: false,
-              source: 'apt',
-            ));
+            packages.add(
+              PackageInfo(
+                name: namePart,
+                version: 'available',
+                description: lines.length > i + 1 ? lines[i + 1].trim() : null,
+                isInstalled: false,
+                source: 'apt',
+              ),
+            );
           }
         }
       }
@@ -107,10 +115,15 @@ class PackageService {
   Future<String> installPackage(String packageName, String source) async {
     try {
       ProcessResult result;
-      
+
       switch (source) {
         case 'apt':
-          result = await Process.run('sudo', ['apt', 'install', '-y', packageName]);
+          result = await Process.run('sudo', [
+            'apt',
+            'install',
+            '-y',
+            packageName,
+          ]);
           break;
         case 'snap':
           result = await Process.run('sudo', ['snap', 'install', packageName]);
@@ -118,7 +131,7 @@ class PackageService {
         default:
           return 'Unsupported package source: $source';
       }
-      
+
       if (result.exitCode == 0) {
         return 'Package installed successfully';
       } else {
@@ -133,10 +146,15 @@ class PackageService {
   Future<String> removePackage(String packageName, String source) async {
     try {
       ProcessResult result;
-      
+
       switch (source) {
         case 'apt':
-          result = await Process.run('sudo', ['apt', 'remove', '-y', packageName]);
+          result = await Process.run('sudo', [
+            'apt',
+            'remove',
+            '-y',
+            packageName,
+          ]);
           break;
         case 'snap':
           result = await Process.run('sudo', ['snap', 'remove', packageName]);
@@ -144,7 +162,7 @@ class PackageService {
         default:
           return 'Unsupported package source: $source';
       }
-      
+
       if (result.exitCode == 0) {
         return 'Package removed successfully';
       } else {

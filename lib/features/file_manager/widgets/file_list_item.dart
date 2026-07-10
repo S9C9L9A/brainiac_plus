@@ -29,7 +29,7 @@ class FileListItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(isDark ? 0.05 : 0.1),
+          color: Colors.white.withValues(alpha: isDark ? 0.05 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -44,7 +44,9 @@ class FileListItem extends StatelessWidget {
                     file.name,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -53,14 +55,20 @@ class FileListItem extends StatelessWidget {
                     '${file.formattedSize} • ${dateFormat.format(file.modified)}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
+                      color: isDark
+                          ? AppColors.textTertiaryDark
+                          : AppColors.textTertiary,
                     ),
                   ),
                 ],
               ),
             ),
             if (file.isDirectory)
-              Icon(AppIcons.chevronRight, color: Colors.white54, size: AppIcons.smallSize),
+              Icon(
+                AppIcons.chevronRight,
+                color: Colors.white54,
+                size: AppIcons.smallSize,
+              ),
           ],
         ),
       ),

@@ -9,10 +9,7 @@ import 'modern/tabs/about_tab.dart';
 class ModernSettingsScreen extends ConsumerStatefulWidget {
   final int initialTabIndex;
 
-  const ModernSettingsScreen({
-    super.key,
-    this.initialTabIndex = 0,
-  });
+  const ModernSettingsScreen({super.key, this.initialTabIndex = 0});
 
   @override
   ConsumerState<ModernSettingsScreen> createState() =>

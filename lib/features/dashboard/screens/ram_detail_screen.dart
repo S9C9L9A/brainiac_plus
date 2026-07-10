@@ -17,7 +17,9 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(processControllerProvider.notifier).loadTopMemProcesses());
+    Future.microtask(
+      () => ref.read(processControllerProvider.notifier).loadTopMemProcesses(),
+    );
   }
 
   @override
@@ -37,17 +39,25 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
+                      icon: const Icon(
+                        AppIcons.arrowBack,
+                        color: Colors.white,
+                        size: AppIcons.defaultSize,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppColors.systemPurple.withOpacity(0.2),
+                        color: AppColors.systemPurple.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(AppIcons.memory, color: AppColors.systemPurple, size: 24),
+                      child: const Icon(
+                        AppIcons.memory,
+                        color: AppColors.systemPurple,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -56,24 +66,32 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
                         children: [
                           Text(
                             'RAM Usage',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            style: Theme.of(context).textTheme.displaySmall
+                                ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
                           Text(
                             'Top processes by memory',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(AppIcons.refresh, color: Colors.white, size: AppIcons.defaultSize),
+                      icon: const Icon(
+                        AppIcons.refresh,
+                        color: Colors.white,
+                        size: AppIcons.defaultSize,
+                      ),
                       onPressed: () {
-                        ref.read(processControllerProvider.notifier).loadTopMemProcesses();
+                        ref
+                            .read(processControllerProvider.notifier)
+                            .loadTopMemProcesses();
                       },
                     ),
                   ],
@@ -88,7 +106,9 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
                       return Center(
                         child: Text(
                           'No processes found',
-                          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
                         ),
                       );
                     }
@@ -103,22 +123,33 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
                     );
                   },
                   loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.systemPurple),
+                    child: CircularProgressIndicator(
+                      color: AppColors.systemPurple,
+                    ),
                   ),
                   error: (error, stack) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(AppIcons.error, color: AppColors.systemRed, size: 48),
+                        Icon(
+                          AppIcons.error,
+                          color: AppColors.systemRed,
+                          size: 48,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Error loading processes',
-                          style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           error.toString(),
-                          style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -133,7 +164,11 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
     );
   }
 
-  Widget _buildProcessCard(BuildContext context, ProcessInfo process, bool isDark) {
+  Widget _buildProcessCard(
+    BuildContext context,
+    ProcessInfo process,
+    bool isDark,
+  ) {
     final cpuValue = double.tryParse(process.cpu) ?? 0.0;
     final memValue = double.tryParse(process.mem) ?? 0.0;
 
@@ -154,22 +189,30 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
                             ? '${process.command.substring(0, 40)}...'
                             : process.command,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'PID: ${process.pid} • User: ${process.user}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
-                            ),
+                          color: isDark
+                              ? AppColors.textTertiaryDark
+                              : AppColors.textTertiary,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(AppIcons.close, color: AppColors.systemRed, size: AppIcons.defaultSize),
+                  icon: const Icon(
+                    AppIcons.close,
+                    color: AppColors.systemRed,
+                    size: AppIcons.defaultSize,
+                  ),
                   onPressed: () => _confirmKillProcess(context, process),
                   tooltip: 'Kill process',
                 ),
@@ -179,11 +222,21 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildMetric('Memory', '${memValue.toStringAsFixed(1)}%', AppColors.systemPurple, memValue),
+                  child: _buildMetric(
+                    'Memory',
+                    '${memValue.toStringAsFixed(1)}%',
+                    AppColors.systemPurple,
+                    memValue,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildMetric('CPU', '${cpuValue.toStringAsFixed(1)}%', AppColors.systemBlue, cpuValue),
+                  child: _buildMetric(
+                    'CPU',
+                    '${cpuValue.toStringAsFixed(1)}%',
+                    AppColors.systemBlue,
+                    cpuValue,
+                  ),
                 ),
               ],
             ),
@@ -193,7 +246,12 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
     );
   }
 
-  Widget _buildMetric(String label, String value, Color color, double percentage) {
+  Widget _buildMetric(
+    String label,
+    String value,
+    Color color,
+    double percentage,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -203,7 +261,7 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 12,
               ),
             ),
@@ -223,7 +281,7 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
           child: LinearProgressIndicator(
             value: (percentage / 100).clamp(0.0, 1.0),
             minHeight: 6,
-            backgroundColor: Colors.white.withOpacity(0.1),
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -231,7 +289,10 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
     );
   }
 
-  Future<void> _confirmKillProcess(BuildContext context, ProcessInfo process) async {
+  Future<void> _confirmKillProcess(
+    BuildContext context,
+    ProcessInfo process,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -239,7 +300,9 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
             ? const Color(0xFF1E1E1E)
             : Colors.white,
         title: const Text('Kill Process?'),
-        content: Text('Are you sure you want to kill process "${process.command}"?\n\nPID: ${process.pid}'),
+        content: Text(
+          'Are you sure you want to kill process "${process.command}"?\n\nPID: ${process.pid}',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -255,12 +318,20 @@ class _RamDetailScreenState extends ConsumerState<RamDetailScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      final success = await ref.read(processControllerProvider.notifier).killProcess(process.pid);
+      final success = await ref
+          .read(processControllerProvider.notifier)
+          .killProcess(process.pid);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Process killed successfully' : 'Failed to kill process'),
-            backgroundColor: success ? AppColors.systemGreen : AppColors.systemRed,
+            content: Text(
+              success
+                  ? 'Process killed successfully'
+                  : 'Failed to kill process',
+            ),
+            backgroundColor: success
+                ? AppColors.systemGreen
+                : AppColors.systemRed,
           ),
         );
         if (success) {

@@ -34,7 +34,7 @@ class MetricCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: accentColor, size: 24),
@@ -44,8 +44,10 @@ class MetricCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-                      ),
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -54,16 +56,18 @@ class MetricCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppColors.textTertiaryDark : AppColors.textTertiary,
-                ),
+              color: isDark
+                  ? AppColors.textTertiaryDark
+                  : AppColors.textTertiary,
+            ),
           ),
           const SizedBox(height: 12),
           ClipRRect(
@@ -71,7 +75,7 @@ class MetricCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: percentage / 100,
               minHeight: 8,
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               valueColor: AlwaysStoppedAnimation<Color>(accentColor),
             ),
           ),

@@ -16,13 +16,13 @@ class ApiClient {
   }
 
   /// Esegue una richiesta POST
-  static Future<dynamic> post(String endpoint, Map<String, dynamic> body,
-      {Map<String, String>? headers}) async {
+  static Future<dynamic> post(
+    String endpoint,
+    Map<String, dynamic> body, {
+    Map<String, String>? headers,
+  }) async {
     try {
-      final mergedHeaders = {
-        'Content-Type': 'application/json',
-        ...?headers,
-      };
+      final mergedHeaders = {'Content-Type': 'application/json', ...?headers};
 
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
@@ -42,9 +42,12 @@ class ApiClient {
       if (response.body.isEmpty) return null;
       return jsonDecode(response.body);
     } else {
-      final errorBody = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      final errorBody = response.body.isNotEmpty
+          ? jsonDecode(response.body)
+          : {};
       throw Exception(
-          'Errore ${response.statusCode}: ${errorBody['error'] ?? 'Sconosciuto'}');
+        'Errore ${response.statusCode}: ${errorBody['error'] ?? 'Sconosciuto'}',
+      );
     }
   }
 }
@@ -60,13 +63,10 @@ class FacebookAuthService {
     String userID,
   ) async {
     try {
-      final response = await ApiClient.post(
-        '/api/facebook/auth',
-        {
-          'access_token': accessToken,
-          'user_id': userID,
-        },
-      );
+      final response = await ApiClient.post('/api/facebook/auth', {
+        'access_token': accessToken,
+        'user_id': userID,
+      });
 
       return response as Map<String, dynamic>;
     } catch (e) {
@@ -77,9 +77,7 @@ class FacebookAuthService {
   /// Recupera le pagine Facebook dell'utente
   static Future<List<dynamic>> getUserPages() async {
     try {
-      final response = await ApiClient.get(
-        '/api/facebook/pages',
-      );
+      final response = await ApiClient.get('/api/facebook/pages');
 
       if (response is Map && response.containsKey('pages')) {
         return response['pages'] as List<dynamic>;
@@ -97,14 +95,11 @@ class FacebookAuthService {
     String message,
   ) async {
     try {
-      final response = await ApiClient.post(
-        '/api/facebook/post',
-        {
-          'page_id': pageID,
-          'page_token': pageToken,
-          'message': message,
-        },
-      );
+      final response = await ApiClient.post('/api/facebook/post', {
+        'page_id': pageID,
+        'page_token': pageToken,
+        'message': message,
+      });
 
       return response['post_id'] as String;
     } catch (e) {

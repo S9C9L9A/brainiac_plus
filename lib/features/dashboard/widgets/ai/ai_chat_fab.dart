@@ -5,20 +5,19 @@ import 'package:brainiac_plus/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
+
 /// Floating Action Button for AI Chat with modern gradient design
 class AIChatFAB extends StatefulWidget {
   final VoidCallback onPressed;
 
-  const AIChatFAB({
-    super.key,
-    required this.onPressed,
-  });
+  const AIChatFAB({super.key, required this.onPressed});
 
   @override
   State<AIChatFAB> createState() => _AIChatFABState();
 }
 
-class _AIChatFABState extends State<AIChatFAB> with SingleTickerProviderStateMixin {
+class _AIChatFABState extends State<AIChatFAB>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -29,7 +28,7 @@ class _AIChatFABState extends State<AIChatFAB> with SingleTickerProviderStateMix
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -54,10 +53,7 @@ class _AIChatFABState extends State<AIChatFAB> with SingleTickerProviderStateMix
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [
-                  AppColors.primary,
-                  AppColors.secondary,
-                ],
+                colors: [AppColors.primary, AppColors.secondary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -99,21 +95,17 @@ class _AIChatFABState extends State<AIChatFAB> with SingleTickerProviderStateMix
 class AIChatOverlay extends ConsumerWidget {
   final VoidCallback onClose;
 
-  const AIChatOverlay({
-    super.key,
-    required this.onClose,
-  });
+  const AIChatOverlay({super.key, required this.onClose});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(extendedSettingsProvider);
-    final hasLocalConfig = settings.hasOllamaEndpoint && settings.hasOllamaModelName;
+    final hasLocalConfig =
+        settings.hasOllamaEndpoint && settings.hasOllamaModelName;
     final modelName = settings.ollamaModelName ?? 'Local model';
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(30),
-      ),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
         child: Container(
@@ -155,9 +147,7 @@ class AIChatOverlay extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -191,10 +181,7 @@ class AIChatOverlay extends ConsumerWidget {
                 ),
                 Text(
                   configured ? modelName : 'Setup required',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),
@@ -275,7 +262,10 @@ class AIChatOverlay extends ConsumerWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
               ),
             ),
           ],

@@ -43,14 +43,14 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
       await Future.delayed(const Duration(seconds: 2));
 
       // Simula verifica (da sostituire con chiamata reale)
-      final isConnected = _tokenController.text.startsWith('EAA') &&
+      final isConnected =
+          _tokenController.text.startsWith('EAA') &&
           _tokenController.text.length > 50;
 
       if (isConnected) {
-        ref.read(setupWizardControllerProvider.notifier).updateServiceStatus(
-              'instagram',
-              true,
-            );
+        ref
+            .read(setupWizardControllerProvider.notifier)
+            .updateServiceStatus('instagram', true);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -79,10 +79,7 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Errore: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('❌ Errore: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -100,7 +97,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
   }
 
   Future<void> _openFacebookBusinessManager() async {
-    final url = Uri.parse('https://business.facebook.com/latest/settings/pages');
+    final url = Uri.parse(
+      'https://business.facebook.com/latest/settings/pages',
+    );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -159,10 +158,7 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
                     SizedBox(height: 4),
                     Text(
                       'Gestisci il tuo account Business',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -176,20 +172,21 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.warning_amber, size: 48, color: Colors.orange),
+                  const Icon(
+                    Icons.warning_amber,
+                    size: 48,
+                    color: Colors.orange,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     '⚠️ Facebook non collegato',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -240,9 +237,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
+                color: Colors.blue.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,8 +326,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.check),
@@ -350,9 +348,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -381,11 +379,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () {
-                      ref.read(setupWizardControllerProvider.notifier)
-                          .updateServiceStatus(
-                            'instagram',
-                            false,
-                          );
+                      ref
+                          .read(setupWizardControllerProvider.notifier)
+                          .updateServiceStatus('instagram', false);
                     },
                     tooltip: 'Modifica',
                   ),
@@ -453,12 +449,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8),
         ],
       ),
       child: Column(
@@ -533,9 +526,9 @@ class _InstagramSetupStepState extends ConsumerState<InstagramSetupStep> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

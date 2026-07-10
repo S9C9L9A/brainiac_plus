@@ -59,7 +59,7 @@ class HardwareDetectionService {
     try {
       // Usa SystemMetricsService come singola fonte di verità
       final metrics = await _systemMetricsService.loadMetrics();
-      
+
       _cachedInfo = HardwareInfo(
         totalMemoryMB: metrics.totalMemoryMB,
         cpuCores: metrics.cpuCores,
@@ -69,14 +69,15 @@ class HardwareDetectionService {
         hasGpu: metrics.hasGpu,
         gpuMemoryMB: metrics.gpuMemoryMB,
       );
-      
+
       return _cachedInfo!;
     } catch (e) {
       return _getDefaultInfo();
     }
   }
 
-  late final SystemMetricsService _systemMetricsService = SystemMetricsService();
+  late final SystemMetricsService _systemMetricsService =
+      SystemMetricsService();
 
   /// Get default hardware info
   HardwareInfo _getDefaultInfo() {

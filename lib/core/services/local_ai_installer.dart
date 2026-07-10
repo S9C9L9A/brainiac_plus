@@ -5,18 +5,12 @@ class LocalAiCommandResult {
   final int exitCode;
   final String output;
 
-  const LocalAiCommandResult({
-    required this.exitCode,
-    required this.output,
-  });
+  const LocalAiCommandResult({required this.exitCode, required this.output});
 
   bool get isSuccess => exitCode == 0;
 }
 
-enum LocalAiInstallMethod {
-  snap,
-  script,
-}
+enum LocalAiInstallMethod { snap, script }
 
 class LocalAiInstaller {
   const LocalAiInstaller();
@@ -26,15 +20,13 @@ class LocalAiInstaller {
   }) {
     switch (method) {
       case LocalAiInstallMethod.snap:
-        return _runCommand(
-          ['snap', 'install', 'ollama'],
-          usePkexec: true,
-        );
+        return _runCommand(['snap', 'install', 'ollama'], usePkexec: true);
       case LocalAiInstallMethod.script:
-        return _runCommand(
-          ['bash', '-lc', 'curl -fsSL https://ollama.com/install.sh | sh'],
-          usePkexec: true,
-        );
+        return _runCommand([
+          'bash',
+          '-lc',
+          'curl -fsSL https://ollama.com/install.sh | sh',
+        ], usePkexec: true);
     }
   }
 
@@ -51,10 +43,7 @@ class LocalAiInstaller {
   Future<LocalAiCommandResult> setEndpointDefaults({
     required String modelsDir,
   }) {
-    return _runCommand(
-      ['ollama', 'list'],
-      env: {'OLLAMA_MODELS': modelsDir},
-    );
+    return _runCommand(['ollama', 'list'], env: {'OLLAMA_MODELS': modelsDir});
   }
 
   Future<LocalAiCommandResult> _runCommand(
@@ -87,9 +76,10 @@ class LocalAiInstaller {
     await stdoutSub.cancel();
     await stderrSub.cancel();
 
-    final output = [stdoutBuffer.toString(), stderrBuffer.toString()]
-        .where((chunk) => chunk.trim().isNotEmpty)
-        .join('\n');
+    final output = [
+      stdoutBuffer.toString(),
+      stderrBuffer.toString(),
+    ].where((chunk) => chunk.trim().isNotEmpty).join('\n');
 
     return LocalAiCommandResult(exitCode: exitCode, output: output);
   }

@@ -51,8 +51,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     _currentIndex = _sanitizeMainIndex(widget.initialTabIndex ?? 0);
-    _settingsTabIndex = _sanitizeSettingsIndex(widget.initialSettingsTabIndex ?? 0);
-    _automationTabIndex = _sanitizeAutomationIndex(widget.initialAutomationTabIndex ?? 0);
+    _settingsTabIndex = _sanitizeSettingsIndex(
+      widget.initialSettingsTabIndex ?? 0,
+    );
+    _automationTabIndex = _sanitizeAutomationIndex(
+      widget.initialAutomationTabIndex ?? 0,
+    );
     // Register tab change callback with navigation service
     NavigationService().onTabChange = (tabIndex) {
       setState(() {

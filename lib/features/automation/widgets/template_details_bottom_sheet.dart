@@ -13,10 +13,7 @@ import '../providers/automation_template_selection_provider.dart';
 class TemplateDetailsBottomSheet extends ConsumerWidget {
   final AutomationTemplate template;
 
-  const TemplateDetailsBottomSheet({
-    super.key,
-    required this.template,
-  });
+  const TemplateDetailsBottomSheet({super.key, required this.template});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,10 +26,7 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1a1a2e),
-            const Color(0xFF16213e),
-          ],
+          colors: [const Color(0xFF1a1a2e), const Color(0xFF16213e)],
         ),
       ),
       child: SafeArea(
@@ -222,7 +216,12 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
                         ),
                       ),
                       onPressed: () {
-                        ref.read(automationTemplateSelectionProvider.notifier).state = template;
+                        ref
+                                .read(
+                                  automationTemplateSelectionProvider.notifier,
+                                )
+                                .state =
+                            template;
                         Navigator.pop(context);
                         NavigationService().navigateToTab(
                           context,
@@ -270,7 +269,11 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
     );
   }
 
-  Widget _buildWarningCard(String title, String subtitle, BuildContext context) {
+  Widget _buildWarningCard(
+    String title,
+    String subtitle,
+    BuildContext context,
+  ) {
     return GlassCard(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -311,10 +314,7 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -366,10 +366,7 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -428,7 +425,10 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            _buildExampleStep('1', 'Configure your ${template.service.label} credentials'),
+            _buildExampleStep(
+              '1',
+              'Configure your ${template.service.label} credentials',
+            ),
             _buildExampleStep('2', 'Set automation triggers and conditions'),
             _buildExampleStep('3', 'Define actions and content'),
             _buildExampleStep('4', 'Activate and monitor results'),
@@ -468,10 +468,7 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 13,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
             ),
           ),
         ],
@@ -481,14 +478,14 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
 
   List<String> _getMissingConfigurations(ExtendedAppSettings settings) {
     final missingConfigs = <String>[];
-    
+
     for (final field in template.requiredFields) {
       // Check if the field is configured based on service
       if (!settings.isServiceConfigured(template.service)) {
         missingConfigs.add(field);
       }
     }
-    
+
     return missingConfigs;
   }
 
@@ -497,11 +494,20 @@ class TemplateDetailsBottomSheet extends ConsumerWidget {
       case AutomationCategory.socialMedia:
         return [const Color(0xFFE1306C), const Color(0xFFFD1D1D)];
       case AutomationCategory.productivity:
-        return [AppColors.systemBlue, AppColors.systemBlue.withOpacity(0.6)];
+        return [
+          AppColors.systemBlue,
+          AppColors.systemBlue.withValues(alpha: 0.6),
+        ];
       case AutomationCategory.communication:
-        return [AppColors.systemGreen, AppColors.systemGreen.withOpacity(0.6)];
+        return [
+          AppColors.systemGreen,
+          AppColors.systemGreen.withValues(alpha: 0.6),
+        ];
       case AutomationCategory.marketing:
-        return [AppColors.systemOrange, AppColors.systemOrange.withOpacity(0.6)];
+        return [
+          AppColors.systemOrange,
+          AppColors.systemOrange.withValues(alpha: 0.6),
+        ];
       default:
         return [Colors.purple, Colors.blue];
     }

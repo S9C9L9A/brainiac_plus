@@ -4,11 +4,7 @@ class WelcomeStep extends StatelessWidget {
   final VoidCallback onNext;
   final VoidCallback onSkip;
 
-  const WelcomeStep({
-    super.key,
-    required this.onNext,
-    required this.onSkip,
-  });
+  const WelcomeStep({super.key, required this.onNext, required this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +32,9 @@ class WelcomeStep extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).primaryColor.withOpacity(0.3),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.3),
                         blurRadius: 30,
                         spreadRadius: 10,
                       ),
@@ -56,10 +54,7 @@ class WelcomeStep extends StatelessWidget {
           // Title
           const Text(
             '🎉 Benvenuto in BrainiacPlus!',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -67,10 +62,7 @@ class WelcomeStep extends StatelessWidget {
           // Subtitle
           Text(
             'La tua piattaforma di automazione\nper i social media',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),
@@ -102,11 +94,9 @@ class WelcomeStep extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: Colors.blue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.blue.withOpacity(0.3),
-              ),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -115,10 +105,7 @@ class WelcomeStep extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Configureremo i tuoi social media in pochi minuti',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.blue[700], fontSize: 14),
                   ),
                 ),
               ],
@@ -152,10 +139,7 @@ class WelcomeStep extends StatelessWidget {
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Inizia Setup',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      Text('Inizia Setup', style: TextStyle(fontSize: 16)),
                       SizedBox(width: 8),
                       Icon(Icons.arrow_forward),
                     ],
@@ -180,14 +164,10 @@ class WelcomeStep extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: Theme.of(context).primaryColor,
-            size: 28,
-          ),
+          child: Icon(icon, color: Theme.of(context).primaryColor, size: 28),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -204,10 +184,7 @@ class WelcomeStep extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
             ],
           ),

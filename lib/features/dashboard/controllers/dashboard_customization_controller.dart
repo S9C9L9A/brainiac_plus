@@ -35,16 +35,14 @@ class DashboardCustomizationController
   static const String _storageKey = 'dashboard_layout';
 
   DashboardCustomizationController()
-      : super(const DashboardCustomizationState(
-          layout: DashboardLayout(),
-        )) {
+    : super(const DashboardCustomizationState(layout: DashboardLayout())) {
     _loadLayout();
   }
 
   /// Load layout from SharedPreferences
   Future<void> _loadLayout() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final layoutJson = prefs.getString(_storageKey);
@@ -81,7 +79,7 @@ class DashboardCustomizationController
   /// Toggle card visibility
   Future<void> toggleCardVisibility(String cardId) async {
     final visibleCards = List<String>.from(state.layout.visibleCards);
-    
+
     if (visibleCards.contains(cardId)) {
       visibleCards.remove(cardId);
     } else {
@@ -91,17 +89,17 @@ class DashboardCustomizationController
     state = state.copyWith(
       layout: state.layout.copyWith(visibleCards: visibleCards),
     );
-    
+
     await _saveLayout();
   }
 
   /// Reorder cards
   Future<void> reorderCard(String cardId, int newPosition) async {
     final cardOrder = Map<String, int>.from(state.layout.cardOrder);
-    
+
     // Update positions
     final oldPosition = cardOrder[cardId] ?? 0;
-    
+
     // Shift other cards
     cardOrder.forEach((key, value) {
       if (key == cardId) {
@@ -119,10 +117,8 @@ class DashboardCustomizationController
       }
     });
 
-    state = state.copyWith(
-      layout: state.layout.copyWith(cardOrder: cardOrder),
-    );
-    
+    state = state.copyWith(layout: state.layout.copyWith(cardOrder: cardOrder));
+
     await _saveLayout();
   }
 
@@ -165,7 +161,9 @@ class DashboardCustomizationController
 
 /// Provider for dashboard customization
 final dashboardCustomizationProvider =
-    StateNotifierProvider<DashboardCustomizationController,
-        DashboardCustomizationState>((ref) {
-  return DashboardCustomizationController();
-});
+    StateNotifierProvider<
+      DashboardCustomizationController,
+      DashboardCustomizationState
+    >((ref) {
+      return DashboardCustomizationController();
+    });

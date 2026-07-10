@@ -34,7 +34,9 @@ class TaskSchedulerService {
         debugPrint('⏰ Executing scheduled automation: ${automation.name}');
       });
       _scheduledTasks[automation.id] = task;
-      debugPrint('📅 Scheduled automation: ${automation.name} with cron: $cronExpression');
+      debugPrint(
+        '📅 Scheduled automation: ${automation.name} with cron: $cronExpression',
+      );
     } catch (e) {
       debugPrint('❌ Failed to schedule automation: ${automation.name}: $e');
     }

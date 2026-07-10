@@ -5,11 +5,7 @@ class ChatInputBar extends StatefulWidget {
   final Function(String) onSend;
   final bool enabled;
 
-  const ChatInputBar({
-    super.key,
-    required this.onSend,
-    this.enabled = true,
-  });
+  const ChatInputBar({super.key, required this.onSend, this.enabled = true});
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -40,13 +36,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900.withOpacity(0.5),
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade800,
-            width: 1,
-          ),
-        ),
+        color: Colors.grey.shade900.withValues(alpha: 0.5),
+        border: Border(top: BorderSide(color: Colors.grey.shade800, width: 1)),
       ),
       child: SafeArea(
         child: Row(
@@ -54,12 +45,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.grey.shade800,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.grey.shade800, width: 1),
                 ),
                 child: TextField(
                   controller: _controller,
@@ -67,10 +55,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   enabled: widget.enabled,
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                   decoration: InputDecoration(
                     hintText: 'Ask AI to add features, fix bugs...',
                     hintStyle: TextStyle(

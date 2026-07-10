@@ -9,13 +9,15 @@ class FacebookAutomationTestScreen extends StatefulWidget {
   const FacebookAutomationTestScreen({super.key});
 
   @override
-  State<FacebookAutomationTestScreen> createState() => _FacebookAutomationTestScreenState();
+  State<FacebookAutomationTestScreen> createState() =>
+      _FacebookAutomationTestScreenState();
 }
 
-class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScreen> {
+class _FacebookAutomationTestScreenState
+    extends State<FacebookAutomationTestScreen> {
   final TextEditingController _tokenController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-  
+
   String _backendUrl = 'http://localhost:8080';
   bool _isLoading = false;
   String _status = 'Pronto per iniziare';
@@ -28,7 +30,8 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
   void initState() {
     super.initState();
     // Pre-compila con il token fornito se disponibile
-    _tokenController.text = 'EAAd3zUKn7ToBQla4F65ayrZBcm2ZBzW2SUOlXlCWSz3MXfAIwVd1oaKUu0MmxwMKvj1BWLMbIgyEzKJJVPqVZB1NkGMMXa4Hny4Fcd6YEeQfCUQ6RGjpdfCLHJ1IKRBoZC7LEpmeZCSOdVA5T0PaBaeduGqIlkKYMJKzZAcK2gLkB7gheZBle3QIj3TAPY2XZBLKVtMqIEXD8MH9yY7hPJOCN80GKZBNIZA8j5ifFoNJaywZCJFVL5AFUwVhOzWRz9dGZAIih3ZBPrJ9eyZBso2W70vSluUkAvEVQF';
+    _tokenController.text =
+        'EAAd3zUKn7ToBQla4F65ayrZBcm2ZBzW2SUOlXlCWSz3MXfAIwVd1oaKUu0MmxwMKvj1BWLMbIgyEzKJJVPqVZB1NkGMMXa4Hny4Fcd6YEeQfCUQ6RGjpdfCLHJ1IKRBoZC7LEpmeZCSOdVA5T0PaBaeduGqIlkKYMJKzZAcK2gLkB7gheZBle3QIj3TAPY2XZBLKVtMqIEXD8MH9yY7hPJOCN80GKZBNIZA8j5ifFoNJaywZCJFVL5AFUwVhOzWRz9dGZAIih3ZBPrJ9eyZBso2W70vSluUkAvEVQF';
     _messageController.text = '🧠 Test BrainiacPlus - ${DateTime.now()}';
   }
 
@@ -47,7 +50,7 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
 
     try {
       final response = await http.get(Uri.parse('$_backendUrl/health'));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -83,12 +86,14 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
     try {
       // Test diretto con Facebook API
       final fbResponse = await http.get(
-        Uri.parse('https://graph.facebook.com/v18.0/me?fields=id,name,email&access_token=${_tokenController.text}')
+        Uri.parse(
+          'https://graph.facebook.com/v18.0/me?fields=id,name,email&access_token=${_tokenController.text}',
+        ),
       );
-      
+
       if (fbResponse.statusCode == 200) {
         final userData = json.decode(fbResponse.body);
-        
+
         if (userData.containsKey('error')) {
           setState(() {
             _status = '❌ Token non valido: ${userData['error']['message']}';
@@ -100,7 +105,7 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
             _userData = userData;
             _status = '✅ Token valido! Utente: ${userData['name']}';
           });
-          
+
           // Autentica anche con il backend
           await _authenticateWithBackend();
         }
@@ -154,12 +159,14 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
 
     try {
       final response = await http.get(
-        Uri.parse('https://graph.facebook.com/v18.0/me/accounts?access_token=${_tokenController.text}')
+        Uri.parse(
+          'https://graph.facebook.com/v18.0/me/accounts?access_token=${_tokenController.text}',
+        ),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['data'] != null && (data['data'] as List).isNotEmpty) {
           setState(() {
             _pages = data['data'];
@@ -168,7 +175,8 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
         } else {
           setState(() {
             _pages = null;
-            _status = '⚠️ Nessuna pagina trovata. Devi essere admin/editor di almeno una pagina.';
+            _status =
+                '⚠️ Nessuna pagina trovata. Devi essere admin/editor di almeno una pagina.';
           });
           _showSnackBar('Nessuna pagina trovata');
         }
@@ -262,7 +270,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                   children: [
                     const Text(
                       'Status',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(_status),
@@ -274,7 +285,7 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
 
             // Backend Configuration
@@ -286,7 +297,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                   children: [
                     const Text(
                       '⚙️ Configurazione Backend',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -324,7 +338,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                       children: [
                         const Text(
                           '🔑 Token Facebook',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         const Spacer(),
                         IconButton(
@@ -371,7 +388,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                     children: [
                       const Text(
                         '👤 Utente Connesso',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text('Nome: ${_userData!['name']}'),
@@ -395,7 +415,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                   children: [
                     const Text(
                       '📄 Pagine Facebook',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ElevatedButton.icon(
@@ -408,18 +431,20 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                     ),
                     if (_pages != null) ...[
                       const SizedBox(height: 12),
-                      ..._pages!.map((page) => RadioListTile(
-                        title: Text(page['name']),
-                        subtitle: Text('ID: ${page['id']}'),
-                        value: page['id'],
-                        groupValue: _selectedPageId,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPageId = value as String;
-                            _selectedPageToken = page['access_token'];
-                          });
-                        },
-                      )),
+                      ..._pages!.map(
+                        (page) => RadioListTile(
+                          title: Text(page['name']),
+                          subtitle: Text('ID: ${page['id']}'),
+                          value: page['id'],
+                          groupValue: _selectedPageId,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedPageId = value as String;
+                              _selectedPageToken = page['access_token'];
+                            });
+                          },
+                        ),
+                      ),
                     ],
                   ],
                 ),
@@ -436,7 +461,10 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                     children: [
                       const Text(
                         '📝 Pubblica Post',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextField(
@@ -476,14 +504,21 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
                   children: [
                     const Text(
                       '💡 Guida Rapida',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text('1. Testa la connessione al backend'),
-                    const Text('2. Genera un token su developers.facebook.com/tools/explorer'),
+                    const Text(
+                      '2. Genera un token su developers.facebook.com/tools/explorer',
+                    ),
                     const Text('3. Incolla il token e validalo'),
                     const Text('4. Carica le tue pagine Facebook'),
-                    const Text('5. Seleziona una pagina e pubblica un post di test'),
+                    const Text(
+                      '5. Seleziona una pagina e pubblica un post di test',
+                    ),
                     const SizedBox(height: 8),
                     TextButton.icon(
                       onPressed: () {
@@ -512,18 +547,27 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('1. Vai su:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                '1. Vai su:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SelectableText(
                 'https://developers.facebook.com/tools/explorer/',
                 style: TextStyle(color: Colors.blue),
               ),
               const SizedBox(height: 12),
-              const Text('2. Seleziona la tua app:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                '2. Seleziona la tua app:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const Text('App ID: 2102048307277114'),
               const SizedBox(height: 12),
               const Text('3. Clicca "Generate Access Token"'),
               const SizedBox(height: 12),
-              const Text('4. Richiedi i permessi:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                '4. Richiedi i permessi:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const Text('• pages_show_list'),
               const Text('• pages_manage_posts'),
               const Text('• pages_read_engagement'),
@@ -544,9 +588,11 @@ class _FacebookAutomationTestScreenState extends State<FacebookAutomationTestScr
         actions: [
           TextButton(
             onPressed: () {
-              Clipboard.setData(const ClipboardData(
-                text: 'https://developers.facebook.com/tools/explorer/',
-              ));
+              Clipboard.setData(
+                const ClipboardData(
+                  text: 'https://developers.facebook.com/tools/explorer/',
+                ),
+              );
               Navigator.pop(context);
               _showSnackBar('URL copiato negli appunti!');
             },

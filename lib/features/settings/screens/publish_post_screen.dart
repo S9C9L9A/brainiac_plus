@@ -61,9 +61,9 @@ class _PublishPostScreenState extends State<PublishPostScreen> {
         setState(() {
           _successMessage = '✅ Post pubblicato con successo!';
         });
-        
+
         _messageController.clear();
-        
+
         // Torna indietro dopo 2 secondi
         await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
@@ -71,7 +71,8 @@ class _PublishPostScreenState extends State<PublishPostScreen> {
         }
       } else {
         setState(() {
-          _errorMessage = authProvider.errorMessage ?? 'Errore nella pubblicazione';
+          _errorMessage =
+              authProvider.errorMessage ?? 'Errore nella pubblicazione';
         });
       }
     } catch (e) {
@@ -90,9 +91,7 @@ class _PublishPostScreenState extends State<PublishPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Pubblica su ${widget.pageName}'),
-      ),
+      appBar: AppBar(title: Text('Pubblica su ${widget.pageName}')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -117,9 +116,9 @@ class _PublishPostScreenState extends State<PublishPostScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'ID: ${widget.pageID}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                     ),
                   ],
                 ),

@@ -26,7 +26,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
     final filteredTemplates = _selectedCategory == null
         ? templates
         : templates.where((t) => t.category == _selectedCategory).toList();
-    
+
     final availableTemplates = filteredTemplates
         .where((t) => settings.isServiceConfigured(t.service))
         .toList();
@@ -128,7 +128,10 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
     );
   }
 
-  Widget _buildTemplateCard(AutomationTemplate template, {required bool isLocked}) {
+  Widget _buildTemplateCard(
+    AutomationTemplate template, {
+    required bool isLocked,
+  }) {
     return Opacity(
       opacity: isLocked ? 0.6 : 1.0,
       child: Stack(
@@ -270,11 +273,20 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
       case AutomationCategory.socialMedia:
         return [const Color(0xFFE1306C), const Color(0xFFFD1D1D)];
       case AutomationCategory.productivity:
-        return [AppColors.systemBlue, AppColors.systemBlue.withOpacity(0.6)];
+        return [
+          AppColors.systemBlue,
+          AppColors.systemBlue.withValues(alpha: 0.6),
+        ];
       case AutomationCategory.communication:
-        return [AppColors.systemGreen, AppColors.systemGreen.withOpacity(0.6)];
+        return [
+          AppColors.systemGreen,
+          AppColors.systemGreen.withValues(alpha: 0.6),
+        ];
       case AutomationCategory.marketing:
-        return [AppColors.systemOrange, AppColors.systemOrange.withOpacity(0.6)];
+        return [
+          AppColors.systemOrange,
+          AppColors.systemOrange.withValues(alpha: 0.6),
+        ];
       default:
         return [Colors.purple, Colors.blue];
     }
@@ -295,9 +307,7 @@ class _TemplatesTabState extends ConsumerState<TemplatesTab> {
 
   void _goToSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ModernSettingsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ModernSettingsScreen()),
     );
   }
 }

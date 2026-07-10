@@ -7,9 +7,12 @@ import '../../settings/providers/extended_settings_provider.dart';
 
 /// Provider per i servizi social media
 final socialMediaServicesProvider =
-    StateNotifierProvider<SocialMediaServicesController, SocialMediaServicesState>((ref) {
-  return SocialMediaServicesController(ref);
-});
+    StateNotifierProvider<
+      SocialMediaServicesController,
+      SocialMediaServicesState
+    >((ref) {
+      return SocialMediaServicesController(ref);
+    });
 
 /// State per i servizi social
 class SocialMediaServicesState {
@@ -45,8 +48,10 @@ class SocialMediaServicesState {
 }
 
 /// Controller per gestire i servizi social
-class SocialMediaServicesController extends StateNotifier<SocialMediaServicesState> {
-  SocialMediaServicesController(this._ref) : super(const SocialMediaServicesState()) {
+class SocialMediaServicesController
+    extends StateNotifier<SocialMediaServicesState> {
+  SocialMediaServicesController(this._ref)
+    : super(const SocialMediaServicesState()) {
     _syncFromSettings(_ref.read(extendedSettingsProvider));
     _ref.listen<ExtendedAppSettings>(
       extendedSettingsProvider,
@@ -105,7 +110,7 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
     if (serviceIndex == -1) return;
 
     final service = state.services[serviceIndex];
-    
+
     try {
       SocialMediaMetrics? metrics;
 
@@ -140,7 +145,9 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
   }
 
   /// Sincronizza metriche Facebook
-  Future<SocialMediaMetrics?> _syncFacebookMetrics(SocialMediaService service) async {
+  Future<SocialMediaMetrics?> _syncFacebookMetrics(
+    SocialMediaService service,
+  ) async {
     if (service.pageId == null || service.accessToken == null) return null;
 
     try {
@@ -154,7 +161,7 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         // Recupera anche gli album per contare le foto
         final albumsResponse = await http.get(
           Uri.parse(
@@ -180,9 +187,7 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
           comments: 0,
           shares: 0,
           engagementRate: 0.0,
-          extra: {
-            'fan_count': data['fan_count'],
-          },
+          extra: {'fan_count': data['fan_count']},
         );
       }
     } catch (e) {
@@ -193,13 +198,17 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
   }
 
   /// Sincronizza metriche Instagram (placeholder)
-  Future<SocialMediaMetrics?> _syncInstagramMetrics(SocialMediaService service) async {
+  Future<SocialMediaMetrics?> _syncInstagramMetrics(
+    SocialMediaService service,
+  ) async {
     // TODO: Implementare sync Instagram quando configurato
     return null;
   }
 
   /// Sincronizza metriche YouTube (placeholder)
-  Future<SocialMediaMetrics?> _syncYouTubeMetrics(SocialMediaService service) async {
+  Future<SocialMediaMetrics?> _syncYouTubeMetrics(
+    SocialMediaService service,
+  ) async {
     // TODO: Implementare sync YouTube quando configurato
     return null;
   }
@@ -208,7 +217,7 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
   Future<void> addService(SocialMediaService service) async {
     final services = [...state.services, service];
     state = state.copyWith(services: services);
-    
+
     // TODO: Salvare nel database
   }
 
@@ -216,7 +225,7 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
   Future<void> removeService(String serviceId) async {
     final services = state.services.where((s) => s.id != serviceId).toList();
     state = state.copyWith(services: services);
-    
+
     // TODO: Rimuovere dal database
   }
 
@@ -225,12 +234,14 @@ class SocialMediaServicesController extends StateNotifier<SocialMediaServicesSta
     final serviceIndex = state.services.indexWhere((s) => s.id == serviceId);
     if (serviceIndex == -1) return;
 
-    final updatedService = state.services[serviceIndex].copyWith(isActive: active);
+    final updatedService = state.services[serviceIndex].copyWith(
+      isActive: active,
+    );
     final updatedServices = List<SocialMediaService>.from(state.services);
     updatedServices[serviceIndex] = updatedService;
 
     state = state.copyWith(services: updatedServices);
-    
+
     // TODO: Aggiornare nel database
   }
 

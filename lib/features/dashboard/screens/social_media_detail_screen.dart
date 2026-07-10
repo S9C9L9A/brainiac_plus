@@ -10,16 +10,15 @@ import 'package:fl_chart/fl_chart.dart';
 class SocialMediaDetailScreen extends ConsumerStatefulWidget {
   final SocialMediaService service;
 
-  const SocialMediaDetailScreen({
-    super.key,
-    required this.service,
-  });
+  const SocialMediaDetailScreen({super.key, required this.service});
 
   @override
-  ConsumerState<SocialMediaDetailScreen> createState() => _SocialMediaDetailScreenState();
+  ConsumerState<SocialMediaDetailScreen> createState() =>
+      _SocialMediaDetailScreenState();
 }
 
-class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScreen> {
+class _SocialMediaDetailScreenState
+    extends ConsumerState<SocialMediaDetailScreen> {
   bool _isRefreshing = false;
 
   @override
@@ -76,12 +75,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(colors[0]),
-            Color(colors[1]),
-          ],
-        ),
+        gradient: LinearGradient(colors: [Color(colors[0]), Color(colors[1])]),
       ),
       child: Column(
         children: [
@@ -191,7 +185,8 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
                 Expanded(
                   child: _buildStatCard(
                     'Total Reactions',
-                    (metrics.likes + metrics.comments + metrics.shares).toString(),
+                    (metrics.likes + metrics.comments + metrics.shares)
+                        .toString(),
                     Icons.thumb_up,
                     Colors.orange,
                   ),
@@ -204,13 +199,18 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -227,7 +227,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
@@ -276,7 +276,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
                       dotData: FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.blue.withOpacity(0.2),
+                        color: Colors.blue.withValues(alpha: 0.2),
                       ),
                     ),
                   ],
@@ -310,16 +310,13 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 12,
           ),
         ),
@@ -355,7 +352,8 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
   }
 
   Widget _buildEngagementBar(String label, int value, Color color) {
-    final total = widget.service.metrics!.likes +
+    final total =
+        widget.service.metrics!.likes +
         widget.service.metrics!.comments +
         widget.service.metrics!.shares;
     final percentage = total > 0 ? (value / total * 100) : 0.0;
@@ -367,10 +365,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
             Text(
               '$value (${percentage.toStringAsFixed(1)}%)',
@@ -387,7 +382,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: percentage / 100,
-            backgroundColor: Colors.white.withOpacity(0.1),
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 8,
           ),
@@ -415,13 +410,9 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
             Row(
               children: [
                 Expanded(
-                  child: _buildActionButton(
-                    'Create Post',
-                    Icons.add_box,
-                    () {
-                      // TODO: Navigate to create post
-                    },
-                  ),
+                  child: _buildActionButton('Create Post', Icons.add_box, () {
+                    // TODO: Navigate to create post
+                  }),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -449,13 +440,9 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildActionButton(
-                    'Settings',
-                    Icons.settings,
-                    () {
-                      // TODO: Navigate to service settings
-                    },
-                  ),
+                  child: _buildActionButton('Settings', Icons.settings, () {
+                    // TODO: Navigate to service settings
+                  }),
                 ),
               ],
             ),
@@ -471,11 +458,9 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -483,10 +468,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -511,7 +493,10 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
               ),
             ),
             const SizedBox(height: 16),
-            _buildInfoRow('Status', widget.service.isActive ? 'Active' : 'Paused'),
+            _buildInfoRow(
+              'Status',
+              widget.service.isActive ? 'Active' : 'Paused',
+            ),
             _buildInfoRow('Page ID', widget.service.pageId ?? 'N/A'),
             _buildInfoRow(
               'Last Sync',
@@ -534,10 +519,7 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
           ),
           Text(
             value,
@@ -561,7 +543,9 @@ class _SocialMediaDetailScreenState extends ConsumerState<SocialMediaDetailScree
       _isRefreshing = true;
     });
 
-    await ref.read(socialMediaServicesProvider.notifier).syncService(widget.service.id);
+    await ref
+        .read(socialMediaServicesProvider.notifier)
+        .syncService(widget.service.id);
 
     setState(() {
       _isRefreshing = false;

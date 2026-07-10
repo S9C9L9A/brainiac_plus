@@ -65,21 +65,18 @@ class AutomationController extends StateNotifier<AutomationState> {
   /// Load automations from database
   Future<void> _loadAutomations() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final automations = await AutomationRepository.getAllAutomations();
       final logs = await AutomationRepository.getAllLogs(limit: 100);
-      
+
       state = state.copyWith(
         activeAutomations: automations,
         logs: logs,
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-      );
+      state = state.copyWith(error: e.toString(), isLoading: false);
     }
   }
 
@@ -111,7 +108,10 @@ class AutomationController extends StateNotifier<AutomationState> {
     }
   }
 
-  Future<bool> createFromTemplate(String templateId, Map<String, dynamic>? config) async {
+  Future<bool> createFromTemplate(
+    String templateId,
+    Map<String, dynamic>? config,
+  ) async {
     final template = AutomationTemplates.getTemplateById(templateId);
     if (template == null) return false;
 
@@ -119,7 +119,9 @@ class AutomationController extends StateNotifier<AutomationState> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       isTemplate: false,
       config: config ?? template.config,
-      status: template.hasSchedule ? AutomationStatus.scheduled : AutomationStatus.idle,
+      status: template.hasSchedule
+          ? AutomationStatus.scheduled
+          : AutomationStatus.idle,
     );
 
     return await createAutomation(newAutomation);
@@ -127,30 +129,38 @@ class AutomationController extends StateNotifier<AutomationState> {
 
   Future<void> executeAutomation(String id) async {
     final automation = state.activeAutomations.firstWhere((a) => a.id == id);
-    
-    final runningAutomation = automation.copyWith(status: AutomationStatus.running);
-    final updated = state.activeAutomations.map((a) => a.id == id ? runningAutomation : a).toList();
+
+    final runningAutomation = automation.copyWith(
+      status: AutomationStatus.running,
+    );
+    final updated = state.activeAutomations
+        .map((a) => a.id == id ? runningAutomation : a)
+        .toList();
     state = state.copyWith(activeAutomations: updated);
-    
+
     // Update in database
     await AutomationRepository.updateAutomation(runningAutomation);
 
     try {
       final log = await _engine.execute(automation);
-      
+
       final completedAutomation = automation.copyWith(
-        status: log.isSuccess ? AutomationStatus.completed : AutomationStatus.failed,
+        status: log.isSuccess
+            ? AutomationStatus.completed
+            : AutomationStatus.failed,
         executionCount: automation.executionCount + 1,
         successCount: automation.successCount + (log.isSuccess ? 1 : 0),
         failureCount: automation.failureCount + (log.isFailed ? 1 : 0),
         lastRun: DateTime.now(),
       );
-      
+
       // Save to database
       await AutomationRepository.updateAutomation(completedAutomation);
       await AutomationRepository.insertLog(log);
-      
-      final finalUpdated = state.activeAutomations.map((a) => a.id == id ? completedAutomation : a).toList();
+
+      final finalUpdated = state.activeAutomations
+          .map((a) => a.id == id ? completedAutomation : a)
+          .toList();
       state = state.copyWith(
         activeAutomations: finalUpdated,
         logs: [...state.logs, log],
@@ -161,11 +171,13 @@ class AutomationController extends StateNotifier<AutomationState> {
         executionCount: automation.executionCount + 1,
         failureCount: automation.failureCount + 1,
       );
-      
+
       // Save to database
       await AutomationRepository.updateAutomation(failedAutomation);
-      
-      final errorUpdated = state.activeAutomations.map((a) => a.id == id ? failedAutomation : a).toList();
+
+      final errorUpdated = state.activeAutomations
+          .map((a) => a.id == id ? failedAutomation : a)
+          .toList();
       state = state.copyWith(activeAutomations: errorUpdated);
     }
   }
@@ -173,11 +185,13 @@ class AutomationController extends StateNotifier<AutomationState> {
   Future<void> toggleAutomation(String id) async {
     final automation = state.activeAutomations.firstWhere((a) => a.id == id);
     final toggled = automation.copyWith(isActive: !automation.isActive);
-    
+
     // Update in database
     await AutomationRepository.updateAutomation(toggled);
-    
-    final updated = state.activeAutomations.map((a) => a.id == id ? toggled : a).toList();
+
+    final updated = state.activeAutomations
+        .map((a) => a.id == id ? toggled : a)
+        .toList();
     state = state.copyWith(activeAutomations: updated);
   }
 
@@ -185,10 +199,10 @@ class AutomationController extends StateNotifier<AutomationState> {
   Future<bool> deleteAutomation(String id) async {
     try {
       await AutomationRepository.deleteAutomation(id);
-      
+
       final updated = state.activeAutomations.where((a) => a.id != id).toList();
       state = state.copyWith(activeAutomations: updated);
-      
+
       return true;
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -204,5 +218,5 @@ class AutomationController extends StateNotifier<AutomationState> {
 /// Provider for automation controller
 final automationControllerProvider =
     StateNotifierProvider<AutomationController, AutomationState>((ref) {
-  return AutomationController(AutomationEngine());
-});
+      return AutomationController(AutomationEngine());
+    });

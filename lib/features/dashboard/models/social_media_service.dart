@@ -58,7 +58,7 @@ class SocialMediaService {
       accessToken: json['access_token'] as String?,
       isConfigured: json['is_configured'] as bool? ?? false,
       isActive: json['is_active'] as bool? ?? false,
-      lastSync: json['last_sync'] != null 
+      lastSync: json['last_sync'] != null
           ? DateTime.parse(json['last_sync'] as String)
           : null,
       metrics: json['metrics'] != null

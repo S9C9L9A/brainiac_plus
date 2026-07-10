@@ -9,11 +9,7 @@ class MessageBubble extends StatelessWidget {
   final AiMessage message;
   final VoidCallback? onDelete;
 
-  const MessageBubble({
-    super.key,
-    required this.message,
-    this.onDelete,
-  });
+  const MessageBubble({super.key, required this.message, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +18,7 @@ class MessageBubble extends StatelessWidget {
         ? null
         : [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.15),
+              color: Colors.blue.withValues(alpha: 0.15),
               blurRadius: 16,
             ),
           ];
@@ -31,12 +27,12 @@ class MessageBubble extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isUser
-            ? Colors.purple.withOpacity(0.3)
-            : Colors.grey.shade900.withOpacity(0.5),
+            ? Colors.purple.withValues(alpha: 0.3)
+            : Colors.grey.shade900.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUser
-              ? Colors.purple.withOpacity(0.5)
+              ? Colors.purple.withValues(alpha: 0.5)
               : Colors.grey.shade800,
           width: 1,
         ),
@@ -82,16 +78,18 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) _buildAvatar(isUser),
           if (!isUser) const SizedBox(width: 12),
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Tooltip(
                   message: isUser ? '' : 'Tap to copy',
@@ -168,8 +166,8 @@ class MessageBubble extends StatelessWidget {
       height: 36,
       decoration: BoxDecoration(
         color: isUser
-            ? Colors.purple.withOpacity(0.3)
-            : Colors.blue.withOpacity(0.3),
+            ? Colors.purple.withValues(alpha: 0.3)
+            : Colors.blue.withValues(alpha: 0.3),
         shape: BoxShape.circle,
         border: Border.all(
           color: isUser ? Colors.purple.shade700 : Colors.blue.shade700,
@@ -188,23 +186,16 @@ class MessageBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.shade800,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.shade800, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                LucideIcons.code,
-                size: 14,
-                color: Colors.grey.shade400,
-              ),
+              Icon(LucideIcons.code, size: 14, color: Colors.grey.shade400),
               const SizedBox(width: 6),
               Text(
                 'Code',
@@ -235,23 +226,16 @@ class MessageBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900.withOpacity(0.3),
+        color: Colors.grey.shade900.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.shade800,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.shade800, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                AppIcons.file,
-                size: 14,
-                color: Colors.grey.shade400,
-              ),
+              Icon(AppIcons.file, size: 14, color: Colors.grey.shade400),
               const SizedBox(width: 6),
               Text(
                 'Affected files',
@@ -275,12 +259,9 @@ class MessageBubble extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: Colors.grey.shade800,
-                        width: 1,
-                      ),
+                      border: Border.all(color: Colors.grey.shade800, width: 1),
                     ),
                     child: Text(
                       file,
@@ -302,9 +283,9 @@ class MessageBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.blueGrey.withOpacity(0.25),
+        color: Colors.blueGrey.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.blueGrey.withOpacity(0.5)),
+        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
       ),
       child: Text(
         'Agent: $agentId',

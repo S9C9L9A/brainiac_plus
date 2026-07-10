@@ -36,7 +36,7 @@ class AuthProvider extends ChangeNotifier {
         _jwtToken = result['token'];
         _currentUser = result['user'];
         _isAuthenticated = true;
-        
+
         print('✅ Autenticato: ${_currentUser?['name']}');
         notifyListeners();
         return true;
@@ -89,7 +89,7 @@ class AuthProvider extends ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
-      
+
       return postId != null;
     } catch (e) {
       _errorMessage = 'Errore nella pubblicazione: $e';

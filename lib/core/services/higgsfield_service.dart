@@ -7,14 +7,16 @@ class HiggsfieldService {
   final String apiKey;
   final String baseUrl;
 
-  HiggsfieldService({
-    required this.apiKey,
-    String? baseUrl,
-  })  : baseUrl = baseUrl ?? 'https://api.higgsfield.ai/v1',
-        _dio = Dio(BaseOptions(
+  HiggsfieldService({required this.apiKey, String? baseUrl})
+    : baseUrl = baseUrl ?? 'https://api.higgsfield.ai/v1',
+      _dio = Dio(
+        BaseOptions(
           connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(minutes: 5), // Video generation can take time
-        ));
+          receiveTimeout: const Duration(
+            minutes: 5,
+          ), // Video generation can take time
+        ),
+      );
 
   /// Generate an image from text prompt
   Future<GeneratedContent> generateImage({
@@ -83,11 +85,7 @@ class HiggsfieldService {
     try {
       final response = await _dio.get(
         '$baseUrl/jobs/$jobId',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $apiKey',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $apiKey'}),
       );
 
       return GeneratedContent.fromJson(response.data);
@@ -101,9 +99,7 @@ class HiggsfieldService {
     try {
       final response = await _dio.get<List<int>>(
         url,
-        options: Options(
-          responseType: ResponseType.bytes,
-        ),
+        options: Options(responseType: ResponseType.bytes),
       );
 
       if (response.data == null) {
