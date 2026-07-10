@@ -6,6 +6,7 @@ import '../../core/theme/glassmorphism.dart';
 import '../../core/theme/app_icons.dart';
 import '../../core/platform/package_service.dart';
 import 'controllers/package_controller.dart';
+import 'widgets/package_error_banner.dart';
 
 class PackagesScreen extends ConsumerStatefulWidget {
   const PackagesScreen({super.key});
@@ -37,9 +38,17 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               _buildAppBar(context),
               _buildSearchBar(),
               _buildFilterTabs(),
+              if (state.error != null)
+                PackageErrorBanner(
+                  message: state.error!,
+                  onDismiss: () =>
+                      ref.read(packageProvider.notifier).clearError(),
+                ),
               Expanded(
                 child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
                     : _buildPackageList(state.filteredPackages),
               ),
             ],
@@ -57,19 +66,35 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(AppIcons.arrowBack, color: Colors.white, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.arrowBack,
+                color: Colors.white,
+                size: AppIcons.defaultSize,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
-            const Icon(AppIcons.apps, color: Colors.white, size: AppIcons.defaultSize),
+            const Icon(
+              AppIcons.apps,
+              color: Colors.white,
+              size: AppIcons.defaultSize,
+            ),
             const SizedBox(width: 12),
             const Expanded(
               child: Text(
                 'Package Manager',
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(AppIcons.moreVert, color: Colors.white, size: AppIcons.defaultSize),
+              icon: const Icon(
+                AppIcons.moreVert,
+                color: Colors.white,
+                size: AppIcons.defaultSize,
+              ),
               onSelected: (value) {
                 switch (value) {
                   case 'update':
@@ -134,7 +159,11 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
             hintText: 'Search packages...',
             hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
             border: InputBorder.none,
-            icon: const Icon(AppIcons.search, color: Colors.white70, size: AppIcons.defaultSize),
+            icon: const Icon(
+              AppIcons.search,
+              color: Colors.white70,
+              size: AppIcons.defaultSize,
+            ),
           ),
           onChanged: (value) {
             ref.read(packageProvider.notifier).setFilter(value);
@@ -146,7 +175,7 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
 
   Widget _buildFilterTabs() {
     final state = ref.watch(packageProvider);
-    
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -163,20 +192,25 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
 
   Widget _buildTabButton(String label, String value, String current) {
     final isSelected = current == value;
-    
+
     return Expanded(
       child: InkWell(
         onTap: () => ref.read(packageProvider.notifier).setSource(value),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.systemBlue : Colors.white.withOpacity(0.1),
+            color: isSelected
+                ? AppColors.systemBlue
+                : Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -186,7 +220,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
   Widget _buildPackageList(List<PackageInfo> packages) {
     if (packages.isEmpty) {
       return const Center(
-        child: Text('No packages found', style: TextStyle(color: Colors.white70, fontSize: 16)),
+        child: Text(
+          'No packages found',
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
       );
     }
 
@@ -232,7 +269,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                 children: [
                   Text(
                     package.name,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -243,7 +283,10 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
                     const SizedBox(height: 4),
                     Text(
                       package.description!,
-                      style: const TextStyle(color: Colors.white60, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 12,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -254,12 +297,18 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: package.isInstalled ? AppColors.systemGreen : AppColors.systemGray,
+                color: package.isInstalled
+                    ? AppColors.systemGreen
+                    : AppColors.systemGray,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 package.isInstalled ? 'Installed' : 'Available',
-                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -277,9 +326,15 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(package.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              package.name,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text('Version: ${package.version}', style: const TextStyle(fontSize: 16, color: Colors.grey)),
+            Text(
+              'Version: ${package.version}',
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            ),
             const SizedBox(height: 16),
             if (package.description != null)
               Text(package.description!, style: const TextStyle(fontSize: 14)),
@@ -288,7 +343,9 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  ref.read(packageProvider.notifier).removePackage(package.name, package.source);
+                  ref
+                      .read(packageProvider.notifier)
+                      .removePackage(package.name, package.source);
                 },
                 icon: const Icon(AppIcons.delete),
                 label: const Text('Remove'),
@@ -301,7 +358,9 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  ref.read(packageProvider.notifier).installPackage(package.name, package.source);
+                  ref
+                      .read(packageProvider.notifier)
+                      .installPackage(package.name, package.source);
                 },
                 icon: const Icon(AppIcons.download),
                 label: const Text('Install'),
@@ -318,17 +377,23 @@ class _PackagesScreenState extends ConsumerState<PackagesScreen> {
 
   IconData _getSourceIcon(String source) {
     switch (source) {
-      case 'apt': return AppIcons.aptPackage;
-      case 'snap': return AppIcons.snapPackage;
-      default: return AppIcons.apps;
+      case 'apt':
+        return AppIcons.aptPackage;
+      case 'snap':
+        return AppIcons.snapPackage;
+      default:
+        return AppIcons.apps;
     }
   }
 
   Color _getSourceColor(String source) {
     switch (source) {
-      case 'apt': return AppColors.systemOrange;
-      case 'snap': return AppColors.systemGreen;
-      default: return AppColors.systemBlue;
+      case 'apt':
+        return AppColors.systemOrange;
+      case 'snap':
+        return AppColors.systemGreen;
+      default:
+        return AppColors.systemBlue;
     }
   }
 }

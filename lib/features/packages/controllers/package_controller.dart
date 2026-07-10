@@ -6,6 +6,9 @@ class PackageManagerState {
   final List<PackageInfo> packages;
   final bool isLoading;
   final String? error;
+
+  /// Outcome of the last install/remove operation, for user feedback.
+  final String? lastOperationMessage;
   final String filter;
   final String source; // all, apt, snap
 
@@ -13,6 +16,7 @@ class PackageManagerState {
     this.packages = const [],
     this.isLoading = false,
     this.error,
+    this.lastOperationMessage,
     this.filter = '',
     this.source = 'all',
   });
@@ -21,13 +25,16 @@ class PackageManagerState {
     List<PackageInfo>? packages,
     bool? isLoading,
     String? error,
+    String? lastOperationMessage,
     String? filter,
     String? source,
   }) {
     return PackageManagerState(
       packages: packages ?? this.packages,
       isLoading: isLoading ?? this.isLoading,
+      // Like error, the message is transient: cleared unless re-supplied.
       error: error,
+      lastOperationMessage: lastOperationMessage,
       filter: filter ?? this.filter,
       source: source ?? this.source,
     );
@@ -35,26 +42,32 @@ class PackageManagerState {
 
   List<PackageInfo> get filteredPackages {
     var filtered = packages;
-    
+
     if (source != 'all') {
       filtered = filtered.where((p) => p.source == source).toList();
     }
-    
+
     if (filter.isNotEmpty) {
-      filtered = filtered.where((p) => 
-        p.name.toLowerCase().contains(filter.toLowerCase()) ||
-        (p.description?.toLowerCase().contains(filter.toLowerCase()) ?? false)
-      ).toList();
+      filtered = filtered
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(filter.toLowerCase()) ||
+                (p.description?.toLowerCase().contains(filter.toLowerCase()) ??
+                    false),
+          )
+          .toList();
     }
-    
+
     return filtered;
   }
 }
 
 class PackageController extends StateNotifier<PackageManagerState> {
-  final PackageService _packageService = PackageService();
+  final PackageService _packageService;
 
-  PackageController() : super(PackageManagerState()) {
+  PackageController({PackageService? packageService})
+    : _packageService = packageService ?? PackageService(),
+      super(PackageManagerState()) {
     loadPackages();
   }
 
@@ -64,9 +77,9 @@ class PackageController extends StateNotifier<PackageManagerState> {
     try {
       final aptPackages = await _packageService.listAptPackages();
       final snapPackages = await _packageService.listSnapPackages();
-      
+
       final allPackages = [...aptPackages, ...snapPackages];
-      
+
       state = state.copyWith(packages: allPackages, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -82,17 +95,30 @@ class PackageController extends StateNotifier<PackageManagerState> {
   }
 
   Future<void> installPackage(String name, String source) async {
+    state = state.copyWith(isLoading: true);
     final result = await _packageService.installPackage(name, source);
-    if (result.contains('success')) {
+    if (result.toLowerCase().contains('success')) {
       await loadPackages();
+      state = state.copyWith(lastOperationMessage: result);
+    } else {
+      // Failure: keep the current list, make the reason visible.
+      state = state.copyWith(isLoading: false, error: result);
     }
   }
 
   Future<void> removePackage(String name, String source) async {
+    state = state.copyWith(isLoading: true);
     final result = await _packageService.removePackage(name, source);
-    if (result.contains('success')) {
+    if (result.toLowerCase().contains('success')) {
       await loadPackages();
+      state = state.copyWith(lastOperationMessage: result);
+    } else {
+      state = state.copyWith(isLoading: false, error: result);
     }
+  }
+
+  void clearError() {
+    state = state.copyWith(error: null);
   }
 
   Future<void> updateLists() async {
@@ -106,6 +132,7 @@ class PackageController extends StateNotifier<PackageManagerState> {
   }
 }
 
-final packageProvider = StateNotifierProvider<PackageController, PackageManagerState>((ref) {
-  return PackageController();
-});
+final packageProvider =
+    StateNotifierProvider<PackageController, PackageManagerState>((ref) {
+      return PackageController();
+    });
