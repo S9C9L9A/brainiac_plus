@@ -1,9 +1,12 @@
+import 'package:brainiac_plus/core/services/gpu_metrics_service.dart';
 import 'package:brainiac_plus/core/theme/app_icons.dart';
+import 'package:brainiac_plus/features/dashboard/controllers/gpu_metrics_provider.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/system_metrics_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Compact horizontal metrics card showing CPU, RAM, Disk in single row
+/// Compact horizontal metrics card showing CPU, RAM, Disk (and GPU when
+/// present) in a single row
 class CompactMetricsCard extends ConsumerWidget {
   const CompactMetricsCard({super.key});
 
@@ -11,6 +14,7 @@ class CompactMetricsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Get real system metrics from provider
     final metrics = ref.watch(systemMetricsProvider);
+    final gpu = ref.watch(gpuMetricsProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -43,9 +47,9 @@ class CompactMetricsCard extends ConsumerWidget {
               },
             ),
           ),
-          
+
           _buildDivider(),
-          
+
           // RAM
           Expanded(
             child: _MetricItem(
@@ -58,9 +62,9 @@ class CompactMetricsCard extends ConsumerWidget {
               },
             ),
           ),
-          
+
           _buildDivider(),
-          
+
           // Disk
           Expanded(
             child: _MetricItem(
@@ -73,7 +77,78 @@ class CompactMetricsCard extends ConsumerWidget {
               },
             ),
           ),
+
+          // GPU (only when an amdgpu card is detected)
+          if (gpu != null) ...[
+            _buildDivider(),
+            Expanded(
+              child: _MetricItem(
+                icon: AppIcons.gpu,
+                label: 'GPU',
+                value: gpu.busyPercent != null ? '${gpu.busyPercent}%' : '—',
+                color: _getMetricColor((gpu.busyPercent ?? 0).toDouble()),
+                onTap: () => _showGpuDetails(context, gpu),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  /// Bottom sheet with the full GPU snapshot (VRAM, temperature, power).
+  void _showGpuDetails(BuildContext context, GpuMetrics gpu) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF16213E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(AppIcons.gpu, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
+                Text(
+                  'GPU ${gpu.cardId}${gpu.pciId != null ? ' · ${gpu.pciId}' : ''}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _GpuDetailRow(
+              label: 'Usage',
+              value: gpu.busyPercent != null ? '${gpu.busyPercent}%' : 'N/A',
+            ),
+            _GpuDetailRow(
+              label: 'VRAM',
+              value: gpu.vramUsedMB != null && gpu.vramTotalMB != null
+                  ? '${gpu.vramUsedMB} / ${gpu.vramTotalMB} MB'
+                  : 'N/A',
+            ),
+            _GpuDetailRow(
+              label: 'Temperature',
+              value: gpu.temperatureC != null
+                  ? '${gpu.temperatureC!.toStringAsFixed(1)}°C'
+                  : 'N/A',
+            ),
+            _GpuDetailRow(
+              label: 'Power',
+              value: gpu.powerWatts != null
+                  ? '${gpu.powerWatts!.toStringAsFixed(1)} W'
+                  : 'N/A',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -101,6 +176,40 @@ class CompactMetricsCard extends ConsumerWidget {
     if (value < 50) return Colors.green;
     if (value < 75) return Colors.orange;
     return Colors.red;
+  }
+}
+
+class _GpuDetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _GpuDetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -143,15 +252,11 @@ class _MetricItem extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 20,
-              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Value
             Text(
               value,
@@ -160,16 +265,13 @@ class _MetricItem extends StatelessWidget {
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 shadows: [
-                  Shadow(
-                    color: color.withValues(alpha: 0.5),
-                    blurRadius: 8,
-                  ),
+                  Shadow(color: color.withValues(alpha: 0.5), blurRadius: 8),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 2),
-            
+
             // Label
             Text(
               label,

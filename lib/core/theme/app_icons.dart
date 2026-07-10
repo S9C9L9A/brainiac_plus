@@ -17,6 +17,9 @@ class AppIcons {
   /// Disk/Storage icon
   static const disk = LucideIcons.hardDrive;
 
+  /// GPU/Graphics card icon
+  static const gpu = LucideIcons.gpu;
+
   /// USB icon
   static const usb = LucideIcons.usb;
 
