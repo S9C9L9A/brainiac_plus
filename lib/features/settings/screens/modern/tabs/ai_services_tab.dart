@@ -12,6 +12,7 @@ import '../../../../automation/models/automation_enums.dart';
 import '../../../../dashboard/dashboard_screen.dart';
 import '../../../providers/extended_settings_provider.dart';
 import '../../../models/extended_settings.dart';
+import '../../../services/endpoint_validator.dart';
 import '../../../../../core/services/local_ai_installer.dart';
 import '../../../../../core/services/ollama_service.dart';
 
@@ -1060,7 +1061,18 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
   void _saveLocalConfig() {
     final model = _modelController.text.trim();
     final path = _modelsPathController.text.trim();
-    final endpoint = _endpointController.text.trim();
+
+    final validation = EndpointValidator().validate(_endpointController.text);
+    if (!validation.isValid) {
+      setState(() {
+        _log = 'Endpoint not saved: ${validation.error}.';
+      });
+      return;
+    }
+    // Reflect the normalized form (scheme added, trailing slash removed).
+    if (validation.normalized != null) {
+      _endpointController.text = validation.normalized!;
+    }
 
     ref
         .read(extendedSettingsProvider.notifier)
@@ -1068,7 +1080,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
           ref
               .read(extendedSettingsProvider)
               .copyWith(
-                ollamaEndpoint: endpoint.isEmpty ? null : endpoint,
+                ollamaEndpoint: validation.normalized,
                 ollamaModelName: model.isEmpty ? null : model,
                 ollamaModelsPath: path.isEmpty ? null : path,
               ),
