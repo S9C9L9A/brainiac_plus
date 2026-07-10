@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/shell_service.dart';
+import '../services/command_guard.dart';
 
 class TerminalSession {
   final String id;
@@ -31,11 +32,17 @@ class TerminalSession {
 }
 
 class TerminalController extends StateNotifier<List<TerminalSession>> {
-  final ShellService _shellService = ShellService();
+  final ShellService _shellService;
+  final CommandGuard _guard = CommandGuard();
   int _sessionCounter = 0;
   StreamSubscription? _outputSubscription;
 
-  TerminalController() : super([]) {
+  /// Dangerous command awaiting confirm-by-repeat, if any.
+  String? _pendingDangerousCommand;
+
+  TerminalController({ShellService? shellService})
+    : _shellService = shellService ?? ShellService(),
+      super([]) {
     _createNewSession();
     _listenToOutput();
   }
@@ -58,7 +65,10 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
     final session = TerminalSession(
       id: 'session_$_sessionCounter',
       name: 'Terminal $_sessionCounter',
-      output: ['Welcome to BrainiacPlus Terminal\n', 'Type your commands below\n\n'],
+      output: [
+        'Welcome to BrainiacPlus Terminal\n',
+        'Type your commands below\n\n',
+      ],
     );
     state = [...state, session];
   }
@@ -66,10 +76,27 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
   Future<void> executeCommand(String command) async {
     if (state.isEmpty) return;
 
+    // Destructive commands require confirm-by-repeat: the first attempt is
+    // blocked with a warning, typing the exact same command again runs it.
+    final check = _guard.assess(command);
+    if (check.isDangerous && command != _pendingDangerousCommand) {
+      _pendingDangerousCommand = command;
+      _appendToCurrentSession(
+        '\$ $command\n'
+        '⚠️ Potentially destructive command blocked (${check.reason}).\n'
+        'Repeat the exact same command to confirm execution.\n',
+      );
+      return;
+    }
+    _pendingDangerousCommand = null;
+
     final currentSession = state.last;
     final newOutput = [...currentSession.output, '\$ $command\n'];
-    final updatedSession = currentSession.copyWith(output: newOutput, isProcessRunning: true);
-    
+    final updatedSession = currentSession.copyWith(
+      output: newOutput,
+      isProcessRunning: true,
+    );
+
     final newState = [...state];
     newState[newState.length - 1] = updatedSession;
     state = newState;
@@ -82,6 +109,16 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
       updatedState[updatedState.length - 1] = session;
       state = updatedState;
     }
+  }
+
+  void _appendToCurrentSession(String text) {
+    if (state.isEmpty) return;
+    final session = state.last;
+    final newState = [...state];
+    newState[newState.length - 1] = session.copyWith(
+      output: [...session.output, text],
+    );
+    state = newState;
   }
 
   List<String> getHistory() => _shellService.history;
@@ -112,6 +149,7 @@ class TerminalController extends StateNotifier<List<TerminalSession>> {
   }
 }
 
-final terminalProvider = StateNotifierProvider<TerminalController, List<TerminalSession>>((ref) {
-  return TerminalController();
-});
+final terminalProvider =
+    StateNotifierProvider<TerminalController, List<TerminalSession>>((ref) {
+      return TerminalController();
+    });
