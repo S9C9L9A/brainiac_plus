@@ -39,11 +39,12 @@ class ApiClient {
   /// Maneggia la risposta HTTP
   static dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) return null;
       return jsonDecode(response.body);
     } else {
-      final error = jsonDecode(response.body);
+      final errorBody = response.body.isNotEmpty ? jsonDecode(response.body) : {};
       throw Exception(
-          'Errore ${response.statusCode}: ${error['error'] ?? 'Sconosciuto'}');
+          'Errore ${response.statusCode}: ${errorBody['error'] ?? 'Sconosciuto'}');
     }
   }
 }
@@ -67,29 +68,23 @@ class FacebookAuthService {
         },
       );
 
-      // Salva il JWT token in memoria o SharedPreferences
-      if (response['token'] != null) {
-        // TODO: Salva il token
-        // await _storage.write(key: 'jwt_token', value: response['token']);
-      }
-
-      return response;
+      return response as Map<String, dynamic>;
     } catch (e) {
       throw Exception('Autenticazione Facebook fallita: $e');
     }
   }
 
   /// Recupera le pagine Facebook dell'utente
-  static Future<List<dynamic>> getUserPages(String facebookToken) async {
+  static Future<List<dynamic>> getUserPages() async {
     try {
       final response = await ApiClient.get(
         '/api/facebook/pages',
-        /* headers: {
-          'X-Facebook-Token': facebookToken,
-        }, */
       );
 
-      return response['pages'] ?? [];
+      if (response is Map && response.containsKey('pages')) {
+        return response['pages'] as List<dynamic>;
+      }
+      return [];
     } catch (e) {
       throw Exception('Errore nel recupero pagine: $e');
     }
@@ -111,102 +106,9 @@ class FacebookAuthService {
         },
       );
 
-      return response['post_id'];
+      return response['post_id'] as String;
     } catch (e) {
       throw Exception('Errore nella pubblicazione: $e');
     }
   }
 }
-
-/// ===================================
-/// UTILIZZO NEL WIDGET
-/// ===================================
-
-/*
-// Esempio: Nel widget di settings
-class FacebookLoginButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        try {
-          // 1. Ottieni il token da Facebook SDK (flutter_facebook_sdk)
-          final LoginResult result = await FacebookAuth.instance.login();
-          
-          if (result.status == LoginStatus.success) {
-            final accessToken = result.accessToken!.token;
-            
-            // 2. Invia il token al backend
-            final response = await FacebookAuthService.authenticateWithFacebook(
-              accessToken,
-              result.accessToken!.userId!,
-            );
-            
-            if (response['valid']) {
-              // 3. Utente autenticato!
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Accesso riuscito: ${response['user']['name']}')),
-              );
-            }
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Errore: $e')),
-          );
-        }
-      },
-      child: Text('Login con Facebook'),
-    );
-  }
-}
-
-// Esempio: Pubblicare un post
-class PublishPostWidget extends StatefulWidget {
-  @override
-  State<PublishPostWidget> createState() => _PublishPostWidgetState();
-}
-
-class _PublishPostWidgetState extends State<PublishPostWidget> {
-  final messageController = TextEditingController();
-  bool isLoading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: messageController,
-          decoration: InputDecoration(hintText: 'Scrivi il messaggio...'),
-        ),
-        ElevatedButton(
-          onPressed: isLoading ? null : _publishPost,
-          child: isLoading ? CircularProgressIndicator() : Text('Pubblica'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _publishPost() async {
-    setState(() => isLoading = true);
-
-    try {
-      // TODO: Recupera pageID e pageToken dalla memoria/database
-      final postId = await FacebookAuthService.postToPage(
-        'PAGE_ID',
-        'PAGE_TOKEN',
-        messageController.text,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Post pubblicato! ID: $postId')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore: $e')),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-}
-*/

@@ -49,7 +49,7 @@ class AuthService {
   /// Recupera le pagine Facebook dell'utente
   static Future<List<dynamic>> getUserPages(String facebookToken) async {
     try {
-      return await FacebookAuthService.getUserPages(facebookToken);
+      return await FacebookAuthService.getUserPages();
     } catch (e) {
       print('❌ Errore nel recupero pagine: $e');
       return [];

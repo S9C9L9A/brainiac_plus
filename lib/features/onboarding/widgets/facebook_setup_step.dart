@@ -176,7 +176,7 @@ class _FacebookSetupStepState extends ConsumerState<FacebookSetupStep> {
               controller: _tokenController,
               decoration: InputDecoration(
                 labelText: 'Facebook Access Token',
-                hintText: 'EAAd3zUKn7ToBQ...',
+                hintText: 'EAA...',
                 prefixIcon: const Icon(Icons.vpn_key),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.content_paste),
