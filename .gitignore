@@ -80,3 +80,6 @@ ollama_models/
 # LibreOffice lock files
 .~lock.*#
 
+# Agent runtime state (knowledge graph, workspace scratch)
+.brainiac/
+

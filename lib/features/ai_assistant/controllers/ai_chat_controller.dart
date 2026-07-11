@@ -15,6 +15,7 @@ import '../services/ai_guardrails_service.dart';
 import '../services/ai_orchestrator_service.dart';
 import '../services/agent_response_parser.dart';
 import '../services/agentic_runner.dart';
+import '../knowledge/knowledge_graph_controller.dart';
 
 /// Provider for Ollama service
 final ollamaServiceProvider = Provider<OllamaService>((ref) {
@@ -82,6 +83,9 @@ final aiChatControllerProvider =
         onActivity: (entry) =>
             ref.read(activityLogProvider.notifier).log(entry),
         agentRunner: ref.watch(agentRunnerProvider),
+        onAgentRun: (taskId, request, steps) => ref
+            .read(knowledgeGraphProvider.notifier)
+            .recordRun(taskId, request, steps),
       );
     });
 
@@ -130,12 +134,17 @@ class AiChatController extends StateNotifier<AiChatState> {
   /// replying with text.
   final AgenticRunner? agentRunner;
 
+  /// Records a finished agentic run into the shared knowledge graph.
+  final void Function(String taskId, String request, List<AgentStep> steps)?
+  onAgentRun;
+
   AiChatController(
     this._ollamaService,
     this._orchestrator,
     this._responseParser, {
     this.onActivity,
     this.agentRunner,
+    this.onAgentRun,
   }) : super(AiChatState()) {
     _initialize();
   }
@@ -195,6 +204,7 @@ class AiChatController extends StateNotifier<AiChatState> {
     }
 
     try {
+      final taskId = 'task:${DateTime.now().millisecondsSinceEpoch}';
       final result = await runner.run(
         content,
         onStep: (step) {
@@ -203,6 +213,9 @@ class AiChatController extends StateNotifier<AiChatState> {
           );
         },
       );
+
+      // Persist what the agent did into the shared knowledge graph.
+      onAgentRun?.call(taskId, content, result.steps);
 
       final status = result.completed
           ? '✅ **Task complete**${result.summary != null ? ' — ${result.summary}' : ''}'

@@ -32,6 +32,9 @@ void main() {
     );
   }
 
+  final recorded = <String>[];
+  setUp(() => recorded.clear());
+
   AiChatController buildController(AgenticRunner runner) {
     return AiChatController(
       OfflineOllama(),
@@ -41,6 +44,7 @@ void main() {
       ),
       AgentResponseParser(),
       agentRunner: runner,
+      onAgentRun: (taskId, request, steps) => recorded.add(request),
     );
   }
 
@@ -67,6 +71,8 @@ void main() {
       expect(texts, contains('Wrote rainbow/main.dart'));
       expect(texts, contains('Rainbow app ready'));
       expect(controller.state.isLoading, isFalse);
+      // The completed run is recorded into the knowledge graph.
+      expect(recorded, contains('crea una app rainbow di test'));
     },
   );
 
