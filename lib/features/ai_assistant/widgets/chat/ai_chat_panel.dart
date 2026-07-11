@@ -27,6 +27,10 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
   late final AnimationController _glowController;
   late final Animation<double> _glowAnimation;
 
+  /// Agent mode: the assistant executes the task (writes files, runs
+  /// commands) instead of only replying. On by default — it's the point.
+  bool _agentMode = true;
+
   @override
   void initState() {
     super.initState();
@@ -178,7 +182,11 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
               ),
             ChatInputBar(
               onSend: (text) {
-                chatController.sendMessageStream(text);
+                if (_agentMode && chatController.agentEnabled) {
+                  chatController.sendAgentTask(text);
+                } else {
+                  chatController.sendMessageStream(text);
+                }
                 HapticFeedback.lightImpact();
               },
               enabled: canSend,
@@ -266,6 +274,8 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             error: (_, _) => _buildStatusPill('Offline', Colors.orange),
           ),
           const SizedBox(width: 10),
+          _buildAgentToggle(),
+          const SizedBox(width: 6),
           IconButton(
             onPressed: () {
               AppRoutes.navigateTo(context, AppRoutes.settingsAI);
@@ -275,6 +285,47 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             splashRadius: 18,
           ),
         ],
+      ),
+    );
+  }
+
+  /// Toggle between Agent (executes tasks) and Chat (talks only).
+  Widget _buildAgentToggle() {
+    final color = _agentMode ? Colors.purpleAccent : Colors.white54;
+    return Tooltip(
+      message: _agentMode
+          ? 'Agent mode: the assistant performs the task'
+          : 'Chat mode: replies only',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: () => setState(() => _agentMode = !_agentMode),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: color.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _agentMode ? Icons.bolt : Icons.chat_bubble_outline,
+                color: color,
+                size: 14,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                _agentMode ? 'Agent' : 'Chat',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

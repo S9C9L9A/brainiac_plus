@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'dart:math' show min;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
 import '../models/agent_task.dart';
 import '../../../core/services/ollama_service.dart';
+import '../../../core/platform/shell_service.dart';
+import '../services/agent_tool_executor.dart';
 import '../../activity/controllers/activity_log_controller.dart';
 import '../../activity/models/activity_entry.dart';
 import '../../settings/providers/extended_settings_provider.dart';
@@ -11,6 +14,7 @@ import '../services/agent_coordinator.dart';
 import '../services/ai_guardrails_service.dart';
 import '../services/ai_orchestrator_service.dart';
 import '../services/agent_response_parser.dart';
+import '../services/agentic_runner.dart';
 
 /// Provider for Ollama service
 final ollamaServiceProvider = Provider<OllamaService>((ref) {
@@ -46,6 +50,28 @@ final aiOrchestratorProvider = Provider<AiOrchestratorService>((ref) {
   );
 });
 
+/// Builds the agentic runner backing autonomous task execution: the local
+/// LLM as the planner, real file/shell tools scoped to the project workspace.
+final agentRunnerProvider = Provider<AgenticRunner>((ref) {
+  final ollama = ref.watch(ollamaServiceProvider);
+  final shell = ShellService();
+  return AgenticRunner(
+    chat: (turns) => ollama.chat([
+      for (final t in turns)
+        if (t.role == 'system')
+          ChatMessage.system(t.content)
+        else if (t.role == 'assistant')
+          ChatMessage.assistant(t.content)
+        else
+          ChatMessage.user(t.content),
+    ]),
+    executor: AgentToolExecutor(
+      workspaceRoot: Directory.current.path,
+      runCommand: shell.executeSync,
+    ),
+  );
+});
+
 /// Provider for AI chat controller
 final aiChatControllerProvider =
     StateNotifierProvider<AiChatController, AiChatState>((ref) {
@@ -55,6 +81,7 @@ final aiChatControllerProvider =
         ref.watch(agentResponseParserProvider),
         onActivity: (entry) =>
             ref.read(activityLogProvider.notifier).log(entry),
+        agentRunner: ref.watch(agentRunnerProvider),
       );
     });
 
@@ -98,13 +125,123 @@ class AiChatController extends StateNotifier<AiChatState> {
   /// Reports user queries to the app-wide activity log.
   final void Function(ActivityEntry entry)? onActivity;
 
+  /// Agentic loop: when present, [sendAgentTask] lets the assistant actually
+  /// carry out multi-step work (write files, run commands) instead of only
+  /// replying with text.
+  final AgenticRunner? agentRunner;
+
   AiChatController(
     this._ollamaService,
     this._orchestrator,
     this._responseParser, {
     this.onActivity,
+    this.agentRunner,
   }) : super(AiChatState()) {
     _initialize();
+  }
+
+  /// Whether the assistant can execute tasks, not just chat about them.
+  bool get agentEnabled => agentRunner != null;
+
+  /// Runs [content] as an autonomous task: the assistant plans, writes files
+  /// and runs commands step by step, and each step is posted to the chat so
+  /// the user can follow the work as it happens.
+  Future<void> sendAgentTask(String content) async {
+    if (content.trim().isEmpty) return;
+    final runner = agentRunner;
+    if (runner == null) {
+      // No executor available — fall back to a normal chat turn.
+      return sendMessageStream(content);
+    }
+
+    final userMsg = userMessage(content);
+    state = state.copyWith(
+      messages: [...state.messages, userMsg],
+      isLoading: true,
+      error: null,
+    );
+
+    // The safety pipeline still guards the request before any execution.
+    final pipelineResult = _orchestrator.runPipeline(content);
+    _logQuery(content, pipelineResult);
+    if (pipelineResult.verdict == AgentVerdict.blocked) {
+      state = state.copyWith(
+        messages: [
+          ...state.messages,
+          errorMessage(
+            '🚫 **Action Blocked by Agent Pipeline**\n\n${pipelineResult.summary}',
+          ),
+        ],
+        isLoading: false,
+        lastPipelineResult: pipelineResult,
+        error: 'Pipeline blocked',
+      );
+      return;
+    }
+
+    if (!await _ollamaService.isAvailable()) {
+      state = state.copyWith(
+        messages: [
+          ...state.messages,
+          errorMessage(
+            '❌ Local LLM server not available.\n\n'
+            'Start it, then try the task again.',
+          ),
+        ],
+        isLoading: false,
+        error: 'Ollama unavailable',
+      );
+      return;
+    }
+
+    try {
+      final result = await runner.run(
+        content,
+        onStep: (step) {
+          state = state.copyWith(
+            messages: [...state.messages, _stepMessage(step)],
+          );
+        },
+      );
+
+      final status = result.completed
+          ? '✅ **Task complete**${result.summary != null ? ' — ${result.summary}' : ''}'
+          : '⚠️ **Stopped after ${result.iterations} steps** — the task may be unfinished.';
+      state = state.copyWith(
+        messages: [
+          ...state.messages,
+          assistantMessage(status, agentId: 'coordinator', intent: 'action'),
+        ],
+        isLoading: false,
+        lastPipelineResult: pipelineResult,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        messages: [...state.messages, errorMessage('⚠️ Agent task failed: $e')],
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Renders one agent step (the model's prose plus its tool outcomes) as a
+  /// single chat message.
+  AiMessage _stepMessage(AgentStep step) {
+    final buf = StringBuffer();
+    final prose = step.assistantText
+        .replaceAll(RegExp(r'```tool[\s\S]*?```'), '')
+        .trim();
+    if (prose.isNotEmpty) buf.writeln(prose);
+    for (final r in step.results) {
+      final icon = r.ok ? '✓' : '✗';
+      final tool = r.call.tool.name;
+      buf.writeln('\n`$icon $tool` ${r.output}');
+    }
+    return assistantMessage(
+      buf.toString().trim(),
+      agentId: 'action',
+      intent: 'action',
+    );
   }
 
   /// Logs the query as soon as the pipeline has judged it — blocked
