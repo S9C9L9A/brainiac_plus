@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:brainiac_plus/features/ai_assistant/models/agent_tool_call.dart';
@@ -86,6 +87,23 @@ void main() {
       expect(result.ok, isFalse);
       expect(ranCommands, isEmpty);
       expect(result.output.toLowerCase(), contains('blocked'));
+    });
+  });
+
+  group('command timeout', () {
+    test('a command that never returns fails instead of hanging', () async {
+      final hangingExecutor = AgentToolExecutor(
+        workspaceRoot: workspace.path,
+        runCommand: (_) => Completer<String>().future, // never completes
+        commandTimeout: const Duration(milliseconds: 50),
+      );
+
+      final result = await hangingExecutor.execute(
+        const AgentToolCall(tool: ToolType.run, command: 'sleep 999'),
+      );
+
+      expect(result.ok, isFalse);
+      expect(result.output.toLowerCase(), contains('timed out'));
     });
   });
 

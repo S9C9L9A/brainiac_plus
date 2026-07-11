@@ -73,10 +73,18 @@ When the task is fully complete, finish with:
 {"tool": "done", "summary": "what you accomplished"}
 ```
 
+You work inside a clean, empty sandbox directory. It is NOT an existing
+project — there is no pubspec, no lib/main.dart, nothing to modify.
+
 Rules:
-- Paths are relative to the project workspace; never write outside it.
+- To build an app, create it in its OWN new subfolder (e.g. "rainbow_app/")
+  and write every file it needs from scratch. Never assume a file exists.
+- Paths are relative to the sandbox; never write outside it, and never
+  target project files like pubspec.yaml or lib/main.dart.
 - Take ONE step per message, then wait for the result before the next.
-- After each command you will receive its output; use it to decide what to do.
+- After each command you receive its output; use it to decide what to do.
+- Do NOT run long-running or interactive commands (servers, "flutter run",
+  file watchers) — they never return. Prefer one-shot commands that finish.
 - If you only need to answer a question, reply in plain text with no tool block.
 ''';
 

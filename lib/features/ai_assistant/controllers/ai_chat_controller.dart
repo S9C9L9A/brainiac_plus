@@ -56,6 +56,10 @@ final aiOrchestratorProvider = Provider<AiOrchestratorService>((ref) {
 final agentRunnerProvider = Provider<AgenticRunner>((ref) {
   final ollama = ref.watch(ollamaServiceProvider);
   final shell = ShellService();
+  // The agent works in an isolated sandbox, not the project root: test apps
+  // stay contained and the real app's files are physically out of reach.
+  final sandbox = Directory('${Directory.current.path}/agent_workspace');
+  sandbox.createSync(recursive: true);
   return AgenticRunner(
     chat: (turns) => ollama.chat([
       for (final t in turns)
@@ -67,8 +71,10 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
           ChatMessage.user(t.content),
     ]),
     executor: AgentToolExecutor(
-      workspaceRoot: Directory.current.path,
-      runCommand: shell.executeSync,
+      workspaceRoot: sandbox.path,
+      // Commands run relative to the sandbox and are hard-capped so a
+      // non-terminating command can never freeze the loop.
+      runCommand: (cmd) => shell.executeSync('cd "${sandbox.path}" && $cmd'),
     ),
   );
 });

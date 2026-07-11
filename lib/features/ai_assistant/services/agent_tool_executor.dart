@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../../terminal/services/command_guard.dart';
@@ -19,9 +20,15 @@ class AgentToolExecutor {
   final CommandRunner _run;
   final CommandGuard _guard = CommandGuard();
 
+  /// A single command may not run longer than this — a non-terminating
+  /// command (a server, an interactive prompt) would otherwise hang the whole
+  /// agent loop and freeze the app.
+  final Duration commandTimeout;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
+    this.commandTimeout = const Duration(seconds: 120),
   }) : _run = runCommand;
 
   /// Project files the assistant must never overwrite unattended. Mirrors the
@@ -102,8 +109,16 @@ class AgentToolExecutor {
     }
 
     try {
-      final out = await _run(command);
+      final out = await _run(command).timeout(commandTimeout);
       return ToolResult(call: call, ok: true, output: out);
+    } on TimeoutException {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output:
+            'Command timed out after ${commandTimeout.inSeconds}s '
+            '(did not terminate): $command',
+      );
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Command failed: $e');
     }

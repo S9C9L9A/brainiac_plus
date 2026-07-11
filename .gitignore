@@ -82,4 +82,5 @@ ollama_models/
 
 # Agent runtime state (knowledge graph, workspace scratch)
 .brainiac/
+agent_workspace/
 
