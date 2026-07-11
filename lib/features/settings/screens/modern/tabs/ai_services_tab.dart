@@ -13,6 +13,7 @@ import '../../../../dashboard/dashboard_screen.dart';
 import '../../../providers/extended_settings_provider.dart';
 import '../../../models/extended_settings.dart';
 import '../../../services/endpoint_validator.dart';
+import '../../../services/model_catalog.dart';
 import '../../../../../core/services/local_ai_installer.dart';
 import '../../../../../core/services/ollama_service.dart';
 
@@ -89,32 +90,51 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
   }) {
     final cards = <Widget>[];
 
-    cards.add(
-      _buildAIServiceCard(
-        context: context,
-        title: 'OpenAI',
-        icon: '🤖',
-        description: isAndroid
-            ? 'API key required for mobile'
-            : 'Cloud models via API key',
-        isConnected: settings.hasOpenAIKey,
-        gradient: [const Color(0xFF10A37F), const Color(0xFF1A7F64)],
-        actionLabel: settings.hasOpenAIKey ? 'Edit' : 'Setup',
-      ),
+    final openAiCard = _buildAIServiceCard(
+      context: context,
+      title: 'OpenAI',
+      icon: '🤖',
+      description: isAndroid
+          ? 'API key required for mobile'
+          : 'Cloud models via API key',
+      isConnected: settings.hasOpenAIKey,
+      gradient: [const Color(0xFF10A37F), const Color(0xFF1A7F64)],
+      actionLabel: settings.hasOpenAIKey ? 'Edit' : 'Setup',
     );
-    cards.add(const SizedBox(height: 12));
+    final higgsfieldCard = _buildAIServiceCard(
+      context: context,
+      title: 'Higgsfield',
+      icon: '🎬',
+      description: isAndroid
+          ? 'API key required for mobile'
+          : 'AI video generation via API',
+      isConnected: settings.hasHiggsfieldKey,
+      gradient: [Colors.purple, Colors.blue],
+      actionLabel: settings.hasHiggsfieldKey ? 'Edit' : 'Setup',
+    );
 
+    // Cloud services sit side by side on desktop widths.
     cards.add(
-      _buildAIServiceCard(
-        context: context,
-        title: 'Higgsfield',
-        icon: '🎬',
-        description: isAndroid
-            ? 'API key required for mobile'
-            : 'AI video generation via API',
-        isConnected: settings.hasHiggsfieldKey,
-        gradient: [Colors.purple, Colors.blue],
-        actionLabel: settings.hasHiggsfieldKey ? 'Edit' : 'Setup',
+      LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 880) {
+            return Column(
+              children: [
+                openAiCard,
+                const SizedBox(height: 12),
+                higgsfieldCard,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: openAiCard),
+              const SizedBox(width: 16),
+              Expanded(child: higgsfieldCard),
+            ],
+          );
+        },
       ),
     );
 
@@ -162,118 +182,232 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
 
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Local AI (Ollama)',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isConfigured
-                  ? 'Local runtime configured'
-                  : 'Install locally and download a model into this project',
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            // Hardware diagnostics section
-            _buildHardwareDiagnostics(),
-            const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Endpoint',
-              controller: _endpointController,
-              hintText: 'http://localhost:8080',
-            ),
-            const SizedBox(height: 12),
-            _buildTextField(
-              label: 'Models directory',
-              controller: _modelsPathController,
-              hintText: '/path/to/project/ai_models/ollama',
-            ),
-            const SizedBox(height: 12),
-            // Intelligent model dropdown
-            _buildModelSelector(settings),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                ElevatedButton(
-                  onPressed: _isInstalling ? null : _installOllama,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.systemBlue,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(_isInstalling ? 'Installing...' : 'Install'),
-                ),
-                OutlinedButton(
-                  onPressed: _isInstalling
-                      ? null
-                      : () => _installOllama(method: LocalAiInstallMethod.snap),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Install via snap'),
-                ),
-                ElevatedButton(
-                  onPressed: _isDownloading ? null : _downloadModel,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.systemGreen,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(
-                    _isDownloading ? 'Downloading...' : 'Download model',
-                  ),
-                ),
-                OutlinedButton(
-                  onPressed: _isTesting ? null : _testOllama,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(_isTesting ? 'Testing...' : 'Test connection'),
-                ),
-                OutlinedButton(
-                  onPressed: _saveLocalConfig,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Save config'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+            // Header: title on the left, configuration status always visible
+            // on the right — the old bottom-of-card status dot was easy to
+            // miss, leaving users with a chat that silently refused input.
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: isConfigured
-                        ? AppColors.systemGreen
-                        : Colors.white38,
-                    shape: BoxShape.circle,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Local AI (Ollama)',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isConfigured
+                            ? 'Local runtime configured — the chat uses this model'
+                            : 'Pick a model below to configure the assistant',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  isConfigured ? 'Configured' : 'Not configured',
-                  style: TextStyle(
-                    color: isConfigured
-                        ? AppColors.systemGreen
-                        : Colors.white60,
-                    fontSize: 12,
-                  ),
-                ),
+                _buildStatusChip(isConfigured),
               ],
+            ),
+            const SizedBox(height: 20),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth >= 880;
+                if (!isWide) return _buildSetupNarrow(settings);
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Connection + model choice: what you touch most often.
+                    Expanded(flex: 5, child: _buildConfigColumn(settings)),
+                    const SizedBox(width: 24),
+                    // System context + one-time runtime setup actions.
+                    Expanded(flex: 3, child: _buildSystemColumn()),
+                  ],
+                );
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Narrow fallback: original stacked order.
+  Widget _buildSetupNarrow(ExtendedAppSettings settings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHardwareDiagnostics(),
+        const SizedBox(height: 16),
+        _buildConfigColumn(settings),
+        const SizedBox(height: 16),
+        _sectionLabel('RUNTIME SETUP'),
+        const SizedBox(height: 8),
+        _buildRuntimeActions(),
+      ],
+    );
+  }
+
+  /// Left column on wide screens: endpoint + connection actions, then model.
+  Widget _buildConfigColumn(ExtendedAppSettings settings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionLabel('CONNECTION'),
+        const SizedBox(height: 8),
+        _buildTextField(
+          label: 'Endpoint',
+          controller: _endpointController,
+          hintText: 'http://localhost:8080',
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _isTesting ? null : _testOllama,
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
+              icon: const Icon(Icons.wifi_tethering, size: 16),
+              label: Text(_isTesting ? 'Testing...' : 'Test connection'),
+            ),
+            ElevatedButton.icon(
+              onPressed: _saveLocalConfig,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.systemBlue,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.save_outlined, size: 16),
+              label: const Text('Save config'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _sectionLabel('MODEL'),
+        const SizedBox(height: 8),
+        _buildTextField(
+          label: 'Models directory',
+          controller: _modelsPathController,
+          hintText: '/path/to/project/ai_models/ollama',
+        ),
+        const SizedBox(height: 12),
+        _buildModelSelector(settings),
+      ],
+    );
+  }
+
+  /// Right column on wide screens: hardware context and runtime setup.
+  Widget _buildSystemColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionLabel('YOUR SYSTEM'),
+        const SizedBox(height: 8),
+        _buildHardwareDiagnostics(),
+        const SizedBox(height: 20),
+        _sectionLabel('RUNTIME SETUP'),
+        const SizedBox(height: 8),
+        _buildRuntimeActions(fullWidth: true),
+      ],
+    );
+  }
+
+  /// One-time installation actions, kept away from the everyday
+  /// connection/model controls.
+  Widget _buildRuntimeActions({bool fullWidth = false}) {
+    final buttons = <Widget>[
+      ElevatedButton.icon(
+        onPressed: _isInstalling ? null : _installOllama,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.systemBlue,
+          foregroundColor: Colors.white,
+        ),
+        icon: const Icon(Icons.download_outlined, size: 16),
+        label: Text(_isInstalling ? 'Installing...' : 'Install runtime'),
+      ),
+      OutlinedButton(
+        onPressed: _isInstalling
+            ? null
+            : () => _installOllama(method: LocalAiInstallMethod.snap),
+        style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
+        child: const Text('Install via snap'),
+      ),
+      ElevatedButton.icon(
+        onPressed: _isDownloading ? null : _downloadModel,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.systemGreen,
+          foregroundColor: Colors.white,
+        ),
+        icon: const Icon(Icons.cloud_download_outlined, size: 16),
+        label: Text(_isDownloading ? 'Downloading...' : 'Download model'),
+      ),
+    ];
+
+    if (!fullWidth) {
+      return Wrap(spacing: 12, runSpacing: 8, children: buttons);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, b) in buttons.indexed) ...[
+          if (i > 0) const SizedBox(height: 8),
+          b,
+        ],
+      ],
+    );
+  }
+
+  /// Small uppercase section label — encodes grouping, not decoration.
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.white.withValues(alpha: 0.45),
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.4,
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(bool isConfigured) {
+    final color = isConfigured ? AppColors.systemGreen : AppColors.systemOrange;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isConfigured ? Icons.check_circle : Icons.error_outline,
+            color: color,
+            size: 13,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            isConfigured ? 'Configured' : 'Not configured',
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -415,6 +549,8 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
         final installedAsync = ref.watch(
           ollamaAvailableModelsProvider(endpoint),
         );
+        final installedModels =
+            installedAsync.asData?.value ?? const <OllamaModel>[];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,9 +590,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 3),
                           child: GestureDetector(
-                            onTap: () {
-                              _modelController.text = model.name;
-                            },
+                            onTap: () => _selectAndSaveModel(model.name),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
@@ -540,9 +674,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                                   vertical: 3,
                                 ),
                                 child: GestureDetector(
-                                  onTap: () {
-                                    _modelController.text = model.name;
-                                  },
+                                  onTap: () => _selectAndSaveModel(model.name),
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
@@ -610,7 +742,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                     // All models dropdown
                     allRatedAsync.when(
                       data: (allModels) {
-                        return _buildModelDropdown(allModels);
+                        return _buildModelDropdown(allModels, installedModels);
                       },
                       loading: () => Container(
                         padding: const EdgeInsets.all(12),
@@ -692,13 +824,28 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
     );
   }
 
+  /// Selects [name] as the active model and persists the configuration
+  /// immediately, so picking a model is enough to make the chat usable —
+  /// no separate "Save config" step to forget.
+  void _selectAndSaveModel(String name) {
+    _modelController.text = name;
+    _saveLocalConfig();
+  }
+
   /// Build model dropdown with all options
-  Widget _buildModelDropdown(List<OllamaModelInfo> allModels) {
+  Widget _buildModelDropdown(
+    List<OllamaModelInfo> allModels,
+    List<OllamaModel> installed,
+  ) {
+    // Server-reported models become first-class entries so they never show
+    // up as "(not installed)" while actually running on the server.
+    final mergedModels = ModelCatalog.mergeWithInstalled(allModels, installed);
+    final installedNames = ModelCatalog.installedNames(installed);
     // Deduplicate by name: duplicate values break DropdownButton's
     // "exactly one item per value" invariant.
     final seen = <String>{};
     final models = <OllamaModelInfo>[
-      for (final m in allModels)
+      for (final m in mergedModels)
         if (seen.add(m.name)) m,
     ];
     final currentValue = _modelController.text.isNotEmpty
@@ -740,19 +887,26 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
           ),
           items:
               models.map<DropdownMenuItem<String>>((model) {
+                  final isInstalled = installedNames.contains(model.name);
                   return DropdownMenuItem<String>(
                     value: model.name,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _parseHexColor(model.ratingColor),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                        isInstalled
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: AppColors.systemGreen,
+                                size: 12,
+                              )
+                            : Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _parseHexColor(model.ratingColor),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -768,7 +922,7 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                                 ),
                               ),
                               Text(
-                                model.ratingIcon,
+                                isInstalled ? '✅ Installed' : model.ratingIcon,
                                 style: const TextStyle(
                                   color: Colors.white60,
                                   fontSize: 10,
@@ -781,15 +935,15 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                     ),
                   );
                 }).toList()
-                // Keep the configured model selectable even if Ollama did not
-                // report it (e.g. not pulled yet), so the value matches exactly
-                // one item instead of throwing.
+                // Keep a hand-typed model selectable even when neither the
+                // catalog nor the server knows it, so the dropdown value
+                // always matches exactly one item.
                 ..insertAll(0, [
                   if (!hasCurrent && currentValue != null)
                     DropdownMenuItem<String>(
                       value: currentValue,
                       child: Text(
-                        '$currentValue (not installed)',
+                        '$currentValue (not detected on server)',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
@@ -799,13 +953,13 @@ class _AIServicesTabState extends ConsumerState<AIServicesTab> {
                 ]),
           onChanged: (value) {
             if (value != null) {
-              _modelController.text = value;
+              _selectAndSaveModel(value);
             }
           },
         ),
         if (_modelController.text.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _buildModelDetails(allModels),
+          _buildModelDetails(models),
         ],
       ],
     );
