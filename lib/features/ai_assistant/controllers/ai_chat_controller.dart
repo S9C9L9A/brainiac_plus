@@ -87,6 +87,8 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
       // Commands run relative to the sandbox and are hard-capped so a
       // non-terminating command can never freeze the loop.
       runCommand: (cmd) => shell.executeSync('cd "${sandbox.path}" && $cmd'),
+      // Live internet access for the `fetch` tool.
+      fetchUrl: _fetchUrl,
       // Inside a user project, its own main.dart/pubspec are editable; the
       // BrainiacPlus locks only apply to the default sandbox.
       lockedFiles: activeProject != null
@@ -97,6 +99,24 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
     projectContext: activeProject != null ? _projectBrief(activeProject) : null,
   );
 });
+
+/// Fetches a URL's body as text for the agent's `fetch` tool. Follows
+/// redirects; returns the decoded body (the executor caps its size).
+Future<String> _fetchUrl(String url) async {
+  final client = HttpClient()
+    ..connectionTimeout = const Duration(seconds: 15)
+    ..userAgent = 'BrainiacPlus/1.0';
+  try {
+    final request = await client.getUrl(Uri.parse(url));
+    final response = await request.close();
+    final body = await response
+        .transform(const SystemEncoding().decoder)
+        .join();
+    return 'HTTP ${response.statusCode}\n$body';
+  } finally {
+    client.close(force: true);
+  }
+}
 
 /// A short brief of a project's source files for the agent's system prompt.
 String _projectBrief(String path) {

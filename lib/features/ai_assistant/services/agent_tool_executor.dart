@@ -8,6 +8,10 @@ import '../models/agent_tool_call.dart';
 /// executor can be tested without spawning real processes.
 typedef CommandRunner = Future<String> Function(String command);
 
+/// Fetches a URL and returns its body text. Injectable for tests and so the
+/// executor doesn't depend on a concrete HTTP client.
+typedef UrlFetcher = Future<String> Function(String url);
+
 /// Executes [AgentToolCall]s produced by the local AI, turning the assistant
 /// from a talker into a doer while keeping hard safety rails:
 ///
@@ -31,12 +35,20 @@ class AgentToolExecutor {
   /// and pubspec are editable.
   final Set<String> lockedFiles;
 
+  /// Fetches URLs for the `fetch` tool; null disables internet access.
+  final UrlFetcher? _fetch;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
+    UrlFetcher? fetchUrl,
     this.commandTimeout = const Duration(seconds: 120),
     this.lockedFiles = defaultLockedFiles,
-  }) : _run = runCommand;
+  }) : _run = runCommand,
+       _fetch = fetchUrl;
+
+  /// Cap on fetched body size fed back to the model.
+  static const _maxFetchChars = 8000;
 
   /// BrainiacPlus's own protected files. Mirrors the locked-files list in the
   /// project contract.
@@ -56,6 +68,8 @@ class AgentToolExecutor {
         return _writeFile(call);
       case ToolType.run:
         return _runCommand(call);
+      case ToolType.fetch:
+        return _fetchUrl(call);
       case ToolType.done:
         return ToolResult(
           call: call,
@@ -128,6 +142,40 @@ class AgentToolExecutor {
       );
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Command failed: $e');
+    }
+  }
+
+  Future<ToolResult> _fetchUrl(AgentToolCall call) async {
+    final url = call.url?.trim();
+    if (url == null || url.isEmpty) {
+      return ToolResult(call: call, ok: false, output: 'Missing url.');
+    }
+    final uri = Uri.tryParse(url);
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Only http/https URLs can be fetched: $url',
+      );
+    }
+    final fetch = _fetch;
+    if (fetch == null) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Internet fetching is not available in this context.',
+      );
+    }
+    try {
+      final body = await fetch(url).timeout(commandTimeout);
+      final out = body.length > _maxFetchChars
+          ? '${body.substring(0, _maxFetchChars)}\n…[truncated ${body.length - _maxFetchChars} chars]'
+          : body;
+      return ToolResult(call: call, ok: true, output: out);
+    } on TimeoutException {
+      return ToolResult(call: call, ok: false, output: 'Fetch timed out: $url');
+    } catch (e) {
+      return ToolResult(call: call, ok: false, output: 'Fetch failed: $e');
     }
   }
 

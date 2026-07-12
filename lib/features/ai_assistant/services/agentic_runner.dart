@@ -74,6 +74,11 @@ To act, emit a fenced block exactly like this (one JSON object per block):
 ```tool
 {"tool": "run", "command": "a shell command"}
 ```
+```tool
+{"tool": "fetch", "url": "https://example.com"}
+```
+Use `fetch` to read documentation, APIs or any page from the internet
+before acting — you have live web access.
 When the task is fully complete, finish with:
 ```tool
 {"tool": "done", "summary": "what you accomplished"}

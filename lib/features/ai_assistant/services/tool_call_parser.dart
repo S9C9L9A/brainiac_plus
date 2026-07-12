@@ -40,6 +40,7 @@ class ToolCallParser {
           path: decoded['path']?.toString(),
           content: decoded['content']?.toString(),
           command: decoded['command']?.toString(),
+          url: decoded['url']?.toString(),
           summary: decoded['summary']?.toString(),
         ),
       );
