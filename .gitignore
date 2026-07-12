@@ -84,3 +84,8 @@ ollama_models/
 .brainiac/
 agent_workspace/
 
+
+# Agent-generated test apps (scaffolded in project root before the sandbox fix)
+/arcobaleno_app/
+/hello_word/
+/rainbow_arc/
