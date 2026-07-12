@@ -65,6 +65,12 @@ class ProjectRunner {
     return _withFlutterPath('cd "$projectPath" && exec dart run');
   }
 
+  /// Command that clears a project's build artifacts (`flutter clean`). Useful
+  /// when a moved or stale build has a mismatched CMake cache.
+  static String cleanCommand(String projectPath) {
+    return _withFlutterPath('cd "$projectPath" && exec flutter clean');
+  }
+
   /// Prepends the flutter bin to PATH when we can locate it, so `flutter`/
   /// `dart` resolve even when the app was launched from a GUI session whose
   /// PATH doesn't include the SDK (the cause of "command not found" / 127).

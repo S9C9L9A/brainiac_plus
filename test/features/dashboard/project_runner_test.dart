@@ -68,6 +68,16 @@ void main() {
     });
   });
 
+  group('cleanCommand', () {
+    test('runs flutter clean in the project', () {
+      final proj = Directory.systemTemp.createTempSync('clean');
+      addTearDown(() => proj.deleteSync(recursive: true));
+      final cmd = ProjectRunner.cleanCommand(proj.path);
+      expect(cmd, contains('flutter clean'));
+      expect(cmd, contains(proj.path));
+    });
+  });
+
   group('fast launch', () {
     late Directory proj;
     setUp(() => proj = Directory.systemTemp.createTempSync('fast'));

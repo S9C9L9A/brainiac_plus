@@ -259,15 +259,52 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               icon: const Icon(Icons.auto_awesome, size: 16),
               label: const Text('Work in chat'),
             ),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white70),
-            onPressed: () =>
-                ShellService().executeCommand('xdg-open "${project.path}"'),
-            icon: const Icon(Icons.folder_open, size: 16),
-            label: const Text('Folder'),
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            color: HudTheme.panel,
+            icon: const Icon(Icons.more_horiz, color: Colors.white70),
+            onSelected: (value) {
+              switch (value) {
+                case 'folder':
+                  ShellService().executeCommand('xdg-open "${project.path}"');
+                case 'clean':
+                  ref
+                      .read(projectRunProvider(project.path).notifier)
+                      .start(ProjectRunner.cleanCommand(project.path));
+                  setState(() => _consoleOpen = true);
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'folder',
+                child: _MenuRow(Icons.folder_open, 'Open folder'),
+              ),
+              PopupMenuItem(
+                value: 'clean',
+                child: _MenuRow(Icons.cleaning_services, 'Clean build'),
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A menu row: icon + label, in the HUD style.
+class _MenuRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _MenuRow(this.icon, this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: HudTheme.cyan.withValues(alpha: 0.8)),
+        const SizedBox(width: 10),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      ],
     );
   }
 }
