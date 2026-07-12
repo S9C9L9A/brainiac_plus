@@ -4,6 +4,7 @@ import 'package:brainiac_plus/features/ai_assistant/widgets/chat/chat_input_bar.
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/message_bubble.dart';
 import 'package:brainiac_plus/features/ai_assistant/models/agent_task.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/suggested_actions_bar.dart';
+import 'package:brainiac_plus/core/providers/inference_telemetry_provider.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/gpu_metrics_provider.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/system_metrics_provider.dart';
 import 'package:brainiac_plus/features/settings/models/extended_settings.dart';
@@ -263,6 +264,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                     fontSize: 11,
                   ),
                 ),
+                _buildTelemetryLine(),
               ],
             ),
           ),
@@ -361,6 +363,34 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Live inference throughput read straight from the local LLM's metrics —
+  /// the assistant showing how fast it is thinking, right now. Hidden entirely
+  /// when the server exposes no telemetry.
+  Widget _buildTelemetryLine() {
+    final t = ref.watch(inferenceTelemetryProvider);
+    if (t == null || t.predictedTokensPerSecond == null) {
+      return const SizedBox.shrink();
+    }
+    final toks = t.predictedTokensPerSecond!.toStringAsFixed(0);
+    final busy = t.isBusy;
+    final color = busy
+        ? Colors.cyanAccent
+        : Colors.white.withValues(alpha: 0.5);
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        children: [
+          Icon(Icons.bolt, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            '$toks tok/s${busy ? ' · thinking' : ''}',
+            style: TextStyle(color: color, fontSize: 11),
+          ),
+        ],
       ),
     );
   }
