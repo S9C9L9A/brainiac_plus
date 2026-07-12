@@ -41,6 +41,7 @@ class ToolCallParser {
           content: decoded['content']?.toString(),
           command: decoded['command']?.toString(),
           url: decoded['url']?.toString(),
+          query: decoded['query']?.toString(),
           summary: decoded['summary']?.toString(),
         ),
       );

@@ -54,6 +54,7 @@ class GraphRecorder {
             graph.addEdge(taskId, id, EdgeRelation.ran);
           case ToolType.readFile:
           case ToolType.fetch:
+          case ToolType.search:
           case ToolType.done:
           case ToolType.unknown:
             break;

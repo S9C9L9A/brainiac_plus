@@ -12,6 +12,10 @@ typedef CommandRunner = Future<String> Function(String command);
 /// executor doesn't depend on a concrete HTTP client.
 typedef UrlFetcher = Future<String> Function(String url);
 
+/// Runs a web search and returns a formatted, model-readable result list.
+/// Injectable so the executor stays independent of the search backend.
+typedef WebSearcher = Future<String> Function(String query);
+
 /// Executes [AgentToolCall]s produced by the local AI, turning the assistant
 /// from a talker into a doer while keeping hard safety rails:
 ///
@@ -38,14 +42,19 @@ class AgentToolExecutor {
   /// Fetches URLs for the `fetch` tool; null disables internet access.
   final UrlFetcher? _fetch;
 
+  /// Runs web searches for the `search` tool; null disables search.
+  final WebSearcher? _search;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
     UrlFetcher? fetchUrl,
+    WebSearcher? webSearch,
     this.commandTimeout = const Duration(seconds: 120),
     this.lockedFiles = defaultLockedFiles,
   }) : _run = runCommand,
-       _fetch = fetchUrl;
+       _fetch = fetchUrl,
+       _search = webSearch;
 
   /// Cap on fetched body size fed back to the model.
   static const _maxFetchChars = 8000;
@@ -72,6 +81,8 @@ class AgentToolExecutor {
         return _runCommand(call);
       case ToolType.fetch:
         return _fetchUrl(call);
+      case ToolType.search:
+        return _webSearch(call);
       case ToolType.done:
         return ToolResult(
           call: call,
@@ -210,6 +221,37 @@ class AgentToolExecutor {
       return ToolResult(call: call, ok: false, output: 'Fetch timed out: $url');
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Fetch failed: $e');
+    }
+  }
+
+  Future<ToolResult> _webSearch(AgentToolCall call) async {
+    final query = call.query?.trim();
+    if (query == null || query.isEmpty) {
+      return ToolResult(call: call, ok: false, output: 'Missing search query.');
+    }
+    final search = _search;
+    if (search == null) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Web search is not available in this context.',
+      );
+    }
+    try {
+      final out = await search(query).timeout(commandTimeout);
+      return ToolResult(
+        call: call,
+        ok: true,
+        output: out.isEmpty ? 'No results for "$query".' : out,
+      );
+    } on TimeoutException {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Search timed out: $query',
+      );
+    } catch (e) {
+      return ToolResult(call: call, ok: false, output: 'Search failed: $e');
     }
   }
 

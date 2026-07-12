@@ -1,7 +1,7 @@
 /// Tools the local AI can invoke to actually get work done, rather than only
 /// describing it. Emitted by the model as ```tool JSON blocks and executed by
 /// [AgentToolExecutor].
-enum ToolType { writeFile, readFile, run, fetch, done, unknown }
+enum ToolType { writeFile, readFile, run, fetch, search, done, unknown }
 
 /// A single tool invocation parsed from the model's reply.
 class AgentToolCall {
@@ -19,6 +19,9 @@ class AgentToolCall {
   /// fetch: URL to retrieve from the internet.
   final String? url;
 
+  /// search: free-text web search query.
+  final String? query;
+
   /// done: short summary of what was accomplished.
   final String? summary;
 
@@ -28,6 +31,7 @@ class AgentToolCall {
     this.content,
     this.command,
     this.url,
+    this.query,
     this.summary,
   });
 
@@ -41,6 +45,8 @@ class AgentToolCall {
         return ToolType.run;
       case 'fetch':
         return ToolType.fetch;
+      case 'search':
+        return ToolType.search;
       case 'done':
         return ToolType.done;
       default:

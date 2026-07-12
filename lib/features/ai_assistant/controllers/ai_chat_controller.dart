@@ -16,6 +16,7 @@ import '../services/ai_guardrails_service.dart';
 import '../services/ai_orchestrator_service.dart';
 import '../services/agent_response_parser.dart';
 import '../services/agentic_runner.dart';
+import '../services/web_search_service.dart';
 import '../knowledge/knowledge_graph_controller.dart';
 
 /// Provider for Ollama service
@@ -88,8 +89,9 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
       // Commands run relative to the sandbox and are hard-capped so a
       // non-terminating command can never freeze the loop.
       runCommand: (cmd) => shell.executeSync('cd "${sandbox.path}" && $cmd'),
-      // Live internet access for the `fetch` tool.
+      // Live internet access: `fetch` a known URL, or `search` the web.
       fetchUrl: _fetchUrl,
+      webSearch: _webSearch,
       // Inside a user project, its own main.dart/pubspec are editable; the
       // BrainiacPlus locks only apply to the default sandbox.
       lockedFiles: activeProject != null
@@ -117,6 +119,24 @@ Future<String> _fetchUrl(String url) async {
   } finally {
     client.close(force: true);
   }
+}
+
+/// Runs a web search for the agent's `search` tool and formats the hits as a
+/// compact, model-readable list (title · url · snippet) it can then `fetch`.
+Future<String> _webSearch(String query) async {
+  final results = await WebSearchService().search(query);
+  if (results.isEmpty) return '';
+  final buf = StringBuffer('Search results for "$query":\n');
+  for (final r in results) {
+    buf.writeln('• ${r.title}\n  ${r.url}');
+    if (r.snippet.isNotEmpty && r.snippet != r.title) {
+      final s = r.snippet.length > 200
+          ? '${r.snippet.substring(0, 200)}…'
+          : r.snippet;
+      buf.writeln('  $s');
+    }
+  }
+  return buf.toString().trimRight();
 }
 
 /// A short brief of a project's source files for the agent's system prompt.
@@ -357,6 +377,7 @@ class AiChatController extends StateNotifier<AiChatState> {
     final wrote = <String>{};
     final read = <String>{};
     final ran = <String>[];
+    final searched = <String>[];
     for (final step in result.steps) {
       for (final r in step.results) {
         if (!r.ok) continue;
@@ -367,6 +388,8 @@ class AiChatController extends StateNotifier<AiChatState> {
             if (r.call.path != null) read.add(r.call.path!);
           case ToolType.run:
             if (r.call.command != null) ran.add(r.call.command!);
+          case ToolType.search:
+            if (r.call.query != null) searched.add(r.call.query!);
           case ToolType.fetch:
           case ToolType.done:
           case ToolType.unknown:
@@ -381,6 +404,7 @@ class AiChatController extends StateNotifier<AiChatState> {
     if (wrote.isNotEmpty) buf.writeln('Wrote: ${wrote.join(', ')}');
     if (read.isNotEmpty) buf.writeln('Read: ${read.join(', ')}');
     if (ran.isNotEmpty) buf.writeln('Ran: ${ran.join('; ')}');
+    if (searched.isNotEmpty) buf.writeln('Searched: ${searched.join('; ')}');
     final text = buf.toString().trim();
     return text.isEmpty
         ? (result.completed ? 'Task completed.' : 'Task stopped, unfinished.')

@@ -79,6 +79,9 @@ Tools — emit a fenced block, one JSON object per block:
 ```tool
 {"tool": "fetch", "url": "https://example.com"}
 ```
+```tool
+{"tool": "search", "query": "how to do X"}
+```
 When the task is fully complete, finish with:
 ```tool
 {"tool": "done", "summary": "what you accomplished"}
@@ -87,6 +90,7 @@ When the task is fully complete, finish with:
 Rules:
 - Take ONE step per message, then wait for its result before the next.
 - write_file replaces the WHOLE file — include the complete new contents.
+- Use `search` to find pages on the web, then `fetch` a result URL to read it.
 - Use `fetch` for docs/APIs from the internet (live web access).
 - Do NOT run long-running/interactive commands (servers, "flutter run",
   watchers) — they never return. Prefer commands that finish.

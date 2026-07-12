@@ -56,4 +56,66 @@ void main() {
       expect(r.ok, isFalse);
     });
   });
+
+  group('ToolCallParser — search', () {
+    test('parses a search tool call with a query', () {
+      final calls = ToolCallParser().parse(
+        '```tool\n{"tool":"search","query":"flutter riverpod"}\n```',
+      );
+      expect(calls.single.tool, ToolType.search);
+      expect(calls.single.query, 'flutter riverpod');
+    });
+  });
+
+  group('AgentToolExecutor — search', () {
+    test(
+      'runs the injected searcher and returns its formatted output',
+      () async {
+        final e = AgentToolExecutor(
+          workspaceRoot: '/tmp',
+          runCommand: (_) async => '',
+          webSearch: (q) async => 'Results for $q:\n• Foo\n  https://foo',
+        );
+        final r = await e.execute(
+          const AgentToolCall(tool: ToolType.search, query: 'foo'),
+        );
+        expect(r.ok, isTrue);
+        expect(r.output, contains('https://foo'));
+      },
+    );
+
+    test('rejects an empty query', () async {
+      final e = AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+        webSearch: (_) async => 'x',
+      );
+      final r = await e.execute(
+        const AgentToolCall(tool: ToolType.search, query: '  '),
+      );
+      expect(r.ok, isFalse);
+    });
+
+    test('reports when search is unavailable', () async {
+      final r = await AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+      ).execute(const AgentToolCall(tool: ToolType.search, query: 'foo'));
+      expect(r.ok, isFalse);
+      expect(r.output.toLowerCase(), contains('not available'));
+    });
+
+    test('empty search results are reported clearly', () async {
+      final e = AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+        webSearch: (_) async => '',
+      );
+      final r = await e.execute(
+        const AgentToolCall(tool: ToolType.search, query: 'zzz'),
+      );
+      expect(r.ok, isTrue);
+      expect(r.output.toLowerCase(), contains('no results'));
+    });
+  });
 }
