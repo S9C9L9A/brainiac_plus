@@ -119,7 +119,7 @@ class _ProjectCard extends ConsumerWidget {
             ),
             // Run without leaving the dashboard.
             IconButton(
-              onPressed: () => runProject(context, project.path),
+              onPressed: () => runProject(context, ref, project.path),
               icon: const Icon(
                 Icons.play_arrow_rounded,
                 color: Color(0xFF4ADE80),

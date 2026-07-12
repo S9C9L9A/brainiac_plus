@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/navigation_service.dart';
+import '../../../terminal/controllers/terminal_controller.dart';
 import '../../services/project_runner.dart';
 
-/// Launches [path] as a running app and reports the outcome via a snackbar.
-/// Shared by the project card and the project detail screen.
-Future<void> runProject(BuildContext context, String path) async {
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.showSnackBar(
-    const SnackBar(
-      content: Text('Starting app…'),
-      duration: Duration(seconds: 1),
-    ),
-  );
-  final result = await ProjectRunner().launchPath(path);
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(result.message),
-      duration: const Duration(seconds: 3),
-    ),
-  );
+/// Launches [path] by running its build/run command in the embedded terminal
+/// and switching to the terminal tab, so the user watches real output —
+/// builds, launch, and any errors — instead of a silent detached process.
+void runProject(BuildContext context, WidgetRef ref, String path) {
+  final command = ProjectRunner.commandFor(path);
+  ref.read(terminalProvider.notifier).executeCommand(command);
+  // Pop back to the dashboard (if on a pushed route) and open the terminal.
+  NavigationService().navigateToTab(context, NavigationService.tabTerminal);
 }

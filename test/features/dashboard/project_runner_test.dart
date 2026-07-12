@@ -1,35 +1,19 @@
+import 'dart:io';
+
 import 'package:brainiac_plus/features/dashboard/services/project_runner.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('ProjectRunner.launchCommand', () {
-    test('runs a Flutter app on the Linux desktop device', () {
-      final cmd = ProjectRunner.launchCommand('/ws/rainbow', isFlutter: true);
-      expect(cmd, contains('cd "/ws/rainbow"'));
-      expect(cmd, contains('flutter run -d linux'));
-    });
-
-    test('runs a plain Dart project with dart run', () {
-      final cmd = ProjectRunner.launchCommand('/ws/cli', isFlutter: false);
-      expect(cmd, contains('cd "/ws/cli"'));
-      expect(cmd, contains('dart run'));
-      expect(cmd, isNot(contains('flutter')));
-    });
-  });
-
   group('ProjectRunner.isFlutterProject', () {
-    test('detects the flutter sdk constraint in a pubspec', () {
+    test('detects a flutter dependency/sdk in the pubspec', () {
       expect(
-        ProjectRunner.isFlutterProject('name: x\ndependencies:\n  flutter:\n'),
-        isTrue,
-      );
-      expect(
-        ProjectRunner.isFlutterProject('environment:\n  flutter: ">=3.0.0"'),
+        ProjectRunner.isFlutterProject(
+          'dependencies:\n  flutter:\n    sdk: flutter',
+        ),
         isTrue,
       );
     });
-
-    test('a pure dart pubspec is not a flutter project', () {
+    test('a pure dart pubspec is not flutter', () {
       expect(
         ProjectRunner.isFlutterProject(
           'name: cli\ndependencies:\n  args: ^2.0',
@@ -39,26 +23,79 @@ void main() {
     });
   });
 
-  group('ProjectRunner.launch', () {
-    test('spawns the launch command detached and reports success', () async {
-      final launched = <String>[];
-      final runner = ProjectRunner(spawn: (cmd) async => launched.add(cmd));
+  group('ProjectRunner.packageName', () {
+    test('reads the name field', () {
+      expect(ProjectRunner.packageName('name: rainbow_arc\n'), 'rainbow_arc');
+    });
+    test('null when absent', () {
+      expect(ProjectRunner.packageName('description: x'), isNull);
+    });
+  });
 
-      final result = await runner.launch('/ws/rainbow', isFlutter: true);
+  group('ProjectRunner.builtExecutable', () {
+    test('finds a built debug bundle executable', () {
+      final proj = Directory.systemTemp.createTempSync('built');
+      addTearDown(() => proj.deleteSync(recursive: true));
+      final bundle = Directory('${proj.path}/build/linux/x64/debug/bundle')
+        ..createSync(recursive: true);
+      final exe = File('${bundle.path}/myapp')..writeAsStringSync('bin');
+      Process.runSync('chmod', ['+x', exe.path]);
+      // A .so next to it must be ignored.
+      File('${bundle.path}/libflutter_linux_gtk.so').writeAsStringSync('so');
 
-      expect(result.started, isTrue);
-      expect(launched.single, contains('flutter run -d linux'));
+      final found = ProjectRunner.builtExecutable(proj.path);
+      expect(found, exe.path);
     });
 
-    test('reports failure when the spawn throws', () async {
-      final runner = ProjectRunner(
-        spawn: (_) async => throw Exception('no flutter'),
+    test('null when nothing is built', () {
+      final proj = Directory.systemTemp.createTempSync('nobuild');
+      addTearDown(() => proj.deleteSync(recursive: true));
+      expect(ProjectRunner.builtExecutable(proj.path), isNull);
+    });
+  });
+
+  group('ProjectRunner.commandFor', () {
+    Directory makeProject({required bool flutter, required bool built}) {
+      final proj = Directory.systemTemp.createTempSync('cmd');
+      File('${proj.path}/pubspec.yaml').writeAsStringSync(
+        'name: demo\n${flutter ? 'dependencies:\n  flutter:\n    sdk: flutter\n' : ''}',
       );
+      if (built) {
+        final bundle = Directory('${proj.path}/build/linux/x64/debug/bundle')
+          ..createSync(recursive: true);
+        final exe = File('${bundle.path}/demo')..writeAsStringSync('bin');
+        Process.runSync('chmod', ['+x', exe.path]);
+      }
+      return proj;
+    }
 
-      final result = await runner.launch('/ws/x', isFlutter: true);
+    test('launches the built bundle directly when present', () {
+      final proj = makeProject(flutter: true, built: true);
+      addTearDown(() => proj.deleteSync(recursive: true));
 
-      expect(result.started, isFalse);
-      expect(result.message.toLowerCase(), contains('failed'));
+      final cmd = ProjectRunner.commandFor(proj.path);
+      expect(cmd, contains('bundle'));
+      expect(cmd, contains('./demo'));
+      expect(cmd, isNot(contains('flutter build')));
+    });
+
+    test('builds then launches a flutter project that is not built', () {
+      final proj = makeProject(flutter: true, built: false);
+      addTearDown(() => proj.deleteSync(recursive: true));
+
+      final cmd = ProjectRunner.commandFor(proj.path);
+      expect(cmd, contains('flutter build linux'));
+      expect(cmd, contains('bundle'));
+      expect(cmd, contains('./demo'));
+    });
+
+    test('uses dart run for a plain dart project', () {
+      final proj = makeProject(flutter: false, built: false);
+      addTearDown(() => proj.deleteSync(recursive: true));
+
+      final cmd = ProjectRunner.commandFor(proj.path);
+      expect(cmd, contains('dart run'));
+      expect(cmd, isNot(contains('flutter')));
     });
   });
 }

@@ -37,7 +37,7 @@ class ProjectDetailScreen extends ConsumerWidget {
           child: Column(
             children: [
               _header(context),
-              _actions(context),
+              _actions(context, ref),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -145,7 +145,7 @@ class ProjectDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _actions(BuildContext context) {
+  Widget _actions(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Wrap(
@@ -157,7 +157,7 @@ class ProjectDetailScreen extends ConsumerWidget {
               backgroundColor: const Color(0xFF4ADE80),
               foregroundColor: HudTheme.background,
             ),
-            onPressed: () => runProject(context, project.path),
+            onPressed: () => runProject(context, ref, project.path),
             icon: const Icon(Icons.play_arrow_rounded, size: 18),
             label: const Text('Run'),
           ),
