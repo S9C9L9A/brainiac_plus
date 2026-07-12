@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' show min;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/ai_message.dart';
 import '../models/agent_task.dart';
 import '../models/agent_tool_call.dart';
@@ -18,6 +19,7 @@ import '../services/ai_guardrails_service.dart';
 import '../services/ai_orchestrator_service.dart';
 import '../services/agent_response_parser.dart';
 import '../services/agentic_runner.dart';
+import '../services/chat_history_store.dart';
 import '../services/web_search_service.dart';
 import '../knowledge/knowledge_graph_controller.dart';
 
@@ -210,8 +212,18 @@ final aiChatControllerProvider =
         onAgentRun: (taskId, request, steps) => ref
             .read(knowledgeGraphProvider.notifier)
             .recordRun(taskId, request, steps),
+        historyStore: ref.watch(chatHistoryStoreProvider),
       );
     });
+
+/// Persists the conversation to a JSON file in the app-support directory, so
+/// the chat survives app restarts.
+final chatHistoryStoreProvider = Provider<ChatHistoryStore>((ref) {
+  return JsonFileChatHistoryStore(() async {
+    final dir = await getApplicationSupportDirectory();
+    return File('${dir.path}/chat_history.json');
+  });
+});
 
 /// AI Chat State
 class AiChatState {
@@ -262,6 +274,10 @@ class AiChatController extends StateNotifier<AiChatState> {
   final void Function(String taskId, String request, List<AgentStep> steps)?
   onAgentRun;
 
+  /// Persists the conversation across restarts. Null disables persistence
+  /// (e.g. in tests) — the controller then behaves as an ephemeral chat.
+  final ChatHistoryStore? historyStore;
+
   AiChatController(
     this._ollamaService,
     this._orchestrator,
@@ -269,8 +285,36 @@ class AiChatController extends StateNotifier<AiChatState> {
     this.onActivity,
     this.agentRunner,
     this.onAgentRun,
+    this.historyStore,
   }) : super(AiChatState()) {
     _initialize();
+    _restore();
+  }
+
+  /// Gate so persistence starts only after the prior conversation has been
+  /// loaded — otherwise the fresh greeting written at construction would
+  /// clobber the saved history before [_restore] gets to read it.
+  bool _restored = false;
+
+  /// Every settled state change is written to disk. We skip in-flight states
+  /// (`isLoading`) so a streaming reply isn't re-serialized on every chunk —
+  /// only the final message is persisted.
+  @override
+  set state(AiChatState value) {
+    super.state = value;
+    if (_restored && historyStore != null && !value.isLoading) {
+      historyStore!.save(value.messages);
+    }
+  }
+
+  /// Loads any persisted conversation and, if present, shows it in place of the
+  /// fresh greeting — so reopening the app continues where you left off.
+  Future<void> _restore() async {
+    final saved = await historyStore?.load();
+    if (saved != null && saved.isNotEmpty && mounted) {
+      state = state.copyWith(messages: saved);
+    }
+    _restored = true;
   }
 
   /// Rolling conversation the agent sees across turns, so follow-ups like
@@ -784,10 +828,15 @@ class AiChatController extends StateNotifier<AiChatState> {
     return history;
   }
 
-  /// Clear chat history
+  /// Clear chat history — also wipes the persisted copy, so a cleared chat
+  /// stays cleared across restarts. The greeting reset is suppressed from
+  /// persistence so it doesn't immediately re-create a history file.
   void clearChat() {
     _agentHistory.clear();
+    historyStore?.clear();
+    _restored = false;
     _initialize();
+    _restored = true;
   }
 
   /// Delete a message
