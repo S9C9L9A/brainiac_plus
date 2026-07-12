@@ -25,15 +25,22 @@ class AgentToolExecutor {
   /// agent loop and freeze the app.
   final Duration commandTimeout;
 
+  /// Files that must not be overwritten in this workspace. Defaults to
+  /// BrainiacPlus's own locked files; when the agent is scoped to a *user*
+  /// project, the caller passes an empty set so the project's own main.dart
+  /// and pubspec are editable.
+  final Set<String> lockedFiles;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
     this.commandTimeout = const Duration(seconds: 120),
+    this.lockedFiles = defaultLockedFiles,
   }) : _run = runCommand;
 
-  /// Project files the assistant must never overwrite unattended. Mirrors the
-  /// locked-files list in the project contract.
-  static const _lockedFiles = <String>{
+  /// BrainiacPlus's own protected files. Mirrors the locked-files list in the
+  /// project contract.
+  static const defaultLockedFiles = <String>{
     'pubspec.yaml',
     'pubspec.lock',
     'lib/main.dart',
@@ -65,7 +72,7 @@ class AgentToolExecutor {
     if (rel == null || rel.isEmpty) {
       return ToolResult(call: call, ok: false, output: 'Missing file path.');
     }
-    if (_lockedFiles.contains(_normalize(rel))) {
+    if (lockedFiles.contains(_normalize(rel))) {
       return ToolResult(
         call: call,
         ok: false,

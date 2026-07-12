@@ -54,11 +54,12 @@ class ProjectRunner {
     }
   }
 
-  /// Detaches via setsid so the app outlives this process.
+  /// Detaches via setsid so the app outlives this process. Uses a login shell
+  /// (bash -lc) so the user's PATH is loaded and flutter/dart are found.
   static Future<void> _defaultSpawn(String command) async {
     await Process.start('setsid', [
       'bash',
-      '-c',
+      '-lc',
       command,
     ], mode: ProcessStartMode.detached);
   }

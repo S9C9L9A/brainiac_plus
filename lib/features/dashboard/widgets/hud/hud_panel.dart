@@ -11,12 +11,17 @@ class HudPanel extends StatelessWidget {
   final Widget child;
   final Widget? trailing;
 
+  /// When true, the child fills the panel's remaining height via Expanded —
+  /// safe inside a bounded parent, unlike a SizedBox(height: infinity).
+  final bool expandChild;
+
   const HudPanel({
     super.key,
     required this.title,
     required this.icon,
     required this.child,
     this.trailing,
+    this.expandChild = false,
   });
 
   @override
@@ -51,7 +56,7 @@ class HudPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Divider(color: HudTheme.cyan.withValues(alpha: 0.1), height: 1),
           const SizedBox(height: 14),
-          child,
+          if (expandChild) Expanded(child: child) else child,
         ],
       ),
     );

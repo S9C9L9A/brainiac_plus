@@ -50,6 +50,34 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('renders on a wide desktop surface without overflow/crash', (
+    tester,
+  ) async {
+    // Regression: the wide layout used SizedBox(height: infinity) inside a
+    // Column, which sent the constellation an infinite canvas and crashed.
+    tester.view.physicalSize = const Size(1600, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final project = WorkspaceProject(
+      name: 'wide',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('SOURCE MAP'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the work-in-chat button invokes the callback', (tester) async {
     var worked = false;
     final project = WorkspaceProject(

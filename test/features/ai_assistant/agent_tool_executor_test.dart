@@ -53,6 +53,25 @@ void main() {
       expect(result.output.toLowerCase(), contains('outside'));
     });
 
+    test(
+      'an empty locked set allows editing main.dart (project-scoped)',
+      () async {
+        final scoped = AgentToolExecutor(
+          workspaceRoot: workspace.path,
+          runCommand: (_) async => '',
+          lockedFiles: const {},
+        );
+        final result = await scoped.execute(
+          const AgentToolCall(
+            tool: ToolType.writeFile,
+            path: 'lib/main.dart',
+            content: 'void main() {}',
+          ),
+        );
+        expect(result.ok, isTrue);
+      },
+    );
+
     test('rejects writing locked project files', () async {
       for (final locked in [
         'pubspec.yaml',

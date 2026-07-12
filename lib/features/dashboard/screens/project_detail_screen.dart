@@ -5,7 +5,6 @@ import '../../../core/platform/shell_service.dart';
 import '../../ai_assistant/knowledge/knowledge_graph_view.dart';
 import '../controllers/project_detail_provider.dart';
 import '../services/project_git_service.dart';
-import '../services/project_graph_builder.dart';
 import '../services/workspace_scanner.dart';
 import '../widgets/hud/hud_background.dart';
 import '../widgets/hud/hud_panel.dart';
@@ -29,7 +28,8 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final graph = ProjectGraphBuilder.build(project.path, name: project.name);
+    // Built once and cached per path — never on the widget build path.
+    final graph = ref.watch(projectGraphProvider(project.path));
 
     return Scaffold(
       body: HudBackground(
@@ -42,21 +42,21 @@ class ProjectDetailScreen extends ConsumerWidget {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final wide = constraints.maxWidth >= 820;
-                    final gitPanel = SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                      child: _GitSection(path: project.path),
-                    );
-                    final graphView = Padding(
+                    // Fixed-height graph panel (bounded → the constellation's
+                    // LayoutBuilder always gets a finite canvas).
+                    Widget graphPanel(double height) => Padding(
                       padding: const EdgeInsets.all(16),
-                      child: HudPanel(
-                        title: 'SOURCE MAP',
-                        icon: Icons.hub_outlined,
-                        child: SizedBox(
-                          height: wide ? double.infinity : 360,
+                      child: SizedBox(
+                        height: height,
+                        child: HudPanel(
+                          title: 'SOURCE MAP',
+                          icon: Icons.hub_outlined,
+                          expandChild: true,
                           child: GraphConstellation(graph: graph),
                         ),
                       ),
                     );
+
                     if (!wide) {
                       return ListView(
                         padding: const EdgeInsets.only(bottom: 24),
@@ -65,15 +65,30 @@ class ProjectDetailScreen extends ConsumerWidget {
                             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                             child: _GitSection(path: project.path),
                           ),
-                          graphView,
+                          graphPanel(360),
                         ],
                       );
                     }
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(width: 360, child: gitPanel),
-                        Expanded(child: graphView),
+                        SizedBox(
+                          width: 360,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                            child: _GitSection(path: project.path),
+                          ),
+                        ),
+                        // Fill the available height with the graph panel;
+                        // clamp so a tiny window never yields a negative box.
+                        Expanded(
+                          child: graphPanel(
+                            (constraints.maxHeight - 32).clamp(
+                              160,
+                              double.infinity,
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   },

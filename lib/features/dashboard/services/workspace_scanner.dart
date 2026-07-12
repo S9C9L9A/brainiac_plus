@@ -28,8 +28,15 @@ class WorkspaceScanner {
     final root = Directory(rootPath);
     if (!root.existsSync()) return const [];
 
+    final List<FileSystemEntity> entries;
+    try {
+      entries = root.listSync(followLinks: false);
+    } catch (_) {
+      return const [];
+    }
+
     final projects = <WorkspaceProject>[];
-    for (final entity in root.listSync()) {
+    for (final entity in entries) {
       if (entity is! Directory) continue;
       final pubspec = File('${entity.path}/pubspec.yaml');
       if (!pubspec.existsSync()) continue;

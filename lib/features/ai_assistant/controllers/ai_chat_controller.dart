@@ -87,6 +87,11 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
       // Commands run relative to the sandbox and are hard-capped so a
       // non-terminating command can never freeze the loop.
       runCommand: (cmd) => shell.executeSync('cd "${sandbox.path}" && $cmd'),
+      // Inside a user project, its own main.dart/pubspec are editable; the
+      // BrainiacPlus locks only apply to the default sandbox.
+      lockedFiles: activeProject != null
+          ? const <String>{}
+          : AgentToolExecutor.defaultLockedFiles,
     ),
   );
 });

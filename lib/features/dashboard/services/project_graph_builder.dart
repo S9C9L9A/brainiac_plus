@@ -22,13 +22,20 @@ class ProjectGraphBuilder {
     final lib = Directory('$projectPath/lib');
     if (!lib.existsSync()) return graph;
 
-    final files =
-        lib
-            .listSync(recursive: true)
-            .whereType<File>()
-            .where((f) => f.path.endsWith('.dart'))
-            .toList()
-          ..sort((a, b) => a.path.compareTo(b.path));
+    // Recursive listing can throw on permission errors or broken symlinks —
+    // never let scanning a project take the whole view down.
+    List<File> files;
+    try {
+      files =
+          lib
+              .listSync(recursive: true, followLinks: false)
+              .whereType<File>()
+              .where((f) => f.path.endsWith('.dart'))
+              .toList()
+            ..sort((a, b) => a.path.compareTo(b.path));
+    } catch (_) {
+      return graph;
+    }
 
     for (final file in files.take(maxFiles)) {
       final rel = file.path.substring(projectPath.length + 1);
