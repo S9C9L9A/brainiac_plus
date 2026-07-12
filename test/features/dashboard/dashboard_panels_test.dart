@@ -1,3 +1,4 @@
+import 'package:brainiac_plus/features/dashboard/controllers/project_detail_provider.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/projects_provider.dart';
 import 'package:brainiac_plus/features/dashboard/services/workspace_scanner.dart';
 import 'package:brainiac_plus/features/dashboard/widgets/hud/projects_panel.dart';
@@ -23,6 +24,7 @@ void main() {
               ),
             ],
           ),
+          projectCommandRunnerProvider.overrideWithValue((cmd) async => ''),
         ],
         child: const MaterialApp(home: Scaffold(body: ProjectsPanel())),
       ),
@@ -34,9 +36,9 @@ void main() {
 
     await tester.tap(find.text('rainbow_arc'));
     await tester.pumpAndSettle();
-    // Sheet-only content confirms it opened.
-    expect(find.text('Open folder'), findsOneWidget);
-    expect(find.text('/ws/rainbow_arc'), findsOneWidget);
+    // Navigates to the rich project detail screen, not a folder.
+    expect(find.text('SOURCE MAP'), findsOneWidget);
+    expect(find.text('Work on this in chat'), findsOneWidget);
   });
 
   testWidgets('ProjectsPanel shows an empty state with no apps', (

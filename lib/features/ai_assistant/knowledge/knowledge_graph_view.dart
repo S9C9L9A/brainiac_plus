@@ -17,7 +17,18 @@ class KnowledgeGraphView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final graph = ref.watch(knowledgeGraphProvider);
     if (graph.nodes.isEmpty) return const _EmptyState();
+    return GraphConstellation(graph: graph);
+  }
+}
 
+/// Renders any [KnowledgeGraph] as the HUD constellation. Reused by the agent
+/// memory view and the per-project graph.
+class GraphConstellation extends StatelessWidget {
+  final KnowledgeGraph graph;
+  const GraphConstellation({super.key, required this.graph});
+
+  @override
+  Widget build(BuildContext context) {
     final positions = GraphLayout.positions(graph);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -30,7 +41,6 @@ class KnowledgeGraphView extends ConsumerWidget {
 
         return Stack(
           children: [
-            // Edges.
             Positioned.fill(
               child: CustomPaint(
                 painter: _EdgePainter(
@@ -41,7 +51,6 @@ class KnowledgeGraphView extends ConsumerWidget {
                 ),
               ),
             ),
-            // Nodes.
             for (final node in graph.nodes)
               if (positions[node.id] != null)
                 _NodeChip(node: node, center: place(positions[node.id]!)),
@@ -56,6 +65,8 @@ Color _nodeColor(NodeType type) {
   switch (type) {
     case NodeType.task:
       return HudTheme.cyan;
+    case NodeType.project:
+      return HudTheme.cyanGlow;
     case NodeType.file:
       return const Color(0xFF4ADE80); // green
     case NodeType.command:
@@ -69,6 +80,8 @@ IconData _nodeIcon(NodeType type) {
   switch (type) {
     case NodeType.task:
       return Icons.bolt;
+    case NodeType.project:
+      return Icons.flutter_dash;
     case NodeType.file:
       return Icons.description_outlined;
     case NodeType.command:

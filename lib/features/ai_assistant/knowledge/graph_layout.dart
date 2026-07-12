@@ -21,10 +21,13 @@ class GraphLayout {
     final nodes = graph.nodes;
     if (nodes.isEmpty) return const {};
 
+    // Tasks and the project root anchor the inner ring; their artifacts orbit.
+    bool isCore(GraphNode n) =>
+        n.type == NodeType.task || n.type == NodeType.project;
     // Stable ordering so the layout never jumps between rebuilds.
-    final tasks = nodes.where((n) => n.type == NodeType.task).toList()
+    final tasks = nodes.where(isCore).toList()
       ..sort((a, b) => a.id.compareTo(b.id));
-    final others = nodes.where((n) => n.type != NodeType.task).toList()
+    final others = nodes.where((n) => !isCore(n)).toList()
       ..sort((a, b) => a.id.compareTo(b.id));
 
     final result = <String, Offset>{};

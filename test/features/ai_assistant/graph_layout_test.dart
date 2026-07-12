@@ -53,5 +53,26 @@ void main() {
     test('an empty graph yields an empty layout', () {
       expect(GraphLayout.positions(KnowledgeGraph()), isEmpty);
     });
+
+    test('project nodes anchor the centre like tasks', () {
+      final g = KnowledgeGraph();
+      g.upsertNode(
+        const GraphNode(
+          id: 'project:app',
+          type: NodeType.project,
+          label: 'app',
+        ),
+      );
+      g.upsertNode(
+        const GraphNode(id: 'file:a', type: NodeType.file, label: 'a'),
+      );
+      final pos = GraphLayout.positions(g);
+      double d(String id) {
+        final p = pos[id]!;
+        return (p.dx - 0.5) * (p.dx - 0.5) + (p.dy - 0.5) * (p.dy - 0.5);
+      }
+
+      expect(d('project:app'), lessThan(d('file:a')));
+    });
   });
 }

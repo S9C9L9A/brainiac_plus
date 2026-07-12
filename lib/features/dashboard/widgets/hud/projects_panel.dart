@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/platform/shell_service.dart';
+import '../../../ai_assistant/controllers/ai_chat_controller.dart';
 import '../../controllers/projects_provider.dart';
+import '../../screens/project_detail_screen.dart';
 import '../../services/workspace_scanner.dart';
 import 'hud_panel.dart';
 import 'hud_theme.dart';
@@ -47,15 +48,23 @@ class ProjectsPanel extends ConsumerWidget {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
+class _ProjectCard extends ConsumerWidget {
   final WorkspaceProject project;
   const _ProjectCard({required this.project});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () => _showProjectSheet(context, project),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailScreen(
+            project: project,
+            onWorkInChat: (p) =>
+                ref.read(activeProjectProvider.notifier).state = p.path,
+          ),
+        ),
+      ),
       child: Container(
         width: 190,
         padding: const EdgeInsets.all(12),
@@ -109,104 +118,6 @@ class _ProjectCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-void _showProjectSheet(BuildContext context, WorkspaceProject project) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: const Color(0xFF0A121F),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.flutter_dash,
-                color: HudTheme.cyanGlow,
-                size: 24,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                project.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          _SheetRow('Description', project.description ?? '—'),
-          _SheetRow('Source', project.hasLib ? 'lib/ present' : 'no lib/'),
-          _SheetRow('Path', project.path),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: HudTheme.cyan.withValues(alpha: 0.2),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  ShellService().executeCommand('xdg-open "${project.path}"');
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.folder_open, size: 16),
-                label: const Text('Open folder'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _SheetRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _SheetRow(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 96,
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                color: HudTheme.cyan.withValues(alpha: 0.6),
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'monospace',
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

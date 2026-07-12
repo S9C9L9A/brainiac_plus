@@ -51,15 +51,27 @@ final aiOrchestratorProvider = Provider<AiOrchestratorService>((ref) {
   );
 });
 
+/// The project the assistant is currently working inside, or null for the
+/// default sandbox. Set from the project detail screen ("Work on this in
+/// chat") so the agent's file/command tools operate within that project.
+final activeProjectProvider = StateProvider<String?>((ref) => null);
+
 /// Builds the agentic runner backing autonomous task execution: the local
-/// LLM as the planner, real file/shell tools scoped to the project workspace.
+/// LLM as the planner, real file/shell tools scoped to the active project (or
+/// the isolated sandbox when none is selected).
 final agentRunnerProvider = Provider<AgenticRunner>((ref) {
   final ollama = ref.watch(ollamaServiceProvider);
   final shell = ShellService();
-  // The agent works in an isolated sandbox, not the project root: test apps
+  final activeProject = ref.watch(activeProjectProvider);
+  // Scope to the selected project, else an isolated sandbox where test apps
   // stay contained and the real app's files are physically out of reach.
-  final sandbox = Directory('${Directory.current.path}/agent_workspace');
-  sandbox.createSync(recursive: true);
+  final Directory sandbox;
+  if (activeProject != null && Directory(activeProject).existsSync()) {
+    sandbox = Directory(activeProject);
+  } else {
+    sandbox = Directory('${Directory.current.path}/agent_workspace');
+    sandbox.createSync(recursive: true);
+  }
   return AgenticRunner(
     chat: (turns) => ollama.chat([
       for (final t in turns)

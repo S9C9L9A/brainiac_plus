@@ -148,6 +148,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
         Column(
           children: [
             _buildHeader(settings, availability),
+            _buildActiveProject(),
             if (!isConfigured || !isOnline)
               _buildConnectionNotice(
                 isConfigured: isConfigured,
@@ -283,6 +284,39 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             icon: const Icon(Icons.tune, color: Colors.white70, size: 18),
             tooltip: 'Open AI settings',
             splashRadius: 18,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Banner shown while the assistant is scoped to a project — its file and
+  /// command tools operate inside that folder. Tap the ✕ to detach.
+  Widget _buildActiveProject() {
+    final path = ref.watch(activeProjectProvider);
+    if (path == null) return const SizedBox.shrink();
+    final name = path.split('/').where((s) => s.isNotEmpty).last;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.cyan.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.cyanAccent.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.flutter_dash, color: Colors.cyanAccent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Working in: $name',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ),
+          InkWell(
+            onTap: () => ref.read(activeProjectProvider.notifier).state = null,
+            child: const Icon(Icons.close, color: Colors.white54, size: 16),
           ),
         ],
       ),
