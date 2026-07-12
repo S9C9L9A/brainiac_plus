@@ -1,15 +1,35 @@
 import 'dart:io';
 
-/// Builds the shell command that launches a workspace project. The command is
-/// run in the embedded terminal so the user sees real output (builds, errors),
-/// instead of a detached process that could fail silently.
-///
-/// Strategy, in order:
-///   1. A pre-built Linux bundle exists → launch that executable directly
-///      (instant, reliable).
-///   2. A Flutter project not yet built → `flutter build linux` then launch
-///      the produced bundle (first run is slow; output is visible).
-///   3. A plain Dart project → `dart run`.
+import 'package:flutter/material.dart';
+
+/// Where to run a project. Maps to a `flutter run` device.
+enum RunTarget { linux, web, android }
+
+extension RunTargetX on RunTarget {
+  /// The `flutter run -d <id>` device id.
+  String get deviceId => switch (this) {
+    RunTarget.linux => 'linux',
+    RunTarget.web => 'chrome',
+    RunTarget.android => 'android',
+  };
+
+  String get label => switch (this) {
+    RunTarget.linux => 'Linux',
+    RunTarget.web => 'Web',
+    RunTarget.android => 'Android',
+  };
+
+  IconData get icon => switch (this) {
+    RunTarget.linux => Icons.desktop_windows,
+    RunTarget.web => Icons.language,
+    RunTarget.android => Icons.phone_android,
+  };
+}
+
+/// Builds the shell command that runs a workspace project. The command is run
+/// inside the project's own console panel so its log streams live and can be
+/// stopped — `flutter run -d <device>` for Flutter apps (Linux/Web/Android),
+/// `dart run` for plain Dart.
 class ProjectRunner {
   ProjectRunner._();
 
@@ -27,45 +47,19 @@ class ProjectRunner {
     return m?.group(1);
   }
 
-  /// Path to an already-built Linux executable (release preferred), or null.
-  static String? builtExecutable(String projectPath) {
-    for (final mode in ['release', 'debug']) {
-      final bundle = Directory('$projectPath/build/linux/x64/$mode/bundle');
-      if (!bundle.existsSync()) continue;
-      try {
-        for (final entity in bundle.listSync()) {
-          if (entity is! File) continue;
-          if (entity.path.endsWith('.so')) continue;
-          // Executable bit set?
-          if (entity.statSync().modeString().contains('x')) return entity.path;
-        }
-      } catch (_) {
-        // ignore unreadable bundle dirs
-      }
-    }
-    return null;
-  }
-
-  /// The shell command to run [projectPath].
-  static String commandFor(String projectPath) {
+  /// The shell command to run [projectPath] on [target].
+  static String commandFor(
+    String projectPath, {
+    RunTarget target = RunTarget.linux,
+  }) {
     final pubspec = File('$projectPath/pubspec.yaml');
     final content = pubspec.existsSync() ? pubspec.readAsStringSync() : '';
 
-    final exe = builtExecutable(projectPath);
-    if (exe != null) {
-      final dir = File(exe).parent.path;
-      final name = exe.split('/').where((s) => s.isNotEmpty).last;
-      return 'cd "$dir" && "./$name"';
-    }
-
+    // `exec` replaces the shell with the runner process, so stopping the
+    // console (which kills the shell) actually kills flutter/dart too.
     if (isFlutterProject(content)) {
-      final pkg =
-          packageName(content) ??
-          projectPath.split('/').where((s) => s.isNotEmpty).last;
-      return 'cd "$projectPath" && flutter build linux --debug && '
-          'cd build/linux/x64/debug/bundle && "./$pkg"';
+      return 'cd "$projectPath" && exec flutter run -d ${target.deviceId}';
     }
-
-    return 'cd "$projectPath" && dart run';
+    return 'cd "$projectPath" && exec dart run';
   }
 }

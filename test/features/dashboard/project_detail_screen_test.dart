@@ -41,11 +41,16 @@ void main() {
     await tester.pump();
 
     expect(find.text('rainbow_arc'), findsWidgets);
+    // Overview tab content + run controls.
+    expect(find.text('OVERVIEW'), findsOneWidget);
+    expect(find.text('CONSOLE'), findsOneWidget);
     expect(find.text('SOURCE MAP'), findsOneWidget);
     expect(find.text('RECENT COMMITS'), findsOneWidget);
-    expect(find.text('PENDING CHANGES'), findsOneWidget);
-    // The scanned source file appears as a node in the constellation.
-    expect(find.text('main.dart'), findsOneWidget);
+    // Run target selector offers all three platforms.
+    expect(find.text('Linux'), findsOneWidget);
+    expect(find.text('Web'), findsOneWidget);
+    expect(find.text('Android'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Run'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
   });
@@ -99,7 +104,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text('Work on this in chat'));
+    await tester.tap(find.text('Work in chat'));
     await tester.pump();
 
     expect(worked, isTrue);

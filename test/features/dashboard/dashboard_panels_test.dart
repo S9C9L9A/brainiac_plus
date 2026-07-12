@@ -38,7 +38,7 @@ void main() {
     await tester.pumpAndSettle();
     // Navigates to the rich project detail screen, not a folder.
     expect(find.text('SOURCE MAP'), findsOneWidget);
-    expect(find.text('Work on this in chat'), findsOneWidget);
+    expect(find.text('Work in chat'), findsOneWidget);
   });
 
   testWidgets('ProjectsPanel shows an empty state with no apps', (

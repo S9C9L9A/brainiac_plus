@@ -1,3 +1,4 @@
+import '../../services/project_runner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,7 +8,6 @@ import '../../screens/project_detail_screen.dart';
 import '../../services/workspace_scanner.dart';
 import 'hud_panel.dart';
 import 'hud_theme.dart';
-import 'run_project.dart';
 
 /// Dashboard panel listing the apps the assistant has built in its workspace.
 /// Tapping one opens a HUD sheet with its details and an "open folder" action.
@@ -53,19 +53,24 @@ class _ProjectCard extends ConsumerWidget {
   final WorkspaceProject project;
   const _ProjectCard({required this.project});
 
+  void _open(BuildContext context, WidgetRef ref, {RunTarget? autoRun}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProjectDetailScreen(
+          project: project,
+          autoRunTarget: autoRun,
+          onWorkInChat: (p) =>
+              ref.read(activeProjectProvider.notifier).state = p.path,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ProjectDetailScreen(
-            project: project,
-            onWorkInChat: (p) =>
-                ref.read(activeProjectProvider.notifier).state = p.path,
-          ),
-        ),
-      ),
+      onTap: () => _open(context, ref),
       child: Container(
         width: 190,
         padding: const EdgeInsets.all(12),
@@ -117,9 +122,10 @@ class _ProjectCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // Run without leaving the dashboard.
+            // Quick-run: open the project and launch it on Linux, with the
+            // live log in its Console tab.
             IconButton(
-              onPressed: () => runProject(context, ref, project.path),
+              onPressed: () => _open(context, ref, autoRun: RunTarget.linux),
               icon: const Icon(
                 Icons.play_arrow_rounded,
                 color: Color(0xFF4ADE80),
