@@ -143,6 +143,39 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('tapping a file node opens its code in the side panel', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    // The source map shows the scanned file as a node.
+    expect(find.text('main.dart'), findsWidgets);
+    await tester.tap(find.text('main.dart').first);
+    await tester.pump();
+
+    // The side panel shows the file's code and edit controls.
+    expect(find.text('void main() {}'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Save'), findsOneWidget);
+    expect(find.text('Edit with AI'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the work-in-chat button invokes the callback', (tester) async {
     var worked = false;
     final project = WorkspaceProject(

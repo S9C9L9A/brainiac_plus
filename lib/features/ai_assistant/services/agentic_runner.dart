@@ -48,11 +48,17 @@ class AgenticRunner {
   final ToolCallParser parser;
   final int maxIterations;
 
+  /// Extra context appended to the system prompt — e.g. a brief of the project
+  /// the assistant is scoped to (its files, from the knowledge graph), so it
+  /// knows the codebase before the user's first message.
+  final String? projectContext;
+
   AgenticRunner({
     required this.chat,
     required this.executor,
     ToolCallParser? parser,
     this.maxIterations = 12,
+    this.projectContext,
   }) : parser = parser ?? ToolCallParser();
 
   /// System prompt teaching the tool protocol. Kept explicit so smaller local
@@ -92,8 +98,12 @@ Rules:
     String userRequest, {
     void Function(AgentStep step)? onStep,
   }) async {
+    final system = projectContext == null
+        ? systemPrompt
+        : '$systemPrompt\n\nPROJECT CONTEXT (you are working inside this '
+              'project; you MAY edit its existing files):\n$projectContext';
     final conversation = <AgentTurn>[
-      const AgentTurn('system', systemPrompt),
+      AgentTurn('system', system),
       AgentTurn('user', userRequest),
     ];
     final steps = <AgentStep>[];

@@ -22,10 +22,19 @@ class KnowledgeGraphView extends ConsumerWidget {
 }
 
 /// Renders any [KnowledgeGraph] as the HUD constellation. Reused by the agent
-/// memory view and the per-project graph.
+/// memory view and the per-project graph. [onNodeTap] fires when a node is
+/// clicked (e.g. to open a file preview).
 class GraphConstellation extends StatelessWidget {
   final KnowledgeGraph graph;
-  const GraphConstellation({super.key, required this.graph});
+  final void Function(GraphNode node)? onNodeTap;
+  final String? selectedNodeId;
+
+  const GraphConstellation({
+    super.key,
+    required this.graph,
+    this.onNodeTap,
+    this.selectedNodeId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +62,12 @@ class GraphConstellation extends StatelessWidget {
             ),
             for (final node in graph.nodes)
               if (positions[node.id] != null)
-                _NodeChip(node: node, center: place(positions[node.id]!)),
+                _NodeChip(
+                  node: node,
+                  center: place(positions[node.id]!),
+                  selected: node.id == selectedNodeId,
+                  onTap: onNodeTap == null ? null : () => onNodeTap!(node),
+                ),
           ],
         );
       },
@@ -94,8 +108,15 @@ IconData _nodeIcon(NodeType type) {
 class _NodeChip extends StatelessWidget {
   final GraphNode node;
   final Offset center;
+  final bool selected;
+  final VoidCallback? onTap;
 
-  const _NodeChip({required this.node, required this.center});
+  const _NodeChip({
+    required this.node,
+    required this.center,
+    this.selected = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -105,36 +126,46 @@ class _NodeChip extends StatelessWidget {
       left: center.dx - chipWidth / 2,
       top: center.dy - 18,
       width: chipWidth,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: HudTheme.background,
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 1.5),
-              boxShadow: [
-                BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 12),
-              ],
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: selected ? 30 : 26,
+              height: selected ? 30 : 26,
+              decoration: BoxDecoration(
+                color: selected
+                    ? color.withValues(alpha: 0.25)
+                    : HudTheme.background,
+                shape: BoxShape.circle,
+                border: Border.all(color: color, width: selected ? 2.5 : 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: selected ? 0.9 : 0.6),
+                    blurRadius: selected ? 18 : 12,
+                  ),
+                ],
+              ),
+              child: Icon(_nodeIcon(node.type), color: color, size: 14),
             ),
-            child: Icon(_nodeIcon(node.type), color: color, size: 14),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            node.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontFamily: 'monospace',
-              fontSize: 10,
-              shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+            const SizedBox(height: 4),
+            Text(
+              node.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: selected ? 1 : 0.85),
+                fontFamily: 'monospace',
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

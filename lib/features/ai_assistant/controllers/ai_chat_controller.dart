@@ -93,8 +93,31 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
           ? const <String>{}
           : AgentToolExecutor.defaultLockedFiles,
     ),
+    // Brief the assistant on the active project's files up front.
+    projectContext: activeProject != null ? _projectBrief(activeProject) : null,
   );
 });
+
+/// A short brief of a project's source files for the agent's system prompt.
+String _projectBrief(String path) {
+  final name = path.split('/').where((s) => s.isNotEmpty).last;
+  final buf = StringBuffer('Project: $name\nLocation: $path\n');
+  final lib = Directory('$path/lib');
+  if (lib.existsSync()) {
+    buf.writeln('Source files (lib/):');
+    try {
+      final files = lib
+          .listSync(recursive: true, followLinks: false)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'))
+          .take(60);
+      for (final f in files) {
+        buf.writeln('- ${f.path.substring(path.length + 1)}');
+      }
+    } catch (_) {}
+  }
+  return buf.toString();
+}
 
 /// Provider for AI chat controller
 final aiChatControllerProvider =

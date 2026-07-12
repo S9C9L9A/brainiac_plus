@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/shell_service.dart';
+import '../../ai_assistant/controllers/ai_chat_controller.dart';
+import '../../ai_assistant/knowledge/knowledge_graph.dart';
 import '../../ai_assistant/knowledge/knowledge_graph_view.dart';
+import '../../ai_assistant/widgets/chat/ai_chat_panel.dart';
 import '../controllers/project_detail_provider.dart';
 import '../controllers/project_run_controller.dart';
 import '../services/project_git_service.dart';
@@ -41,7 +46,30 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   RunTarget _target = RunTarget.linux;
   bool _consoleOpen = false;
 
+  /// The file node currently previewed in the side panel, if any.
+  GraphNode? _selectedFile;
+
   WorkspaceProject get project => widget.project;
+
+  /// Opens the project-scoped assistant chat as a bottom sheet. The agent is
+  /// already briefed on the project (see agentRunnerProvider projectContext).
+  void _openChat() {
+    ref.read(activeProjectProvider.notifier).state = project.path;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: const AiChatPanel(),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -73,25 +101,63 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final run = ref.watch(projectRunProvider(project.path));
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: HudTheme.cyan,
+        foregroundColor: HudTheme.background,
+        onPressed: _openChat,
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text('Assistant'),
+      ),
       body: HudBackground(
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              _header(),
-              _actionBar(run.running),
-              // One page: overview fills the space, the console docks at the
-              // bottom and expands/collapses on a click.
-              Expanded(child: _body()),
-              _ConsoleDock(
-                open: _consoleOpen,
-                running: run.running,
-                hasOutput: run.output.isNotEmpty,
-                onToggle: () => setState(() => _consoleOpen = !_consoleOpen),
-                onStop: _stop,
-                onClear: () =>
-                    ref.read(projectRunProvider(project.path).notifier).clear(),
-                child: _ConsoleLog(path: project.path),
+              Column(
+                children: [
+                  _header(),
+                  _actionBar(run.running),
+                  // One page: content fills the space, the console docks at
+                  // the bottom and expands/collapses on a click.
+                  Expanded(child: _body()),
+                  _ConsoleDock(
+                    open: _consoleOpen,
+                    running: run.running,
+                    hasOutput: run.output.isNotEmpty,
+                    onToggle: () =>
+                        setState(() => _consoleOpen = !_consoleOpen),
+                    onStop: _stop,
+                    onClear: () => ref
+                        .read(projectRunProvider(project.path).notifier)
+                        .clear(),
+                    child: _ConsoleLog(path: project.path),
+                  ),
+                ],
               ),
+              // Code preview/editor docks on the right when a node is tapped.
+              if (_selectedFile != null)
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedFile = null),
+                          child: Container(color: Colors.black38),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 480,
+                        child: _CodeSidePanel(
+                          node: _selectedFile!,
+                          onClose: () => setState(() => _selectedFile = null),
+                          onEditWithAi: () {
+                            setState(() => _selectedFile = null);
+                            _openChat();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -101,11 +167,28 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   Widget _body() {
     final graph = ref.watch(projectGraphProvider(project.path));
+    final constellation = GraphConstellation(
+      graph: graph,
+      selectedNodeId: _selectedFile?.id,
+      onNodeTap: (node) {
+        // Only file nodes carry a path to preview.
+        if (node.type == NodeType.file && node.props['path'] != null) {
+          setState(() => _selectedFile = node);
+        }
+      },
+    );
     final graphPanel = HudPanel(
       title: 'SOURCE MAP',
       icon: Icons.hub_outlined,
+      trailing: Text(
+        'tap a file to open it',
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.35),
+          fontSize: 10,
+        ),
+      ),
       expandChild: true,
-      child: GraphConstellation(graph: graph),
+      child: constellation,
     );
 
     return LayoutBuilder(
@@ -284,6 +367,221 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 child: _MenuRow(Icons.cleaning_services, 'Clean build'),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Side panel that previews a file's code, allows manual editing + save, and
+/// offers to hand the file to the assistant for AI editing.
+class _CodeSidePanel extends StatefulWidget {
+  final GraphNode node;
+  final VoidCallback onClose;
+  final VoidCallback onEditWithAi;
+
+  const _CodeSidePanel({
+    required this.node,
+    required this.onClose,
+    required this.onEditWithAi,
+  });
+
+  @override
+  State<_CodeSidePanel> createState() => _CodeSidePanelState();
+}
+
+class _CodeSidePanelState extends State<_CodeSidePanel> {
+  final _controller = TextEditingController();
+  String? _error;
+  bool _dirty = false;
+
+  String get _path => widget.node.props['path'] ?? '';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(_CodeSidePanel old) {
+    super.didUpdateWidget(old);
+    if (old.node.id != widget.node.id) {
+      _dirty = false;
+      _load();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _load() {
+    try {
+      _controller.text = File(_path).readAsStringSync();
+      _error = null;
+    } catch (e) {
+      _controller.text = '';
+      _error = 'Cannot open this file (binary or unreadable).';
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _save() {
+    try {
+      File(_path).writeAsStringSync(_controller.text);
+      setState(() => _dirty = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Saved ${widget.node.label}')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A121F),
+        border: Border(
+          left: BorderSide(color: HudTheme.cyan.withValues(alpha: 0.25)),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title bar.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.description_outlined,
+                  color: Color(0xFF4ADE80),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    widget.node.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (_dirty)
+                  Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: HudTheme.amber,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white54,
+                    size: 18,
+                  ),
+                  onPressed: widget.onClose,
+                  splashRadius: 16,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              _path,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HudTheme.cyan.withValues(alpha: 0.5),
+                fontFamily: 'monospace',
+                fontSize: 10,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _error != null
+                ? Center(
+                    child: Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  )
+                : Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      controller: _controller,
+                      onChanged: (_) {
+                        if (!_dirty) setState(() => _dirty = true);
+                      },
+                      expands: true,
+                      maxLines: null,
+                      minLines: null,
+                      textAlignVertical: TextAlignVertical.top,
+                      style: const TextStyle(
+                        color: Color(0xFFCDE7FF),
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        height: 1.45,
+                      ),
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.all(12),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+          ),
+          // Actions.
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _dirty ? HudTheme.cyan : Colors.white24,
+                    foregroundColor: HudTheme.background,
+                  ),
+                  onPressed: (_dirty && _error == null) ? _save : null,
+                  icon: const Icon(Icons.save_outlined, size: 16),
+                  label: const Text('Save'),
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: HudTheme.cyanGlow,
+                    side: BorderSide(
+                      color: HudTheme.cyan.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  onPressed: widget.onEditWithAi,
+                  icon: const Icon(Icons.auto_awesome, size: 16),
+                  label: const Text('Edit with AI'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
