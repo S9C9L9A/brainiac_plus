@@ -66,6 +66,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
     _tabs.animateTo(1); // jump to the Console
   }
 
+  /// Launches the already-built artifact for the selected target, no rebuild.
+  void _fastLaunch() {
+    final command = ProjectRunner.fastLaunchCommand(project.path, _target);
+    if (command == null) return;
+    ref.read(projectRunProvider(project.path).notifier).start(command);
+    _tabs.animateTo(1);
+  }
+
   void _stop() => ref.read(projectRunProvider(project.path).notifier).stop();
 
   @override
@@ -190,25 +198,34 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
               ),
             ),
           ),
-          running
-              ? ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: HudTheme.danger,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: _stop,
-                  icon: const Icon(Icons.stop_rounded, size: 18),
-                  label: const Text('Stop'),
-                )
-              : ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4ADE80),
-                    foregroundColor: HudTheme.background,
-                  ),
-                  onPressed: _run,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                  label: const Text('Run'),
-                ),
+          if (running)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: HudTheme.danger,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: _stop,
+              icon: const Icon(Icons.stop_rounded, size: 18),
+              label: const Text('Stop'),
+            )
+          else ...[
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4ADE80),
+                foregroundColor: HudTheme.background,
+              ),
+              onPressed: _run,
+              icon: const Icon(Icons.play_arrow_rounded, size: 18),
+              label: const Text('Run'),
+            ),
+            // Fast launch: opens the already-built artifact (no rebuild). The
+            // icon reflects the selected target so it's clear where it opens.
+            _FastLaunchButton(
+              target: _target,
+              available: ProjectRunner.canFastLaunch(project.path, _target),
+              onPressed: _fastLaunch,
+            ),
+          ],
           if (widget.onWorkInChat != null)
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
@@ -248,6 +265,44 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Fast-launch control: opens the already-built app for [target] with no
+/// rebuild. Its icon identifies the environment; disabled (with a hint) when
+/// nothing is built for that target yet.
+class _FastLaunchButton extends StatelessWidget {
+  final RunTarget target;
+  final bool available;
+  final VoidCallback onPressed;
+
+  const _FastLaunchButton({
+    required this.target,
+    required this.available,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: available ? HudTheme.cyanGlow : Colors.white38,
+        side: BorderSide(
+          color: (available ? HudTheme.cyan : Colors.white24).withValues(
+            alpha: 0.5,
+          ),
+        ),
+      ),
+      onPressed: available ? onPressed : null,
+      icon: Icon(target.icon, size: 16),
+      label: const Text('Launch (fast)'),
+    );
+    return Tooltip(
+      message: available
+          ? 'Launch the built ${target.label} app instantly'
+          : 'No ${target.label} build yet — press Run first to build it',
+      child: button,
     );
   }
 }

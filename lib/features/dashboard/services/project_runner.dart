@@ -62,4 +62,69 @@ class ProjectRunner {
     }
     return 'cd "$projectPath" && exec dart run';
   }
+
+  /// Path to an already-built artifact for [target], or null when the project
+  /// hasn't been built for it yet.
+  ///   Linux  → the bundle executable
+  ///   Web    → build/web (a served directory)
+  ///   Android→ the flutter-apk output
+  static String? builtArtifact(String projectPath, RunTarget target) {
+    switch (target) {
+      case RunTarget.linux:
+        return _linuxExecutable(projectPath);
+      case RunTarget.web:
+        final index = File('$projectPath/build/web/index.html');
+        return index.existsSync() ? '$projectPath/build/web' : null;
+      case RunTarget.android:
+        for (final apk in ['app-release.apk', 'app-debug.apk']) {
+          final f = File('$projectPath/build/app/outputs/flutter-apk/$apk');
+          if (f.existsSync()) return f.path;
+        }
+        return null;
+    }
+  }
+
+  /// True when a fast (no-rebuild) launch is possible for [target].
+  static bool canFastLaunch(String projectPath, RunTarget target) =>
+      builtArtifact(projectPath, target) != null;
+
+  /// Command that launches the already-built artifact for [target] without
+  /// recompiling, or null when nothing is built. Runs in the project console.
+  static String? fastLaunchCommand(String projectPath, RunTarget target) {
+    final artifact = builtArtifact(projectPath, target);
+    if (artifact == null) return null;
+
+    switch (target) {
+      case RunTarget.linux:
+        final dir = File(artifact).parent.path;
+        final name = artifact.split('/').where((s) => s.isNotEmpty).last;
+        return 'cd "$dir" && exec "./$name"';
+      case RunTarget.web:
+        // Serve the built output and open the browser at it.
+        const port = 8091;
+        return 'cd "$artifact" && '
+            '(sleep 1 && xdg-open "http://localhost:$port" >/dev/null 2>&1 &) && '
+            'exec python3 -m http.server $port';
+      case RunTarget.android:
+        // Install the APK on the connected device.
+        return 'adb install -r "$artifact"';
+    }
+  }
+
+  /// Executable in the Linux release/debug bundle, or null.
+  static String? _linuxExecutable(String projectPath) {
+    for (final mode in ['release', 'debug']) {
+      final bundle = Directory('$projectPath/build/linux/x64/$mode/bundle');
+      if (!bundle.existsSync()) continue;
+      try {
+        for (final entity in bundle.listSync()) {
+          if (entity is! File || entity.path.endsWith('.so')) continue;
+          if (entity.statSync().modeString().contains('x')) return entity.path;
+        }
+      } catch (_) {
+        // ignore unreadable bundle dirs
+      }
+    }
+    return null;
+  }
 }

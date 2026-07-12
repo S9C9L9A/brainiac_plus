@@ -83,6 +83,41 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('Launch (fast) is disabled without a build, enabled with one', (
+    tester,
+  ) async {
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+
+    Future<void> pump() => tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+
+    await pump();
+    await tester.pump();
+    final fast = find.widgetWithText(OutlinedButton, 'Launch (fast)');
+    expect(fast, findsOneWidget);
+    expect(tester.widget<OutlinedButton>(fast).onPressed, isNull); // disabled
+
+    // Add a built Linux bundle → the button enables.
+    final bundle = Directory('${proj.path}/build/linux/x64/debug/bundle')
+      ..createSync(recursive: true);
+    final exe = File('${bundle.path}/demo')..writeAsStringSync('bin');
+    Process.runSync('chmod', ['+x', exe.path]);
+
+    await pump();
+    await tester.pump();
+    expect(tester.widget<OutlinedButton>(fast).onPressed, isNotNull); // enabled
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the work-in-chat button invokes the callback', (tester) async {
     var worked = false;
     final project = WorkspaceProject(
