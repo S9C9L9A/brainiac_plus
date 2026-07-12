@@ -61,54 +61,64 @@ class AgenticRunner {
     this.projectContext,
   }) : parser = parser ?? ToolCallParser();
 
-  /// System prompt teaching the tool protocol. Kept explicit so smaller local
-  /// models still emit parseable blocks.
-  static const systemPrompt = '''
+  /// Base tool protocol, shared by both modes.
+  static const _toolProtocol = '''
 You are BrainiacPlus, an autonomous AI developer operating the user's machine.
 You do not merely describe work — you perform it, one step at a time.
 
-To act, emit a fenced block exactly like this (one JSON object per block):
+Tools — emit a fenced block, one JSON object per block:
 ```tool
-{"tool": "write_file", "path": "relative/path.dart", "content": "file contents"}
+{"tool": "read_file", "path": "relative/path.dart"}
 ```
 ```tool
-{"tool": "run", "command": "a shell command"}
+{"tool": "write_file", "path": "relative/path.dart", "content": "full new file contents"}
+```
+```tool
+{"tool": "run", "command": "a one-shot shell command"}
 ```
 ```tool
 {"tool": "fetch", "url": "https://example.com"}
 ```
-Use `fetch` to read documentation, APIs or any page from the internet
-before acting — you have live web access.
 When the task is fully complete, finish with:
 ```tool
 {"tool": "done", "summary": "what you accomplished"}
 ```
 
-You work inside a clean, empty sandbox directory. It is NOT an existing
-project — there is no pubspec, no lib/main.dart, nothing to modify.
-
 Rules:
-- To build an app, create it in its OWN new subfolder (e.g. "rainbow_app/")
-  and write every file it needs from scratch. Never assume a file exists.
-- Paths are relative to the sandbox; never write outside it, and never
-  target project files like pubspec.yaml or lib/main.dart.
-- Take ONE step per message, then wait for the result before the next.
-- After each command you receive its output; use it to decide what to do.
-- Do NOT run long-running or interactive commands (servers, "flutter run",
-  file watchers) — they never return. Prefer one-shot commands that finish.
-- If you only need to answer a question, reply in plain text with no tool block.
-''';
+- Take ONE step per message, then wait for its result before the next.
+- write_file replaces the WHOLE file — include the complete new contents.
+- Use `fetch` for docs/APIs from the internet (live web access).
+- Do NOT run long-running/interactive commands (servers, "flutter run",
+  watchers) — they never return. Prefer commands that finish.
+- Plain question? Reply in plain text with no tool block.''';
+
+  /// Sandbox mode — building fresh apps.
+  static const _sandboxRules = '''
+
+You work inside a clean, empty sandbox. To build an app, create it in its
+own new subfolder and write every file from scratch.''';
+
+  /// Full sandbox-mode prompt (no active project). Public for reference/tests.
+  static const systemPrompt = '$_toolProtocol$_sandboxRules';
 
   Future<AgentRunResult> run(
     String userRequest, {
     void Function(AgentStep step)? onStep,
+    List<AgentTurn> history = const [],
   }) async {
+    // In project mode the workspace is an existing codebase, not an empty
+    // sandbox — read files before changing them.
     final system = projectContext == null
         ? systemPrompt
-        : '$systemPrompt\n\nPROJECT CONTEXT (you are working inside this '
-              'project; you MAY edit its existing files):\n$projectContext';
+        : '$_toolProtocol\n\nYou are working INSIDE an existing project. Its '
+              'files already exist — use read_file to inspect a file before '
+              'you write_file to change it. Paths are relative to the project '
+              'root.\n\nPROJECT CONTEXT:\n$projectContext';
     final conversation = <AgentTurn>[
       AgentTurn('system', system),
+      // Prior turns give the assistant memory of what it already did, so
+      // follow-ups ("show me what you changed") have context.
+      ...history,
       AgentTurn('user', userRequest),
     ];
     final steps = <AgentStep>[];

@@ -66,6 +66,8 @@ class AgentToolExecutor {
     switch (call.tool) {
       case ToolType.writeFile:
         return _writeFile(call);
+      case ToolType.readFile:
+        return _readFile(call);
       case ToolType.run:
         return _runCommand(call);
       case ToolType.fetch:
@@ -142,6 +144,34 @@ class AgentToolExecutor {
       );
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Command failed: $e');
+    }
+  }
+
+  Future<ToolResult> _readFile(AgentToolCall call) async {
+    final rel = call.path?.trim();
+    if (rel == null || rel.isEmpty) {
+      return ToolResult(call: call, ok: false, output: 'Missing file path.');
+    }
+    final root = Directory(workspaceRoot).absolute.path;
+    final target = File('$root/$rel').absolute;
+    if (!_isInside(root, target.path)) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Refused: "$rel" is outside the workspace.',
+      );
+    }
+    if (!target.existsSync()) {
+      return ToolResult(call: call, ok: false, output: 'No such file: $rel');
+    }
+    try {
+      final content = target.readAsStringSync();
+      final out = content.length > _maxFetchChars
+          ? '${content.substring(0, _maxFetchChars)}\n…[truncated]'
+          : content;
+      return ToolResult(call: call, ok: true, output: 'Contents of $rel:\n$out');
+    } catch (e) {
+      return ToolResult(call: call, ok: false, output: 'Read failed: $e');
     }
   }
 

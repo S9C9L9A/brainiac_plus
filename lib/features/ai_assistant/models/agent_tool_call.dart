@@ -1,7 +1,7 @@
 /// Tools the local AI can invoke to actually get work done, rather than only
 /// describing it. Emitted by the model as ```tool JSON blocks and executed by
 /// [AgentToolExecutor].
-enum ToolType { writeFile, run, fetch, done, unknown }
+enum ToolType { writeFile, readFile, run, fetch, done, unknown }
 
 /// A single tool invocation parsed from the model's reply.
 class AgentToolCall {
@@ -35,6 +35,8 @@ class AgentToolCall {
     switch (name) {
       case 'write_file':
         return ToolType.writeFile;
+      case 'read_file':
+        return ToolType.readFile;
       case 'run':
         return ToolType.run;
       case 'fetch':

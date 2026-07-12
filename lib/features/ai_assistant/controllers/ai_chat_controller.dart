@@ -3,6 +3,7 @@ import 'dart:math' show min;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/ai_message.dart';
 import '../models/agent_task.dart';
+import '../models/agent_tool_call.dart';
 import '../../../core/services/ollama_service.dart';
 import '../../../core/platform/shell_service.dart';
 import '../services/agent_tool_executor.dart';
@@ -215,6 +216,10 @@ class AiChatController extends StateNotifier<AiChatState> {
     _initialize();
   }
 
+  /// Rolling conversation the agent sees across turns, so follow-ups like
+  /// "show me what you changed" have the context of the prior work.
+  final List<AgentTurn> _agentHistory = [];
+
   /// Whether the assistant can execute tasks, not just chat about them.
   bool get agentEnabled => agentRunner != null;
 
@@ -273,12 +278,17 @@ class AiChatController extends StateNotifier<AiChatState> {
       final taskId = 'task:${DateTime.now().millisecondsSinceEpoch}';
       final result = await runner.run(
         content,
+        history: List.unmodifiable(_agentHistory),
         onStep: (step) {
           state = state.copyWith(
             messages: [...state.messages, _stepMessage(step)],
           );
         },
       );
+
+      // Remember this turn so follow-ups ("show me what you changed") carry the
+      // context of the work just done, instead of starting cold each message.
+      _recordAgentTurn(content, result);
 
       // Persist what the agent did into the shared knowledge graph.
       onAgentRun?.call(taskId, content, result.steps);
@@ -321,6 +331,60 @@ class AiChatController extends StateNotifier<AiChatState> {
       agentId: 'action',
       intent: 'action',
     );
+  }
+
+  /// Appends the just-finished task to the rolling agent history: the user's
+  /// request plus a compact digest of what the agent actually did (files it
+  /// read/wrote, commands it ran, its own summary). The next message the user
+  /// sends is prepended with this, so "what did you change?" or "now add a
+  /// button to that file" resolves against real context.
+  ///
+  /// The digest is kept terse — the model doesn't need the full tool output
+  /// echoed back, only enough to know what state the workspace is in. History
+  /// is capped so a long session can't grow the prompt without bound.
+  void _recordAgentTurn(String request, AgentRunResult result) {
+    _agentHistory.add(AgentTurn('user', request));
+    _agentHistory.add(AgentTurn('assistant', _historyDigest(result)));
+    const maxTurns = 16; // 8 exchanges
+    if (_agentHistory.length > maxTurns) {
+      _agentHistory.removeRange(0, _agentHistory.length - maxTurns);
+    }
+  }
+
+  /// A short, model-facing recap of one run: which files it touched and its
+  /// closing summary. Not shown to the user — this is the agent's own memory.
+  String _historyDigest(AgentRunResult result) {
+    final wrote = <String>{};
+    final read = <String>{};
+    final ran = <String>[];
+    for (final step in result.steps) {
+      for (final r in step.results) {
+        if (!r.ok) continue;
+        switch (r.call.tool) {
+          case ToolType.writeFile:
+            if (r.call.path != null) wrote.add(r.call.path!);
+          case ToolType.readFile:
+            if (r.call.path != null) read.add(r.call.path!);
+          case ToolType.run:
+            if (r.call.command != null) ran.add(r.call.command!);
+          case ToolType.fetch:
+          case ToolType.done:
+          case ToolType.unknown:
+            break;
+        }
+      }
+    }
+    final buf = StringBuffer();
+    if (result.summary != null && result.summary!.trim().isNotEmpty) {
+      buf.writeln(result.summary!.trim());
+    }
+    if (wrote.isNotEmpty) buf.writeln('Wrote: ${wrote.join(', ')}');
+    if (read.isNotEmpty) buf.writeln('Read: ${read.join(', ')}');
+    if (ran.isNotEmpty) buf.writeln('Ran: ${ran.join('; ')}');
+    final text = buf.toString().trim();
+    return text.isEmpty
+        ? (result.completed ? 'Task completed.' : 'Task stopped, unfinished.')
+        : text;
   }
 
   /// Logs the query as soon as the pipeline has judged it — blocked
@@ -660,6 +724,7 @@ class AiChatController extends StateNotifier<AiChatState> {
 
   /// Clear chat history
   void clearChat() {
+    _agentHistory.clear();
     _initialize();
   }
 

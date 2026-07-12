@@ -76,6 +76,66 @@ void main() {
     },
   );
 
+  test('a follow-up task sees the previous task in its history, so the '
+      'agent remembers what it just did', () async {
+    final conversations = <List<AgentTurn>>[];
+    var i = 0;
+    final replies = [
+      'Creating.\n```tool\n{"tool":"write_file","path":"a/main.dart","content":"void main(){}"}\n```',
+      'Done.\n```tool\n{"tool":"done","summary":"Made the app"}\n```',
+      'Sure.\n```tool\n{"tool":"done","summary":"answered"}\n```',
+    ];
+    final runner = AgenticRunner(
+      chat: (conversation) async {
+        conversations.add(List.of(conversation));
+        return i < replies.length ? replies[i++] : 'stuck';
+      },
+      executor: AgentToolExecutor(
+        workspaceRoot: workspace.path,
+        runCommand: (cmd) async => 'ran: $cmd',
+      ),
+    );
+    final controller = buildController(runner);
+
+    await controller.sendAgentTask('crea una app');
+    await controller.sendAgentTask('cosa hai modificato?');
+
+    // The second task's first LLM call must carry the first task's memory:
+    // the user's original request and a digest naming the file it wrote.
+    final followUp = conversations.last;
+    final joined = followUp.map((t) => t.content).join('\n');
+    expect(joined, contains('crea una app'));
+    expect(joined, contains('a/main.dart'));
+    expect(followUp.last.content, 'cosa hai modificato?');
+  });
+
+  test(
+    'clearChat wipes the agent memory so the next task starts cold',
+    () async {
+      final conversations = <List<AgentTurn>>[];
+      final runner = AgenticRunner(
+        chat: (conversation) async {
+          conversations.add(List.of(conversation));
+          return 'Done.\n```tool\n{"tool":"done","summary":"ok"}\n```';
+        },
+        executor: AgentToolExecutor(
+          workspaceRoot: workspace.path,
+          runCommand: (cmd) async => '',
+        ),
+      );
+      final controller = buildController(runner);
+
+      await controller.sendAgentTask('first task');
+      controller.clearChat();
+      await controller.sendAgentTask('second task');
+
+      // After clearing, the second task's conversation is just system + request.
+      final second = conversations.last;
+      expect(second.where((t) => t.content.contains('first task')), isEmpty);
+      expect(second.last.content, 'second task');
+    },
+  );
+
   test('a blocked pipeline request never reaches the agent loop', () async {
     var chatCalls = 0;
     final runner = AgenticRunner(
