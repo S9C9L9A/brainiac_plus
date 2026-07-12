@@ -1,3 +1,5 @@
+import 'package:brainiac_plus/core/providers/inference_telemetry_provider.dart';
+import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controller.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/project_detail_provider.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/projects_provider.dart';
 import 'package:brainiac_plus/features/dashboard/services/workspace_scanner.dart';
@@ -11,6 +13,12 @@ void main() {
   testWidgets('ProjectsPanel lists built apps and opens a detail sheet', (
     tester,
   ) async {
+    // The detail screen embeds the live assistant — give it a desktop surface
+    // and silence its background pollers so the test is deterministic.
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -25,6 +33,13 @@ void main() {
             ],
           ),
           projectCommandRunnerProvider.overrideWithValue((cmd) async => ''),
+          ollamaAvailabilityProvider.overrideWith((ref) => false),
+          inferenceTelemetryProvider.overrideWith(
+            (ref) => InferenceTelemetryNotifier(
+              ref.watch(inferenceTelemetryServiceProvider),
+              pollInterval: null,
+            ),
+          ),
         ],
         child: const MaterialApp(home: Scaffold(body: ProjectsPanel())),
       ),
@@ -35,10 +50,13 @@ void main() {
     expect(find.text('rainbow_arc'), findsOneWidget);
 
     await tester.tap(find.text('rainbow_arc'));
-    await tester.pumpAndSettle();
-    // Navigates to the rich project detail screen, not a folder.
+    // Not pumpAndSettle: the assistant's ambient glow animation never settles.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    // Navigates to the rich project detail screen with the assistant embedded
+    // as the primary panel and the source map in the context rail.
     expect(find.text('SOURCE MAP'), findsOneWidget);
-    expect(find.text('Work in chat'), findsOneWidget);
+    expect(find.text('BrainiacPlus Assistant'), findsOneWidget);
   });
 
   testWidgets('ProjectsPanel shows an empty state with no apps', (

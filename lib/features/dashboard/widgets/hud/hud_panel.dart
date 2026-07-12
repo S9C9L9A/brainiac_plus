@@ -40,17 +40,25 @@ class HudPanel extends StatelessWidget {
             children: [
               Icon(icon, color: HudTheme.cyan.withValues(alpha: 0.8), size: 15),
               const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: HudTheme.cyan.withValues(alpha: 0.85),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
+              // Expanded (not a fixed Text + Spacer) so the header never
+              // overflows in a narrow panel — the title ellipsizes instead.
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: HudTheme.cyan.withValues(alpha: 0.85),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
-              const Spacer(),
-              ?trailing,
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                Flexible(child: trailing!),
+              ],
             ],
           ),
           const SizedBox(height: 8),

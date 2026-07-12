@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:brainiac_plus/core/providers/inference_telemetry_provider.dart';
+import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controller.dart';
 import 'package:brainiac_plus/features/dashboard/controllers/project_detail_provider.dart';
 import 'package:brainiac_plus/features/dashboard/screens/project_detail_screen.dart';
 import 'package:brainiac_plus/features/dashboard/services/workspace_scanner.dart';
@@ -7,8 +9,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// The project screen now embeds the live assistant. Silence its background
+// pollers (Ollama HTTP check, telemetry timer) so widget tests stay
+// deterministic and leave no pending timers.
 final _fakeGit = <Override>[
   projectCommandRunnerProvider.overrideWithValue((cmd) async => ''),
+  ollamaAvailabilityProvider.overrideWith((ref) => false),
+  inferenceTelemetryProvider.overrideWith(
+    (ref) => InferenceTelemetryNotifier(
+      ref.watch(inferenceTelemetryServiceProvider),
+      pollInterval: null,
+    ),
+  ),
 ];
 
 void main() {
@@ -25,6 +37,12 @@ void main() {
   testWidgets('shows the project name, source map and git sections', (
     tester,
   ) async {
+    // Wide surface so the context rail (source map + git) is shown inline
+    // beside the assistant, which is the primary panel here.
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final project = WorkspaceProject(
       name: 'rainbow_arc',
       path: proj.path,
@@ -50,6 +68,29 @@ void main() {
     expect(find.text('Web'), findsOneWidget);
     expect(find.text('Android'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Run'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the assistant is embedded as the primary panel (no FAB)', (
+    tester,
+  ) async {
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    // The assistant panel is on screen, and the old floating button is gone.
+    expect(find.text('BrainiacPlus Assistant'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
   });
@@ -85,6 +126,12 @@ void main() {
   testWidgets('the console dock reveals the log when its bar is tapped', (
     tester,
   ) async {
+    // A realistic desktop surface: the embedded assistant plus an open console
+    // need vertical room (the default 600px is shorter than any real window).
+    tester.view.physicalSize = const Size(1200, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final project = WorkspaceProject(
       name: 'demo',
       path: proj.path,
@@ -102,7 +149,10 @@ void main() {
     expect(find.text(hint), findsNothing); // collapsed
 
     await tester.tap(find.text('CONSOLE'));
-    await tester.pumpAndSettle();
+    // Not pumpAndSettle: the assistant's ambient glow animation repeats
+    // forever, so the tree never "settles" — pump past the expand animation.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 250));
     expect(find.text(hint), findsOneWidget); // expanded
 
     await tester.pumpWidget(const SizedBox());
@@ -176,30 +226,33 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('the work-in-chat button invokes the callback', (tester) async {
-    var worked = false;
+  testWidgets('the context toggle hides the rail for a focused chat', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     final project = WorkspaceProject(
       name: 'demo',
       path: proj.path,
       hasLib: true,
     );
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: _fakeGit,
-        child: MaterialApp(
-          home: ProjectDetailScreen(
-            project: project,
-            onWorkInChat: (_) => worked = true,
-          ),
-        ),
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
       ),
     );
     await tester.pump();
 
-    await tester.tap(find.text('Work in chat'));
+    // Context visible inline by default…
+    expect(find.text('SOURCE MAP'), findsOneWidget);
+    // …tap the header toggle to hide it (focus mode).
+    await tester.tap(find.byTooltip('Hide project context'));
     await tester.pump();
+    expect(find.text('SOURCE MAP'), findsNothing);
 
-    expect(worked, isTrue);
+    await tester.pumpWidget(const SizedBox());
   });
 }

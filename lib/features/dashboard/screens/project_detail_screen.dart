@@ -46,38 +46,47 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   RunTarget _target = RunTarget.linux;
   bool _consoleOpen = false;
 
+  /// Desktop: whether the context rail (source map + git) is shown inline.
+  bool _railOpen = true;
+
+  /// Narrow screens: whether the context overlay drawer is open.
+  bool _drawerOpen = false;
+
   /// The file node currently previewed in the side panel, if any.
   GraphNode? _selectedFile;
 
   WorkspaceProject get project => widget.project;
 
-  /// Opens the project-scoped assistant chat as a bottom sheet. The agent is
-  /// already briefed on the project (see agentRunnerProvider projectContext).
-  void _openChat() {
-    ref.read(activeProjectProvider.notifier).state = project.path;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FractionallySizedBox(
-        heightFactor: 0.85,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: const AiChatPanel(),
-        ),
-      ),
-    );
+  /// Below this width the context rail moves to an overlay drawer so the chat
+  /// keeps the full width — it's the primary surface here.
+  static const _wideBreakpoint = 980.0;
+
+  bool get _isWide => MediaQuery.of(context).size.width >= _wideBreakpoint;
+
+  /// Toggles the project context — inline rail on desktop, overlay drawer on
+  /// narrow screens — so the assistant can go full-width for focused work.
+  void _toggleContext() {
+    setState(() {
+      if (_isWide) {
+        _railOpen = !_railOpen;
+      } else {
+        _drawerOpen = !_drawerOpen;
+      }
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    if (widget.autoRunTarget != null) {
-      _target = widget.autoRunTarget!;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _run());
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Scope the always-present assistant to this project: its file/command
+      // tools and briefing now target this folder.
+      ref.read(activeProjectProvider.notifier).state = project.path;
+      if (widget.autoRunTarget != null) {
+        _target = widget.autoRunTarget!;
+        _run();
+      }
+    });
   }
 
   void _run() {
@@ -99,26 +108,20 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final run = ref.watch(projectRunProvider(project.path));
+    final wide = _isWide;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: HudTheme.cyan,
-        foregroundColor: HudTheme.background,
-        onPressed: _openChat,
-        icon: const Icon(Icons.auto_awesome),
-        label: const Text('Assistant'),
-      ),
       body: HudBackground(
         child: SafeArea(
           child: Stack(
             children: [
               Column(
                 children: [
-                  _header(),
+                  _header(wide),
                   _actionBar(run.running),
-                  // One page: content fills the space, the console docks at
-                  // the bottom and expands/collapses on a click.
-                  Expanded(child: _body()),
+                  // The assistant is the primary surface; project context sits
+                  // in a collapsible rail beside it, the console docks below.
+                  Expanded(child: _workspace(wide)),
                   _ConsoleDock(
                     open: _consoleOpen,
                     running: run.running,
@@ -133,6 +136,28 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   ),
                 ],
               ),
+              // Narrow screens: context as a right-side overlay drawer.
+              if (!wide && _drawerOpen)
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _drawerOpen = false),
+                          child: Container(color: Colors.black54),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 340,
+                        child: Container(
+                          color: HudTheme.background,
+                          padding: const EdgeInsets.all(12),
+                          child: _contextRail(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // Code preview/editor docks on the right when a node is tapped.
               if (_selectedFile != null)
                 Positioned.fill(
@@ -149,10 +174,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                         child: _CodeSidePanel(
                           node: _selectedFile!,
                           onClose: () => setState(() => _selectedFile = null),
-                          onEditWithAi: () {
-                            setState(() => _selectedFile = null);
-                            _openChat();
-                          },
+                          // The assistant is already on screen — just close the
+                          // preview; the file can be @mentioned in the chat.
+                          onEditWithAi: () =>
+                              setState(() => _selectedFile = null),
                         ),
                       ),
                     ],
@@ -165,68 +190,75 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     );
   }
 
-  Widget _body() {
+  /// The working area: assistant panel (primary) + optional context rail.
+  Widget _workspace(bool wide) {
+    final chat = Padding(
+      padding: EdgeInsets.fromLTRB(16, 4, wide && _railOpen ? 8 : 16, 8),
+      child: const AiChatPanel(),
+    );
+
+    if (!wide || !_railOpen) {
+      // Narrow, or focus mode: the assistant takes the whole width.
+      return chat;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: chat),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 4, 16, 8),
+          child: SizedBox(width: 360, child: _contextRail()),
+        ),
+      ],
+    );
+  }
+
+  /// Project context: the source-map constellation over the git history.
+  Widget _contextRail() {
     final graph = ref.watch(projectGraphProvider(project.path));
     final constellation = GraphConstellation(
       graph: graph,
       selectedNodeId: _selectedFile?.id,
       onNodeTap: (node) {
-        // Only file nodes carry a path to preview.
         if (node.type == NodeType.file && node.props['path'] != null) {
           setState(() => _selectedFile = node);
         }
       },
     );
-    final graphPanel = HudPanel(
-      title: 'SOURCE MAP',
-      icon: Icons.hub_outlined,
-      trailing: Text(
-        'tap a file to open it',
-        style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.35),
-          fontSize: 10,
-        ),
-      ),
-      expandChild: true,
-      child: constellation,
-    );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 860) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            children: [
-              _GitSection(path: project.path),
-              const SizedBox(height: 16),
-              SizedBox(height: 340, child: graphPanel),
-            ],
-          );
-        }
-        // Desktop: git rail on the left, source map as the hero on the right.
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                width: 340,
-                child: SingleChildScrollView(
-                  child: _GitSection(path: project.path),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 3,
+          child: HudPanel(
+            title: 'SOURCE MAP',
+            icon: Icons.hub_outlined,
+            trailing: Text(
+              'tap a file to open it',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.35),
+                fontSize: 10,
               ),
-              const SizedBox(width: 16),
-              Expanded(child: graphPanel),
-            ],
+            ),
+            expandChild: true,
+            child: constellation,
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(child: _GitSection(path: project.path)),
+        ),
+      ],
     );
   }
 
-  Widget _header() {
+  Widget _header(bool wide) {
+    final contextShown = wide ? _railOpen : _drawerOpen;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       child: Row(
         children: [
           IconButton(
@@ -261,6 +293,22 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          // Toggle the project context so the assistant can fill the width.
+          IconButton(
+            tooltip: contextShown
+                ? 'Hide project context'
+                : 'Show project context',
+            onPressed: _toggleContext,
+            icon: Icon(
+              contextShown
+                  ? Icons.vertical_split
+                  : Icons.vertical_split_outlined,
+              color: contextShown
+                  ? HudTheme.cyanGlow
+                  : Colors.white.withValues(alpha: 0.55),
+              size: 20,
             ),
           ),
         ],
@@ -332,16 +380,6 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
               onPressed: _fastLaunch,
             ),
           ],
-          if (widget.onWorkInChat != null)
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () {
-                widget.onWorkInChat!(project);
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.auto_awesome, size: 16),
-              label: const Text('Work in chat'),
-            ),
           PopupMenuButton<String>(
             tooltip: 'More',
             color: HudTheme.panel,

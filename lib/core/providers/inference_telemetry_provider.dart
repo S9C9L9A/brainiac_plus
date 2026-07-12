@@ -12,13 +12,21 @@ final inferenceTelemetryServiceProvider = Provider<InferenceTelemetryService>(
 /// Polls the inference server every 3 s for live throughput. State is null
 /// when the server is unreachable or exposes no metrics, so any UI can simply
 /// hide its telemetry badge instead of showing a broken value.
+///
+/// [pollInterval] can be set to null to disable polling entirely — used by
+/// widget tests so the embedded chat doesn't leave a pending timer.
 class InferenceTelemetryNotifier extends StateNotifier<InferenceTelemetry?> {
   final InferenceTelemetryService _service;
   Timer? _timer;
 
-  InferenceTelemetryNotifier(this._service) : super(null) {
-    _load();
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _load());
+  InferenceTelemetryNotifier(
+    this._service, {
+    Duration? pollInterval = const Duration(seconds: 3),
+  }) : super(null) {
+    if (pollInterval != null) {
+      _load();
+      _timer = Timer.periodic(pollInterval, (_) => _load());
+    }
   }
 
   Future<void> _load() async {
