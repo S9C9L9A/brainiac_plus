@@ -11,10 +11,10 @@ class AgentProfile {
     required this.id,
     required this.name,
     required this.description,
-    required this.domainPaths,
-    required this.keywords,
-    required this.allowedPaths,
-    required this.systemPrompt,
+    this.domainPaths = const [],
+    this.keywords = const [],
+    this.allowedPaths = const [],
+    this.systemPrompt = '',
   });
 
   bool matches(String text) {

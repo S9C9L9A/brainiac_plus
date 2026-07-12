@@ -169,7 +169,11 @@ class AgentToolExecutor {
       final out = content.length > _maxFetchChars
           ? '${content.substring(0, _maxFetchChars)}\n…[truncated]'
           : content;
-      return ToolResult(call: call, ok: true, output: 'Contents of $rel:\n$out');
+      return ToolResult(
+        call: call,
+        ok: true,
+        output: 'Contents of $rel:\n$out',
+      );
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Read failed: $e');
     }

@@ -182,7 +182,8 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
                 onStateAction: _executeStateAction,
               ),
             ChatInputBar(
-              onSend: (text) {
+              onSend: (composition) {
+                final text = composition.toPrompt();
                 if (_agentMode && chatController.agentEnabled) {
                   chatController.sendAgentTask(text);
                 } else {
