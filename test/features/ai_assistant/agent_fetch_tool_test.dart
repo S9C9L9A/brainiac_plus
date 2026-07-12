@@ -118,4 +118,44 @@ void main() {
       expect(r.output.toLowerCase(), contains('no results'));
     });
   });
+
+  group('ToolCallParser — status', () {
+    test('parses a status tool call with no args', () {
+      final calls = ToolCallParser().parse('```tool\n{"tool":"status"}\n```');
+      expect(calls.single.tool, ToolType.status);
+    });
+  });
+
+  group('AgentToolExecutor — status', () {
+    test('returns the probe output', () async {
+      final e = AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+        statusProbe: () async => 'GPU busy 42%, 34 tok/s',
+      );
+      final r = await e.execute(const AgentToolCall(tool: ToolType.status));
+      expect(r.ok, isTrue);
+      expect(r.output, contains('34 tok/s'));
+    });
+
+    test('reports when status is unavailable', () async {
+      final r = await AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+      ).execute(const AgentToolCall(tool: ToolType.status));
+      expect(r.ok, isFalse);
+      expect(r.output.toLowerCase(), contains('not available'));
+    });
+
+    test('a throwing probe is reported, not propagated', () async {
+      final e = AgentToolExecutor(
+        workspaceRoot: '/tmp',
+        runCommand: (_) async => '',
+        statusProbe: () async => throw StateError('sysfs gone'),
+      );
+      final r = await e.execute(const AgentToolCall(tool: ToolType.status));
+      expect(r.ok, isFalse);
+      expect(r.output, contains('failed'));
+    });
+  });
 }

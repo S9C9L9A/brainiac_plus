@@ -55,6 +55,7 @@ class GraphRecorder {
           case ToolType.readFile:
           case ToolType.fetch:
           case ToolType.search:
+          case ToolType.status:
           case ToolType.done:
           case ToolType.unknown:
             break;

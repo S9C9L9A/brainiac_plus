@@ -16,6 +16,10 @@ typedef UrlFetcher = Future<String> Function(String url);
 /// Injectable so the executor stays independent of the search backend.
 typedef WebSearcher = Future<String> Function(String query);
 
+/// Reports the machine's live state (GPU, VRAM, inference tok/s, LLM up) as a
+/// short model-readable string, so the agent can reason about its own hardware.
+typedef StatusProbe = Future<String> Function();
+
 /// Executes [AgentToolCall]s produced by the local AI, turning the assistant
 /// from a talker into a doer while keeping hard safety rails:
 ///
@@ -45,16 +49,21 @@ class AgentToolExecutor {
   /// Runs web searches for the `search` tool; null disables search.
   final WebSearcher? _search;
 
+  /// Probes machine state for the `status` tool; null disables it.
+  final StatusProbe? _status;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
     UrlFetcher? fetchUrl,
     WebSearcher? webSearch,
+    StatusProbe? statusProbe,
     this.commandTimeout = const Duration(seconds: 120),
     this.lockedFiles = defaultLockedFiles,
   }) : _run = runCommand,
        _fetch = fetchUrl,
-       _search = webSearch;
+       _search = webSearch,
+       _status = statusProbe;
 
   /// Cap on fetched body size fed back to the model.
   static const _maxFetchChars = 8000;
@@ -83,6 +92,8 @@ class AgentToolExecutor {
         return _fetchUrl(call);
       case ToolType.search:
         return _webSearch(call);
+      case ToolType.status:
+        return _systemStatus(call);
       case ToolType.done:
         return ToolResult(
           call: call,
@@ -252,6 +263,37 @@ class AgentToolExecutor {
       );
     } catch (e) {
       return ToolResult(call: call, ok: false, output: 'Search failed: $e');
+    }
+  }
+
+  Future<ToolResult> _systemStatus(AgentToolCall call) async {
+    final probe = _status;
+    if (probe == null) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'System status is not available in this context.',
+      );
+    }
+    try {
+      final out = await probe().timeout(commandTimeout);
+      return ToolResult(
+        call: call,
+        ok: true,
+        output: out.isEmpty ? 'No status available.' : out,
+      );
+    } on TimeoutException {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Status probe timed out.',
+      );
+    } catch (e) {
+      return ToolResult(
+        call: call,
+        ok: false,
+        output: 'Status probe failed: $e',
+      );
     }
   }
 

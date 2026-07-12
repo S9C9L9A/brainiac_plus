@@ -5,6 +5,8 @@ import '../models/ai_message.dart';
 import '../models/agent_task.dart';
 import '../models/agent_tool_call.dart';
 import '../../../core/services/ollama_service.dart';
+import '../../../core/services/gpu_metrics_service.dart';
+import '../../../core/services/inference_telemetry_service.dart';
 import '../../../core/platform/shell_service.dart';
 import '../services/agent_tool_executor.dart';
 import '../../activity/controllers/activity_log_controller.dart';
@@ -92,6 +94,8 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
       // Live internet access: `fetch` a known URL, or `search` the web.
       fetchUrl: _fetchUrl,
       webSearch: _webSearch,
+      // Self-awareness: `status` reports live GPU / VRAM / inference speed.
+      statusProbe: _systemStatus,
       // Inside a user project, its own main.dart/pubspec are editable; the
       // BrainiacPlus locks only apply to the default sandbox.
       lockedFiles: activeProject != null
@@ -136,6 +140,39 @@ Future<String> _webSearch(String query) async {
       buf.writeln('  $s');
     }
   }
+  return buf.toString().trimRight();
+}
+
+/// Probes live machine state for the agent's `status` tool — the GPU it runs
+/// on and how fast the local model is generating — so the assistant can reason
+/// about its own hardware ("am I GPU-bound?", "why is this slow?").
+Future<String> _systemStatus() async {
+  final buf = StringBuffer('Machine status:\n');
+
+  final gpu = await GpuMetricsService().readPrimary();
+  if (gpu != null) {
+    final busy = gpu.busyPercent != null ? '${gpu.busyPercent}%' : 'n/a';
+    final vram = (gpu.vramUsedMB != null && gpu.vramTotalMB != null)
+        ? '${gpu.vramUsedMB}/${gpu.vramTotalMB} MB'
+        : 'n/a';
+    final temp = gpu.temperatureC != null
+        ? '${gpu.temperatureC!.toStringAsFixed(0)}°C'
+        : 'n/a';
+    buf.writeln('• GPU ${gpu.cardId}: busy $busy, VRAM $vram, temp $temp');
+  } else {
+    buf.writeln('• GPU: no supported GPU detected');
+  }
+
+  final infer = await InferenceTelemetryService().read();
+  if (infer?.predictedTokensPerSecond != null) {
+    buf.writeln(
+      '• Inference: ${infer!.predictedTokensPerSecond!.toStringAsFixed(1)} '
+      'tok/s${infer.isBusy ? ' (busy)' : ''}',
+    );
+  } else {
+    buf.writeln('• Inference: local LLM metrics unavailable');
+  }
+
   return buf.toString().trimRight();
 }
 
@@ -391,6 +428,7 @@ class AiChatController extends StateNotifier<AiChatState> {
           case ToolType.search:
             if (r.call.query != null) searched.add(r.call.query!);
           case ToolType.fetch:
+          case ToolType.status:
           case ToolType.done:
           case ToolType.unknown:
             break;
