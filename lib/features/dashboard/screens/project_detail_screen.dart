@@ -12,9 +12,9 @@ import '../widgets/hud/hud_background.dart';
 import '../widgets/hud/hud_panel.dart';
 import '../widgets/hud/hud_theme.dart';
 
-/// Rich project view: an Overview tab (source-map constellation + git history)
-/// and a Console tab with a live run log. A target selector chooses whether to
-/// run on Linux, Web or Android.
+/// One-page project workspace: the source-map constellation and git history
+/// on top, with a collapsible run console docked at the bottom. A target
+/// selector chooses whether to run on Linux, Web or Android.
 class ProjectDetailScreen extends ConsumerStatefulWidget {
   final WorkspaceProject project;
 
@@ -37,33 +37,25 @@ class ProjectDetailScreen extends ConsumerStatefulWidget {
       _ProjectDetailScreenState();
 }
 
-class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
+class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   RunTarget _target = RunTarget.linux;
+  bool _consoleOpen = false;
 
   WorkspaceProject get project => widget.project;
 
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
     if (widget.autoRunTarget != null) {
       _target = widget.autoRunTarget!;
       WidgetsBinding.instance.addPostFrameCallback((_) => _run());
     }
   }
 
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
   void _run() {
     final command = ProjectRunner.commandFor(project.path, target: _target);
     ref.read(projectRunProvider(project.path).notifier).start(command);
-    _tabs.animateTo(1); // jump to the Console
+    setState(() => _consoleOpen = true);
   }
 
   /// Launches the already-built artifact for the selected target, no rebuild.
@@ -71,14 +63,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
     final command = ProjectRunner.fastLaunchCommand(project.path, _target);
     if (command == null) return;
     ref.read(projectRunProvider(project.path).notifier).start(command);
-    _tabs.animateTo(1);
+    setState(() => _consoleOpen = true);
   }
 
   void _stop() => ref.read(projectRunProvider(project.path).notifier).stop();
 
   @override
   Widget build(BuildContext context) {
-    final running = ref.watch(projectRunProvider(project.path)).running;
+    final run = ref.watch(projectRunProvider(project.path));
 
     return Scaffold(
       body: HudBackground(
@@ -86,35 +78,66 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
           child: Column(
             children: [
               _header(),
-              _actionBar(running),
-              TabBar(
-                controller: _tabs,
-                indicatorColor: HudTheme.cyan,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white54,
-                labelStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.5,
-                ),
-                tabs: const [
-                  Tab(text: 'OVERVIEW'),
-                  Tab(text: 'CONSOLE'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabs,
-                  children: [
-                    _overview(),
-                    _ConsoleTab(path: project.path),
-                  ],
-                ),
+              _actionBar(run.running),
+              // One page: overview fills the space, the console docks at the
+              // bottom and expands/collapses on a click.
+              Expanded(child: _body()),
+              _ConsoleDock(
+                open: _consoleOpen,
+                running: run.running,
+                hasOutput: run.output.isNotEmpty,
+                onToggle: () => setState(() => _consoleOpen = !_consoleOpen),
+                onStop: _stop,
+                onClear: () =>
+                    ref.read(projectRunProvider(project.path).notifier).clear(),
+                child: _ConsoleLog(path: project.path),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _body() {
+    final graph = ref.watch(projectGraphProvider(project.path));
+    final graphPanel = HudPanel(
+      title: 'SOURCE MAP',
+      icon: Icons.hub_outlined,
+      expandChild: true,
+      child: GraphConstellation(graph: graph),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 860) {
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            children: [
+              _GitSection(path: project.path),
+              const SizedBox(height: 16),
+              SizedBox(height: 340, child: graphPanel),
+            ],
+          );
+        }
+        // Desktop: git rail on the left, source map as the hero on the right.
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 340,
+                child: SingleChildScrollView(
+                  child: _GitSection(path: project.path),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(child: graphPanel),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -247,24 +270,137 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen>
       ),
     );
   }
+}
 
-  Widget _overview() {
-    final graph = ref.watch(projectGraphProvider(project.path));
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        _GitSection(path: project.path),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 340,
-          child: HudPanel(
-            title: 'SOURCE MAP',
-            icon: Icons.hub_outlined,
-            expandChild: true,
-            child: GraphConstellation(graph: graph),
-          ),
+/// IDE-style console dock: a slim toggle bar that expands/collapses the live
+/// run log with a click. Auto-opens when a run starts.
+class _ConsoleDock extends StatelessWidget {
+  final bool open;
+  final bool running;
+  final bool hasOutput;
+  final VoidCallback onToggle;
+  final VoidCallback onStop;
+  final VoidCallback onClear;
+  final Widget child;
+
+  const _ConsoleDock({
+    required this.open,
+    required this.running,
+    required this.hasOutput,
+    required this.onToggle,
+    required this.onStop,
+    required this.onClear,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: HudTheme.cyan.withValues(alpha: 0.18)),
         ),
-      ],
+        color: HudTheme.panel.withValues(alpha: 0.55),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.terminal,
+                    size: 15,
+                    color: HudTheme.cyan.withValues(alpha: 0.85),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'CONSOLE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: running ? HudTheme.cyan : Colors.white24,
+                      boxShadow: running
+                          ? [
+                              BoxShadow(
+                                color: HudTheme.cyan.withValues(alpha: 0.7),
+                                blurRadius: 8,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    running ? 'running' : 'idle',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      fontSize: 10,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (running)
+                    _barAction(
+                      Icons.stop_rounded,
+                      'Stop',
+                      HudTheme.danger,
+                      onStop,
+                    )
+                  else if (hasOutput)
+                    _barAction(
+                      Icons.clear_all,
+                      'Clear',
+                      Colors.white54,
+                      onClear,
+                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    open ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: open
+                ? SizedBox(height: 300, child: child)
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _barAction(
+    IconData icon,
+    String tooltip,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return IconButton(
+      icon: Icon(icon, size: 18, color: color),
+      tooltip: tooltip,
+      onPressed: onTap,
+      splashRadius: 16,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
     );
   }
 }
@@ -308,15 +444,16 @@ class _FastLaunchButton extends StatelessWidget {
 }
 
 /// Live run log for a project. Streams the process output and auto-scrolls.
-class _ConsoleTab extends ConsumerStatefulWidget {
+/// The header/controls live in the [_ConsoleDock] bar; this is just the log.
+class _ConsoleLog extends ConsumerStatefulWidget {
   final String path;
-  const _ConsoleTab({required this.path});
+  const _ConsoleLog({required this.path});
 
   @override
-  ConsumerState<_ConsoleTab> createState() => _ConsoleTabState();
+  ConsumerState<_ConsoleLog> createState() => _ConsoleLogState();
 }
 
-class _ConsoleTabState extends ConsumerState<_ConsoleTab> {
+class _ConsoleLogState extends ConsumerState<_ConsoleLog> {
   final _scroll = ScrollController();
 
   @override
@@ -336,96 +473,43 @@ class _ConsoleTabState extends ConsumerState<_ConsoleTab> {
       }
     });
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _statusDot(run.running),
-              const SizedBox(width: 8),
-              Text(
-                run.running ? 'RUNNING' : 'IDLE',
-                style: TextStyle(
-                  color: run.running ? HudTheme.cyan : Colors.white54,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
-                ),
-              ),
-              const Spacer(),
-              if (run.output.isNotEmpty && !run.running)
-                TextButton(
-                  onPressed: () => ref
-                      .read(projectRunProvider(widget.path).notifier)
-                      .clear(),
-                  style: TextButton.styleFrom(foregroundColor: Colors.white54),
-                  child: const Text('CLEAR', style: TextStyle(fontSize: 10)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: HudTheme.cyan.withValues(alpha: 0.15),
-                ),
-              ),
-              child: run.output.isEmpty
-                  ? Center(
-                      child: Text(
-                        run.running
-                            ? 'Starting…'
-                            : 'Press Run to launch this project\nand watch its log here.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 12,
-                          height: 1.6,
-                        ),
-                      ),
-                    )
-                  : SingleChildScrollView(
-                      controller: _scroll,
-                      child: SelectableText(
-                        run.output,
-                        style: const TextStyle(
-                          color: Color(0xFFB6F0C4),
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-        ],
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: HudTheme.cyan.withValues(alpha: 0.12)),
       ),
+      child: run.output.isEmpty
+          ? Center(
+              child: Text(
+                run.running
+                    ? 'Starting…'
+                    : 'Press Run to launch this project and watch its log here.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 12,
+                  height: 1.6,
+                ),
+              ),
+            )
+          : SingleChildScrollView(
+              controller: _scroll,
+              child: SelectableText(
+                run.output,
+                style: const TextStyle(
+                  color: Color(0xFFB6F0C4),
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+            ),
     );
   }
-
-  Widget _statusDot(bool running) => Container(
-    width: 9,
-    height: 9,
-    decoration: BoxDecoration(
-      color: running ? HudTheme.cyan : Colors.white24,
-      shape: BoxShape.circle,
-      boxShadow: running
-          ? [
-              BoxShadow(
-                color: HudTheme.cyan.withValues(alpha: 0.7),
-                blurRadius: 8,
-              ),
-            ]
-          : null,
-    ),
-  );
 }
 
 class _GitSection extends ConsumerWidget {

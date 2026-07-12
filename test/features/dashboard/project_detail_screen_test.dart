@@ -41,8 +41,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('rainbow_arc'), findsWidgets);
-    // Overview tab content + run controls.
-    expect(find.text('OVERVIEW'), findsOneWidget);
+    // One-page content + a collapsible console dock.
     expect(find.text('CONSOLE'), findsOneWidget);
     expect(find.text('SOURCE MAP'), findsOneWidget);
     expect(find.text('RECENT COMMITS'), findsOneWidget);
@@ -79,6 +78,32 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('SOURCE MAP'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the console dock reveals the log when its bar is tapped', (
+    tester,
+  ) async {
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    const hint = 'Press Run to launch this project and watch its log here.';
+    expect(find.text(hint), findsNothing); // collapsed
+
+    await tester.tap(find.text('CONSOLE'));
+    await tester.pumpAndSettle();
+    expect(find.text(hint), findsOneWidget); // expanded
 
     await tester.pumpWidget(const SizedBox());
   });

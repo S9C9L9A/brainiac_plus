@@ -64,7 +64,7 @@ void main() {
 
       final cmd = ProjectRunner.commandFor(proj.path);
       expect(cmd, contains('dart run'));
-      expect(cmd, isNot(contains('flutter')));
+      expect(cmd, isNot(contains('flutter run')));
     });
   });
 

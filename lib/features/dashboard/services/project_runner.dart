@@ -58,9 +58,36 @@ class ProjectRunner {
     // `exec` replaces the shell with the runner process, so stopping the
     // console (which kills the shell) actually kills flutter/dart too.
     if (isFlutterProject(content)) {
-      return 'cd "$projectPath" && exec flutter run -d ${target.deviceId}';
+      return _withFlutterPath(
+        'cd "$projectPath" && exec flutter run -d ${target.deviceId}',
+      );
     }
-    return 'cd "$projectPath" && exec dart run';
+    return _withFlutterPath('cd "$projectPath" && exec dart run');
+  }
+
+  /// Prepends the flutter bin to PATH when we can locate it, so `flutter`/
+  /// `dart` resolve even when the app was launched from a GUI session whose
+  /// PATH doesn't include the SDK (the cause of "command not found" / 127).
+  static String _withFlutterPath(String command) {
+    final dir = flutterBinDir();
+    return dir != null ? 'export PATH="$dir:\$PATH" && $command' : command;
+  }
+
+  /// Best-effort location of the Flutter SDK's bin directory, or null.
+  static String? flutterBinDir() {
+    final home = Platform.environment['HOME'] ?? '';
+    final candidates = [
+      '$home/flutter/bin',
+      '$home/development/flutter/bin',
+      '$home/snap/flutter/common/flutter/bin',
+      '$home/fvm/default/bin',
+      '/opt/flutter/bin',
+      '/usr/local/flutter/bin',
+    ];
+    for (final c in candidates) {
+      if (File('$c/flutter').existsSync()) return c;
+    }
+    return null;
   }
 
   /// Path to an already-built artifact for [target], or null when the project
