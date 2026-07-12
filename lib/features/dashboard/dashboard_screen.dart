@@ -9,6 +9,7 @@ import '../automation/screens/automation_main_screen.dart';
 import '../file_manager/file_manager_screen.dart';
 import '../settings/screens/modern_settings_screen.dart';
 import '../activity/recent_activity_screen.dart';
+import '../../routes/app_routes.dart';
 import 'widgets/hud/hud_background.dart';
 import 'widgets/hud/hud_theme.dart';
 import 'widgets/hud/jarvis_dashboard.dart';
@@ -227,6 +228,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.hub_outlined,
+              color: HudTheme.cyan.withValues(alpha: 0.8),
+            ),
+            tooltip: 'Knowledge graph',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.knowledgeGraph),
           ),
           IconButton(
             icon: Icon(

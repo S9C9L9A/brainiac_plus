@@ -4,6 +4,7 @@ import '../features/dashboard/screens/cpu_detail_screen.dart';
 import '../features/dashboard/screens/ram_detail_screen.dart';
 import '../features/dashboard/screens/disk_detail_screen.dart';
 import '../features/dashboard/screens/gpu_detail_screen.dart';
+import '../features/ai_assistant/knowledge/knowledge_graph_screen.dart';
 import '../features/terminal/terminal_screen.dart';
 import '../features/file_manager/file_manager_screen.dart';
 import '../features/packages/packages_screen.dart';
@@ -54,6 +55,9 @@ class AppRoutes {
 
   /// GPU detail screen
   static const String gpuDetail = '/gpu-detail';
+
+  /// Knowledge graph (agent memory) screen
+  static const String knowledgeGraph = '/knowledge-graph';
 
   // ========== FUTURE ROUTES (Placeholder) ==========
 
@@ -166,6 +170,7 @@ class AppRoutes {
       ramDetail: (context) => const RamDetailScreen(),
       diskDetail: (context) => const DiskDetailScreen(),
       gpuDetail: (context) => const GpuDetailScreen(),
+      knowledgeGraph: (context) => const KnowledgeGraphScreen(),
 
       // Onboarding
       setupWizard: (context) => const SetupWizardScreen(),
