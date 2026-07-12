@@ -7,6 +7,8 @@ import '../../controllers/gpu_metrics_provider.dart';
 import '../../controllers/system_metrics_provider.dart';
 import 'hud_ring_gauge.dart';
 import 'hud_theme.dart';
+import 'projects_panel.dart';
+import 'socials_panel.dart';
 
 /// The Jarvis-style command HUD: live system vitals as arc-reactor ring gauges
 /// over a technical grid, with a status ribbon and a telemetry strip. Tapping
@@ -27,7 +29,36 @@ class JarvisDashboard extends ConsumerWidget {
         _GaugeCluster(metrics: m, gpu: gpu),
         const SizedBox(height: 24),
         _TelemetryStrip(metrics: m, gpu: gpu),
+        const SizedBox(height: 20),
+        // Below the vitals: what the assistant has built and who it posts to.
+        const _PanelRow(),
       ],
+    );
+  }
+}
+
+/// Projects and socials, side by side on desktop and stacked when narrow.
+class _PanelRow extends StatelessWidget {
+  const _PanelRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 720) {
+          return const Column(
+            children: [ProjectsPanel(), SizedBox(height: 20), SocialsPanel()],
+          );
+        }
+        return const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: ProjectsPanel()),
+            SizedBox(width: 20),
+            Expanded(child: SocialsPanel()),
+          ],
+        );
+      },
     );
   }
 }
