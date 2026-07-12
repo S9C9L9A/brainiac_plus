@@ -1,18 +1,17 @@
 import 'package:brainiac_plus/features/dashboard/widgets/ai/ai_chat_fab.dart';
-import 'package:brainiac_plus/features/dashboard/widgets/metrics/compact_metrics_card.dart';
 import 'package:brainiac_plus/features/dashboard/widgets/navigation/floating_bottom_bar.dart';
-import 'package:brainiac_plus/features/dashboard/widgets/social_media/social_media_services_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/navigation/navigation_service.dart';
-import 'controllers/dashboard_customization_controller.dart';
-import 'controllers/social_media_controller.dart';
 import '../terminal/terminal_screen.dart';
 import '../automation/screens/automation_main_screen.dart';
 import '../file_manager/file_manager_screen.dart';
 import '../settings/screens/modern_settings_screen.dart';
 import '../activity/recent_activity_screen.dart';
+import 'widgets/hud/hud_background.dart';
+import 'widgets/hud/hud_theme.dart';
+import 'widgets/hud/jarvis_dashboard.dart';
 
 // Constant for bottom navigation bar height
 const double kBottomNavHeight = 100.0;
@@ -145,97 +144,96 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildDashboardContent() {
-    final customState = ref.watch(dashboardCustomizationProvider);
-    final socialMediaState = ref.watch(socialMediaServicesProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return SafeArea(
-      child: Column(
-        children: [
-          // Header
-          _buildHeader(isDark, customState),
-
-          // Scrollable content
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, kBottomNavHeight),
-              children: [
-                const SizedBox(height: 20),
-
-                // Compact Metrics Card
-                if (customState.layout.compactMetrics)
-                  const CompactMetricsCard(),
-
-                const SizedBox(height: 24),
-
-                // Social Media Services Section
-                if (socialMediaState.configuredServices.isNotEmpty) ...[
-                  SocialMediaServicesSection(
-                    services: socialMediaState.configuredServices,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // AI Chat Section (replacing Quick Actions)
-                // _buildSectionTitle('AI Assistant', isDark),
-                const SizedBox(height: 12),
-                // const IntegratedAIChat(),
-              ],
-            ),
-          ),
-        ],
+    // Jarvis-style command HUD: holographic vitals over a technical grid.
+    return HudBackground(
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            const Expanded(child: JarvisDashboard()),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(bool isDark, DashboardCustomizationState customState) {
+  Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         children: [
-          // App logo/icon
+          // Reactor-core mark.
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
                 colors: [
-                  Colors.purple.withValues(alpha: 0.3),
-                  Colors.blue.withValues(alpha: 0.3),
+                  HudTheme.cyanGlow.withValues(alpha: 0.4),
+                  HudTheme.panel,
                 ],
               ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              border: Border.all(color: HudTheme.cyan.withValues(alpha: 0.6)),
+              boxShadow: [
+                BoxShadow(
+                  color: HudTheme.cyan.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                ),
+              ],
             ),
-            child: const Icon(Icons.memory, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.blur_on,
+              color: HudTheme.cyanGlow,
+              size: 24,
+            ),
           ),
-
           const SizedBox(width: 16),
-
-          // Title
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'BrainiacPlus',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                Row(
+                  children: [
+                    const Text(
+                      'BRAINIAC',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'PLUS',
+                      style: TextStyle(
+                        color: HudTheme.cyan,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 4,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
-                  'Your AI Assistant',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  'SYSTEM COMMAND INTERFACE',
+                  style: TextStyle(
+                    color: HudTheme.cyan.withValues(alpha: 0.55),
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    letterSpacing: 2.5,
+                  ),
                 ),
               ],
             ),
           ),
-
-          // Activity button
           IconButton(
-            icon: const Icon(Icons.history, color: Colors.white),
+            icon: Icon(
+              Icons.history,
+              color: HudTheme.cyan.withValues(alpha: 0.8),
+            ),
+            tooltip: 'Activity log',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
