@@ -7,6 +7,7 @@ import '../../screens/project_detail_screen.dart';
 import '../../services/workspace_scanner.dart';
 import 'hud_panel.dart';
 import 'hud_theme.dart';
+import 'run_project.dart';
 
 /// Dashboard panel listing the apps the assistant has built in its workspace.
 /// Tapping one opens a HUD sheet with its details and an "open folder" action.
@@ -115,6 +116,19 @@ class _ProjectCard extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+            // Run without leaving the dashboard.
+            IconButton(
+              onPressed: () => runProject(context, project.path),
+              icon: const Icon(
+                Icons.play_arrow_rounded,
+                color: Color(0xFF4ADE80),
+                size: 22,
+              ),
+              tooltip: 'Run app',
+              splashRadius: 18,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
           ],
         ),

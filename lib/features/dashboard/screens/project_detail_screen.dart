@@ -10,6 +10,7 @@ import '../services/workspace_scanner.dart';
 import '../widgets/hud/hud_background.dart';
 import '../widgets/hud/hud_panel.dart';
 import '../widgets/hud/hud_theme.dart';
+import '../widgets/hud/run_project.dart';
 
 /// Rich project view: navigate the source as a constellation, read the recent
 /// git history and pending changes, and jump into working on it. Replaces the
@@ -134,7 +135,17 @@ class ProjectDetailScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Wrap(
         spacing: 12,
+        runSpacing: 8,
         children: [
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4ADE80),
+              foregroundColor: HudTheme.background,
+            ),
+            onPressed: () => runProject(context, project.path),
+            icon: const Icon(Icons.play_arrow_rounded, size: 18),
+            label: const Text('Run'),
+          ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: HudTheme.cyan.withValues(alpha: 0.9),
