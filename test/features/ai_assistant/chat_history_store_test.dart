@@ -87,4 +87,41 @@ void main() {
     expect(await file.exists(), isFalse);
     expect(await s.load(), isEmpty);
   });
+
+  group('chatHistoryFileName (per-project scoping)', () {
+    test('the global chat uses the base file name', () {
+      expect(chatHistoryFileName(null), 'chat_history.json');
+      expect(chatHistoryFileName('   '), 'chat_history.json');
+    });
+
+    test('a project file is keyed by folder name and is deterministic', () {
+      final a = chatHistoryFileName('/home/me/dev/rainbow_arc');
+      final b = chatHistoryFileName('/home/me/dev/rainbow_arc');
+      expect(a, b); // same path → same file across launches
+      expect(a, startsWith('chat_history_rainbow_arc_'));
+      expect(a, endsWith('.json'));
+    });
+
+    test('different projects get different files', () {
+      expect(
+        chatHistoryFileName('/home/me/a'),
+        isNot(chatHistoryFileName('/home/me/b')),
+      );
+    });
+
+    test('same folder name in different locations does not collide', () {
+      expect(
+        chatHistoryFileName('/home/me/x/app'),
+        isNot(chatHistoryFileName('/home/me/y/app')),
+      );
+    });
+
+    test('special characters in the folder name are sanitized', () {
+      final name = chatHistoryFileName('/tmp/my project (v2)!');
+      expect(
+        name,
+        matches(r'^chat_history_[A-Za-z0-9._-]+_[0-9a-f]{8}\.json$'),
+      );
+    });
+  });
 }

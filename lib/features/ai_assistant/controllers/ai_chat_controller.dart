@@ -217,11 +217,15 @@ final aiChatControllerProvider =
     });
 
 /// Persists the conversation to a JSON file in the app-support directory, so
-/// the chat survives app restarts.
+/// the chat survives app restarts. Scoped to the active project: each project
+/// keeps its own history, and the global chat keeps a separate one — switching
+/// context restores the right conversation instead of one shared log.
 final chatHistoryStoreProvider = Provider<ChatHistoryStore>((ref) {
+  final project = ref.watch(activeProjectProvider);
+  final fileName = chatHistoryFileName(project);
   return JsonFileChatHistoryStore(() async {
     final dir = await getApplicationSupportDirectory();
-    return File('${dir.path}/chat_history.json');
+    return File('${dir.path}/$fileName');
   });
 });
 

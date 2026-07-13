@@ -3,6 +3,37 @@ import 'dart:io';
 
 import '../models/ai_message.dart';
 
+/// The file name a conversation is persisted under, scoped to [projectPath].
+///
+/// The global (no-project) chat uses the base name; each project gets its own
+/// file keyed by a readable slug of its folder name plus a stable hash of the
+/// full path, so two projects — even two with the same folder name in
+/// different locations — never share a history.
+String chatHistoryFileName(String? projectPath) {
+  if (projectPath == null || projectPath.trim().isEmpty) {
+    return 'chat_history.json';
+  }
+  final segments = projectPath
+      .split(RegExp(r'[/\\]'))
+      .where((s) => s.isNotEmpty);
+  final name = segments.isEmpty ? 'project' : segments.last;
+  final slug = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  final hash = _fnv1a32(projectPath).toRadixString(16).padLeft(8, '0');
+  return 'chat_history_${slug}_$hash.json';
+}
+
+/// FNV-1a 32-bit hash — small, dependency-free, and deterministic across runs
+/// (unlike String.hashCode), so a project maps to the same file every launch.
+int _fnv1a32(String s) {
+  const prime = 0x01000193;
+  var hash = 0x811c9dc5;
+  for (final unit in s.codeUnits) {
+    hash = (hash ^ unit) & 0xFFFFFFFF;
+    hash = (hash * prime) & 0xFFFFFFFF;
+  }
+  return hash;
+}
+
 /// Persists the assistant conversation so it survives an app restart — the
 /// difference between a tool that forgets you every launch and one that feels
 /// like a continuous assistant.
