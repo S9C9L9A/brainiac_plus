@@ -91,8 +91,14 @@ When the task is fully complete, finish with:
 ```
 
 Rules:
+- To CHANGE a file you MUST emit a write_file tool block. Describing the fix,
+  or showing the code in a normal ```dart block, does NOT change anything on
+  disk — only write_file does. Never say you edited a file without a
+  write_file block in the SAME message.
 - Take ONE step per message, then wait for its result before the next.
 - write_file replaces the WHOLE file — include the complete new contents.
+- In write_file, put the file's code in the JSON "content" field and keep
+  "content" the LAST field in the object.
 - Use `search` to find pages on the web, then `fetch` a result URL to read it.
 - Use `status` to check the machine's live state (GPU, VRAM, inference speed).
 - Use `fetch` for docs/APIs from the internet (live web access).

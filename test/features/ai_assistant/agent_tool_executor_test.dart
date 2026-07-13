@@ -53,6 +53,34 @@ void main() {
       expect(result.output.toLowerCase(), contains('outside'));
     });
 
+    test('accepts an absolute path that points inside the workspace', () async {
+      // Models often emit the full path; it must still write, not be rejected.
+      final abs = '${workspace.path}/lib/widget.dart';
+      final result = await executor.execute(
+        AgentToolCall(
+          tool: ToolType.writeFile,
+          path: abs,
+          content: 'class W {}',
+        ),
+      );
+
+      expect(result.ok, isTrue);
+      expect(File(abs).existsSync(), isTrue);
+      expect(File(abs).readAsStringSync(), 'class W {}');
+    });
+
+    test('rejects an absolute path outside the workspace', () async {
+      final result = await executor.execute(
+        const AgentToolCall(
+          tool: ToolType.writeFile,
+          path: '/etc/passwd',
+          content: 'x',
+        ),
+      );
+      expect(result.ok, isFalse);
+      expect(result.output.toLowerCase(), contains('outside'));
+    });
+
     test(
       'an empty locked set allows editing main.dart (project-scoped)',
       () async {

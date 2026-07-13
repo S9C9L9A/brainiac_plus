@@ -119,7 +119,11 @@ class AgentToolExecutor {
     }
 
     final root = Directory(workspaceRoot).absolute.path;
-    final target = File('$root/$rel').absolute;
+    // Accept both a path relative to the workspace and an absolute path that
+    // already points inside it (models emit either) — the [_isInside] guard
+    // below still blocks anything that escapes the workspace.
+    final target =
+        (rel.startsWith('/') ? File(rel) : File('$root/$rel')).absolute;
     // Reject traversal outside the workspace after resolving '..' segments.
     if (!_isInside(root, target.path)) {
       return ToolResult(
@@ -175,7 +179,8 @@ class AgentToolExecutor {
       return ToolResult(call: call, ok: false, output: 'Missing file path.');
     }
     final root = Directory(workspaceRoot).absolute.path;
-    final target = File('$root/$rel').absolute;
+    final target =
+        (rel.startsWith('/') ? File(rel) : File('$root/$rel')).absolute;
     if (!_isInside(root, target.path)) {
       return ToolResult(
         call: call,

@@ -76,4 +76,54 @@ then
     expect(parser.hasToolCalls('```tool\n{"tool":"done"}\n```'), isTrue);
     expect(parser.hasToolCalls('no tools here'), isFalse);
   });
+
+  group('lenient recovery — malformed JSON from a local model', () {
+    test('write_file with LITERAL newlines in content is recovered', () {
+      // A local model emits real newlines inside the JSON string (invalid
+      // JSON). Previously this was silently dropped and nothing was written.
+      const text = '''
+Here is the fix:
+```tool
+{"tool": "write_file", "path": "lib/main.dart", "content": "import 'x';
+
+void main() {
+  print('hi');
+}"}
+```
+''';
+      final calls = parser.parse(text);
+      expect(calls, hasLength(1));
+      expect(calls.single.tool, ToolType.writeFile);
+      expect(calls.single.path, 'lib/main.dart');
+      expect(calls.single.content, contains('void main() {'));
+      expect(calls.single.content, contains("print('hi');"));
+    });
+
+    test('write_file with escaped \\n in content yields real newlines', () {
+      const text = r'''```tool
+{"tool":"write_file","path":"a.dart","content":"line1\nline2\n"}
+```''';
+      final calls = parser.parse(text);
+      expect(calls.single.content, 'line1\nline2\n');
+    });
+
+    test('content with embedded quotes and newlines is recovered', () {
+      const text = '''
+```tool
+{"tool": "write_file", "path": "w.dart", "content": "final s = "hi";
+final t = 2;"}
+```
+''';
+      final calls = parser.parse(text);
+      expect(calls, hasLength(1));
+      expect(calls.single.path, 'w.dart');
+      expect(calls.single.content, contains('final s ='));
+      expect(calls.single.content, contains('final t = 2;'));
+    });
+
+    test('truly unrecoverable noise is still skipped', () {
+      final calls = parser.parse('```tool\ngarbage not a tool\n```');
+      expect(calls, isEmpty);
+    });
+  });
 }
