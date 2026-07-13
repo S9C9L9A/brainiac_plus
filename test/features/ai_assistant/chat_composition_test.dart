@@ -79,6 +79,27 @@ void main() {
       );
     });
 
+    test('forFile classifies images vs generic files by extension', () {
+      expect(
+        ChatAttachment.forFile('/tmp/shot.PNG').kind,
+        AttachmentKind.image,
+      );
+      expect(
+        ChatAttachment.forFile('/home/me/photo.jpeg').kind,
+        AttachmentKind.image,
+      );
+      expect(
+        ChatAttachment.forFile('/src/main.dart').kind,
+        AttachmentKind.file,
+      );
+      expect(
+        ChatAttachment.forFile('/data/README').kind, // no extension
+        AttachmentKind.file,
+      );
+      // The full path is preserved as the machine-facing value.
+      expect(ChatAttachment.forFile('/a/b.png').value, '/a/b.png');
+    });
+
     test('attachments are equal by kind and value (dedup-friendly)', () {
       const a = ChatAttachment(kind: AttachmentKind.file, value: 'a.dart');
       const b = ChatAttachment(

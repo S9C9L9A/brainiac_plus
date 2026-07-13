@@ -18,7 +18,7 @@ le idee e i follow-up che sopravvivono tra le sessioni.
 
 - [x] Storia della chat separata per progetto (ogni progetto ha il suo file di
   persistenza; la chat globale è a parte).
-- [ ] Drag & drop di file direttamente nella chat (oltre al menu ＋).
+- [x] Drag & drop di file direttamente nella chat (oltre al menu ＋).
 - [ ] Incolla-immagine dagli appunti nel composer.
 - [ ] Supporto a un modello multimodale (es. LLaVA/Llama-Vision su Ollama) per vera
   analisi degli screenshot allegati (oggi l'immagine è solo un path referenziabile).

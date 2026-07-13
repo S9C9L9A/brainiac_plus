@@ -32,6 +32,34 @@ class ChatAttachment {
 
   const ChatAttachment({required this.kind, required this.value, this.label});
 
+  /// Image file extensions that make a dropped/attached file an [image]
+  /// (the assistant can reference it by path) rather than a generic [file].
+  static const _imageExtensions = {
+    'png',
+    'jpg',
+    'jpeg',
+    'gif',
+    'webp',
+    'bmp',
+    'svg',
+    'heic',
+    'tiff',
+  };
+
+  /// Builds an attachment from a filesystem [path], classifying it as an
+  /// [image] or a generic [file] by extension. Used for drag-and-drop and the
+  /// attach menu so both routes produce the same, correctly-typed chip.
+  factory ChatAttachment.forFile(String path) {
+    final dot = path.lastIndexOf('.');
+    final ext = dot >= 0 ? path.substring(dot + 1).toLowerCase() : '';
+    return ChatAttachment(
+      kind: _imageExtensions.contains(ext)
+          ? AttachmentKind.image
+          : AttachmentKind.file,
+      value: path,
+    );
+  }
+
   /// Display text for the chip — the label if given, else the last path
   /// segment for files/images, else the raw value.
   String get display {

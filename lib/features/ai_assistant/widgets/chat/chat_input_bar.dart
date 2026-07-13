@@ -1,15 +1,17 @@
 import 'package:brainiac_plus/core/theme/app_icons.dart';
 import 'package:brainiac_plus/features/ai_assistant/models/chat_composition.dart';
 import 'package:brainiac_plus/features/ai_assistant/services/mention_source.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// The message composer: plain prose plus first-class context. Type `@` to
 /// mention a file, agent or skill; use the `＋` button to attach an image
-/// (screenshot), a file, or a link. Everything the user pins shows as a
-/// removable chip and travels with the message as structured context, so the
-/// assistant acts on exact references instead of guessing.
+/// (screenshot), a file, or a link; or drag files straight onto the composer.
+/// Everything the user pins shows as a removable chip and travels with the
+/// message as structured context, so the assistant acts on exact references
+/// instead of guessing.
 class ChatInputBar extends ConsumerStatefulWidget {
   final void Function(ChatComposition) onSend;
   final bool enabled;
@@ -30,6 +32,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   /// The text typed after the active `@`, or null when no mention is in flight.
   String? _mentionQuery;
+
+  /// True while files are being dragged over the composer, for the drop hint.
+  bool _dragging = false;
 
   @override
   void dispose() {
@@ -240,6 +245,18 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     );
   }
 
+  /// Files dragged from the OS file manager onto the composer become
+  /// attachments, typed (image vs file) by extension — the same chips the
+  /// attach menu produces.
+  void _onFilesDropped(DropDoneDetails detail) {
+    setState(() => _dragging = false);
+    for (final file in detail.files) {
+      if (file.path.isNotEmpty) {
+        _addAttachment(ChatAttachment.forFile(file.path));
+      }
+    }
+  }
+
   void _openAttachMenu() {
     showModalBottomSheet<void>(
       context: context,
@@ -311,67 +328,80 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade900.withValues(alpha: 0.5),
-        border: Border(top: BorderSide(color: Colors.grey.shade800, width: 1)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_attachments.isNotEmpty) _buildAttachmentChips(),
-            Row(
-              children: [
-                _buildAttachButton(),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: CompositedTransformTarget(
-                    link: _layerLink,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.grey.shade800,
-                          width: 1,
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        enabled: widget.enabled,
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: 'Ask, or type @ to mention a file, agent…',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
+    return DropTarget(
+      onDragDone: _onFilesDropped,
+      onDragEntered: (_) => setState(() => _dragging = true),
+      onDragExited: (_) => setState(() => _dragging = false),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _dragging
+              ? Colors.purple.withValues(alpha: 0.18)
+              : Colors.grey.shade900.withValues(alpha: 0.5),
+          border: Border(
+            top: BorderSide(
+              color: _dragging ? Colors.purpleAccent : Colors.grey.shade800,
+              width: _dragging ? 2 : 1,
+            ),
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_attachments.isNotEmpty) _buildAttachmentChips(),
+              Row(
+                children: [
+                  _buildAttachButton(),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: CompositedTransformTarget(
+                      link: _layerLink,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.grey.shade800,
+                            width: 1,
                           ),
                         ),
-                        onChanged: _onChanged,
-                        onSubmitted: (_) => _handleSubmit(),
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          enabled: widget.enabled,
+                          maxLines: null,
+                          textCapitalization: TextCapitalization.sentences,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Ask, or type @ to mention a file, agent…',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                          ),
+                          onChanged: _onChanged,
+                          onSubmitted: (_) => _handleSubmit(),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _buildSendButton(),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 12),
+                  _buildSendButton(),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
