@@ -58,4 +58,26 @@ void main() {
     final projects = await WorkspaceScanner('${root.path}/nope').scan();
     expect(projects, isEmpty);
   });
+
+  test('scans multiple roots and merges their projects', () async {
+    // A second root (e.g. ~/sviluppo) alongside the sandbox.
+    final other = Directory.systemTemp.createTempSync('ws_scan_other');
+    addTearDown(() => other.deleteSync(recursive: true));
+    Directory('${other.path}/sideproject').createSync();
+    File(
+      '${other.path}/sideproject/pubspec.yaml',
+    ).writeAsStringSync('name: sideproject\n');
+    makeApp('sandbox_app');
+
+    final projects = await WorkspaceScanner.roots([
+      root.path,
+      other.path,
+      '${root.path}/does_not_exist', // a missing root is skipped, not fatal
+    ]).scan();
+
+    expect(
+      projects.map((p) => p.name),
+      containsAll(['sandbox_app', 'sideproject']),
+    );
+  });
 }

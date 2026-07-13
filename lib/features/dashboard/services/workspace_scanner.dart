@@ -16,44 +16,52 @@ class WorkspaceProject {
   });
 }
 
-/// Scans the agent workspace for buildable projects, so the dashboard can show
-/// what the assistant has created. Cheap directory listing — a folder counts
-/// as a project when it contains a pubspec.yaml.
+/// Scans one or more roots for buildable projects, so the dashboard can show
+/// everything the user works on — the assistant's own sandbox plus any project
+/// folders under the user's development directory. Cheap directory listing: a
+/// direct subfolder counts as a project when it contains a pubspec.yaml.
 class WorkspaceScanner {
-  final String rootPath;
+  /// Roots whose immediate subfolders are inspected for projects.
+  final List<String> roots;
 
-  WorkspaceScanner(this.rootPath);
+  WorkspaceScanner(String rootPath) : roots = [rootPath];
+
+  /// Scans several roots and merges the results (deduped by path).
+  WorkspaceScanner.roots(this.roots);
 
   Future<List<WorkspaceProject>> scan() async {
-    final root = Directory(rootPath);
-    if (!root.existsSync()) return const [];
+    // Keyed by path so a folder reachable from two roots appears once.
+    final projects = <String, WorkspaceProject>{};
 
-    final List<FileSystemEntity> entries;
-    try {
-      entries = root.listSync(followLinks: false);
-    } catch (_) {
-      return const [];
-    }
+    for (final rootPath in roots) {
+      final root = Directory(rootPath);
+      if (!root.existsSync()) continue;
 
-    final projects = <WorkspaceProject>[];
-    for (final entity in entries) {
-      if (entity is! Directory) continue;
-      final pubspec = File('${entity.path}/pubspec.yaml');
-      if (!pubspec.existsSync()) continue;
+      final List<FileSystemEntity> entries;
+      try {
+        entries = root.listSync(followLinks: false);
+      } catch (_) {
+        continue;
+      }
 
-      final name = entity.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
-      projects.add(
-        WorkspaceProject(
+      for (final entity in entries) {
+        if (entity is! Directory) continue;
+        final pubspec = File('${entity.path}/pubspec.yaml');
+        if (!pubspec.existsSync()) continue;
+
+        final name = entity.uri.pathSegments.lastWhere((s) => s.isNotEmpty);
+        projects[entity.path] = WorkspaceProject(
           name: name,
           path: entity.path,
           description: _readDescription(pubspec),
           hasLib: Directory('${entity.path}/lib').existsSync(),
-        ),
-      );
+        );
+      }
     }
 
-    projects.sort((a, b) => a.name.compareTo(b.name));
-    return projects;
+    final list = projects.values.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    return list;
   }
 
   String? _readDescription(File pubspec) {
