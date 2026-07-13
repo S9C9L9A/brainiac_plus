@@ -57,6 +57,11 @@ class AgenticRunner {
   /// write/run, so nothing is applied. The prompt is told to plan, not act.
   final bool planMode;
 
+  /// Rough char budget for the conversation sent to the model, so a long
+  /// tool-heavy run (file reads, search/fetch results) doesn't overflow the
+  /// local model's context window and get a 400. System prompt is always kept.
+  final int maxContextChars;
+
   AgenticRunner({
     required this.chat,
     required this.executor,
@@ -64,6 +69,7 @@ class AgenticRunner {
     this.maxIterations = 12,
     this.projectContext,
     this.planMode = false,
+    this.maxContextChars = 24000,
   }) : parser = parser ?? ToolCallParser();
 
   /// Prepended to the system prompt in plan mode.
@@ -157,14 +163,35 @@ own new subfolder and write every file from scratch.''';
     String? summary;
     var completed = false;
     var iterations = 0;
+    var nudges = 0;
 
     while (iterations < maxIterations) {
       iterations++;
-      final reply = await chat(conversation);
+      final reply = await _chatSafe(conversation);
       conversation.add(AgentTurn('assistant', reply));
 
       final calls = parser.parse(reply);
       if (calls.isEmpty) {
+        // A local model often SHOWS the corrected file in a ```dart / ```yaml
+        // block but forgets the write_file tool — so nothing is applied. If the
+        // reply looks like an unapplied edit and we're executing (not planning),
+        // nudge it once or twice to emit the tool instead of ending silently.
+        if (!planMode && nudges < 2 && _looksLikeUnappliedEdit(reply)) {
+          nudges++;
+          final step = AgentStep(assistantText: reply, results: const []);
+          steps.add(step);
+          onStep?.call(step);
+          conversation.add(
+            AgentTurn(
+              'user',
+              'You SHOWED the change but did not apply it — a plain code block '
+                  'does nothing. Emit it now as a write_file tool block (the '
+                  'complete file), e.g.:\n```tool\n{"tool":"write_file","path":'
+                  '"<path>","content":"<full file>"}\n```',
+            ),
+          );
+          continue;
+        }
         // Plain answer — the model chose to talk, not act. Done.
         final step = AgentStep(assistantText: reply, results: const []);
         steps.add(step);
@@ -203,6 +230,50 @@ own new subfolder and write every file from scratch.''';
       iterations: iterations,
       summary: summary,
     );
+  }
+
+  /// Calls the model with a trimmed conversation; on failure (usually a 400
+  /// from context overflow) retries once with an aggressive trim. Keeps a long
+  /// tool-heavy run from dying outright.
+  Future<String> _chatSafe(List<AgentTurn> conversation) async {
+    try {
+      return await chat(_trim(conversation, maxContextChars));
+    } catch (_) {
+      return await chat(_trim(conversation, 6000));
+    }
+  }
+
+  /// Keeps the system prompt plus the most recent turns that fit in [budget]
+  /// characters; any single oversized turn is truncated. Prevents the running
+  /// conversation from outgrowing the local model's context window.
+  static List<AgentTurn> _trim(List<AgentTurn> conv, int budget) {
+    if (conv.length <= 2) return conv;
+    const maxTurn = 6000;
+    final rest = [
+      for (final t in conv.skip(1))
+        t.content.length > maxTurn
+            ? AgentTurn(
+                t.role,
+                '${t.content.substring(0, maxTurn)}\n…[truncated]',
+              )
+            : t,
+    ];
+    final kept = <AgentTurn>[];
+    var used = 0;
+    for (final t in rest.reversed) {
+      if (used + t.content.length > budget && kept.isNotEmpty) break;
+      used += t.content.length;
+      kept.insert(0, t);
+    }
+    return [conv.first, ...kept];
+  }
+
+  /// Heuristic: the reply has a fenced code block (```dart/```yaml/…) and reads
+  /// like a proposed file change, but carried no tool call — i.e. the model
+  /// described the edit instead of applying it. Excludes our own ```tool blocks.
+  static bool _looksLikeUnappliedEdit(String reply) {
+    final fences = RegExp(r'```([a-zA-Z0-9]*)').allMatches(reply);
+    return fences.any((m) => m.group(1) != 'tool');
   }
 
   String _formatResults(List<ToolResult> results) {

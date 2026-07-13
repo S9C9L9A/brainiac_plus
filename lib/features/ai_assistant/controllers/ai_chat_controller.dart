@@ -460,10 +460,18 @@ class AiChatController extends StateNotifier<AiChatState> {
         lastPipelineResult: pipelineResult,
       );
     } catch (e) {
+      // A 400 from the local model almost always means the conversation grew
+      // past its context window — give an actionable message, not a raw dump.
+      final raw = e.toString();
+      final friendly = raw.contains('400')
+          ? 'The local model rejected the request — the conversation likely '
+                'outgrew its context window. Clear the chat (🗑) or start a '
+                'shorter task, and consider a larger context in the LLM server.'
+          : 'Agent task failed: $raw';
       state = state.copyWith(
-        messages: [...state.messages, errorMessage('⚠️ Agent task failed: $e')],
+        messages: [...state.messages, errorMessage('⚠️ $friendly')],
         isLoading: false,
-        error: e.toString(),
+        error: raw,
       );
     }
   }

@@ -24,6 +24,62 @@ void main() {
     return (_) async => i < replies.length ? replies[i++] : 'stuck';
   }
 
+  test('nudges when the model shows a code block but no write_file', () async {
+    // Step 1: shows the fix in a ```yaml block (no tool) → runner nudges.
+    // Step 2: complies with a real write_file → it's applied.
+    final runner = AgenticRunner(
+      chat: scripted([
+        'Here is the corrected file:\n```dart\nclass Fixed {}\n```',
+        '```tool\n{"tool":"write_file","path":"lib/fixed.dart","content":"class Fixed {}"}\n```',
+        '```tool\n{"tool":"done","summary":"fixed"}\n```',
+      ]),
+      executor: executor,
+    );
+
+    final result = await runner.run('fix the widget');
+
+    expect(
+      File('${workspace.path}/lib/fixed.dart').existsSync(),
+      isTrue,
+      reason: 'the nudge should have produced a real write',
+    );
+    expect(result.completed, isTrue);
+  });
+
+  test('a plan-only code block is NOT nudged (plan mode proposes)', () async {
+    var calls = 0;
+    final runner = AgenticRunner(
+      chat: (_) async {
+        calls++;
+        return 'Proposed change:\n```yaml\nsdk: ^3.12.0\n```';
+      },
+      executor: executor,
+      planMode: true,
+    );
+    final result = await runner.run('plan the fix');
+    // No nudge in plan mode → ends after the single reply.
+    expect(calls, 1);
+    expect(result.completed, isTrue);
+  });
+
+  test(
+    'retries once when the model call fails (context overflow → 400)',
+    () async {
+      var calls = 0;
+      final runner = AgenticRunner(
+        chat: (_) async {
+          calls++;
+          if (calls == 1) throw Exception('DioException 400 bad response');
+          return '```tool\n{"tool":"done","summary":"ok"}\n```';
+        },
+        executor: executor,
+      );
+      final result = await runner.run('do something');
+      expect(calls, 2); // failed once, retried and succeeded
+      expect(result.completed, isTrue);
+    },
+  );
+
   test('drives write → run → done and executes each step', () async {
     final runner = AgenticRunner(
       chat: scripted([
