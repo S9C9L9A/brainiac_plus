@@ -262,6 +262,39 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('source map and git each have a pop-out; git can float', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    // Two docked, poppable panels: source map and git.
+    expect(find.byTooltip('Pop out'), findsNWidgets(2));
+
+    // Pop the git panel (the second one) out.
+    await tester.tap(find.byTooltip('Pop out').last);
+    await tester.pump();
+    expect(find.byType(FloatingPanel), findsOneWidget);
+    // Its git content is present in the floating window.
+    expect(find.text('RECENT COMMITS'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the context toggle hides the rail for a focused chat', (
     tester,
   ) async {

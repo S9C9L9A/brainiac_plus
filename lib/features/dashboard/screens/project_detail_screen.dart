@@ -47,6 +47,7 @@ class ProjectDetailScreen extends ConsumerStatefulWidget {
 class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   RunTarget _target = RunTarget.linux;
   bool _consoleOpen = false;
+  double _consoleHeight = 300;
 
   /// Desktop: whether the context rail (source map + git) is shown inline.
   bool _railOpen = true;
@@ -61,6 +62,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   final Set<String> _floating = {};
 
   static const _pSourceMap = 'sourcemap';
+  static const _pGit = 'git';
   static const _pCode = 'code';
 
   WorkspaceProject get project => widget.project;
@@ -134,6 +136,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     open: _consoleOpen,
                     running: run.running,
                     hasOutput: run.output.isNotEmpty,
+                    height: _consoleHeight,
+                    onResize: (dy) => setState(() {
+                      _consoleHeight = (_consoleHeight - dy).clamp(
+                        120.0,
+                        620.0,
+                      );
+                    }),
                     onToggle: () =>
                         setState(() => _consoleOpen = !_consoleOpen),
                     onStop: _stop,
@@ -207,19 +216,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     // Source map + git share the lower part of the rail.
     final side = <Widget>[];
     if (!_floating.contains(_pSourceMap)) side.add(_sourceMapCard());
-    side.add(
-      HudPanel(
-        title: 'GIT',
-        icon: Icons.commit,
-        expandChild: true,
-        child: SingleChildScrollView(child: _GitSection(path: project.path)),
-      ),
-    );
-    final sideStack = _verticalStack(side);
+    if (!_floating.contains(_pGit)) side.add(_gitCard());
+    final sideStack = side.isEmpty ? null : _verticalStack(side);
 
     // When a file is open, the code panel takes the top half — it's what the
     // user is working on — with the source map / git below it.
     if (_selectedFile != null && !_floating.contains(_pCode)) {
+      if (sideStack == null) return _codeCard();
       return ResizableSplit(
         axis: Axis.vertical,
         initialFraction: 0.5,
@@ -229,8 +232,24 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         second: sideStack,
       );
     }
+    if (sideStack == null) {
+      return const Center(
+        child: Text(
+          'All panels are floating',
+          style: TextStyle(color: Colors.white38, fontSize: 12),
+        ),
+      );
+    }
     return sideStack;
   }
+
+  Widget _gitCard() => HudPanel(
+    title: 'GIT',
+    icon: Icons.commit,
+    expandChild: true,
+    trailing: _popOutButton(_pGit),
+    child: SingleChildScrollView(child: _GitSection(path: project.path)),
+  );
 
   /// Stacks panels vertically with a draggable divider between each pair.
   Widget _verticalStack(List<Widget> panels) {
@@ -310,6 +329,18 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           initialSize: const Size(460, 380),
           onDock: () => setState(() => _floating.remove(_pSourceMap)),
           child: _constellation(),
+        ),
+      );
+    }
+    if (_floating.contains(_pGit)) {
+      panels.add(
+        FloatingPanel(
+          title: 'GIT',
+          icon: Icons.commit,
+          initialOffset: offsetFor(),
+          initialSize: const Size(420, 420),
+          onDock: () => setState(() => _floating.remove(_pGit)),
+          child: SingleChildScrollView(child: _GitSection(path: project.path)),
         ),
       );
     }
@@ -710,19 +741,26 @@ class _ConsoleDock extends StatelessWidget {
   final bool open;
   final bool running;
   final bool hasOutput;
+  final double height;
   final VoidCallback onToggle;
   final VoidCallback onStop;
   final VoidCallback onClear;
+
+  /// Called with the vertical drag delta while resizing (up = negative dy);
+  /// the parent turns it into a new [height].
+  final ValueChanged<double>? onResize;
   final Widget child;
 
   const _ConsoleDock({
     required this.open,
     required this.running,
     required this.hasOutput,
+    required this.height,
     required this.onToggle,
     required this.onStop,
     required this.onClear,
     required this.child,
+    this.onResize,
   });
 
   @override
@@ -737,6 +775,27 @@ class _ConsoleDock extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Drag the top edge to resize the console (only while it's open).
+          if (open && onResize != null)
+            MouseRegion(
+              cursor: SystemMouseCursors.resizeRow,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragUpdate: (d) => onResize!(d.delta.dy),
+                child: Container(
+                  height: 10,
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 40,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: HudTheme.cyan.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           InkWell(
             onTap: onToggle,
             child: Padding(
@@ -812,7 +871,7 @@ class _ConsoleDock extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOut,
             child: open
-                ? SizedBox(height: 300, child: child)
+                ? SizedBox(height: height, child: child)
                 : const SizedBox(width: double.infinity),
           ),
         ],
