@@ -5,12 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'features/dashboard/dashboard_screen.dart';
+import 'features/dashboard/screens/document_window.dart';
 import 'features/onboarding/screens/setup_wizard_screen.dart';
 import 'routes/route_generator.dart';
 import 'core/debug/error_reporter.dart';
 import 'core/debug/error_overlay.dart';
 
-void main() {
+void main(List<String> args) {
+  // Detached document windows re-launch this executable as a sub-window with
+  // ['multi_window', <windowId>, <jsonArgument>]. Route those to a standalone
+  // document editor instead of booting the whole app.
+  if (args.isNotEmpty && args.first == 'multi_window') {
+    WidgetsFlutterBinding.ensureInitialized();
+    final argument = args.length > 2 ? args[2] : '{}';
+    runApp(DocumentWindowApp.fromArgument(argument));
+    return;
+  }
+
   runWithErrorReporting(() async {
     WidgetsFlutterBinding.ensureInitialized();
 

@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -63,7 +65,6 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   static const _pSourceMap = 'sourcemap';
   static const _pGit = 'git';
-  static const _pCode = 'code';
 
   WorkspaceProject get project => widget.project;
 
@@ -221,7 +222,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
     // When a file is open, the code panel takes the top half — it's what the
     // user is working on — with the source map / git below it.
-    if (_selectedFile != null && !_floating.contains(_pCode)) {
+    if (_selectedFile != null) {
       if (sideStack == null) return _codeCard();
       return ResizableSplit(
         axis: Axis.vertical,
@@ -279,7 +280,13 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     trailing: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _popOutButton(_pCode),
+        // Documents detach into a real, free OS window on the Linux desktop.
+        _iconAction(
+          Icons.open_in_new,
+          'Open in a window',
+          HudTheme.cyan.withValues(alpha: 0.8),
+          () => _openDocumentWindow(_selectedFile!),
+        ),
         _iconAction(
           Icons.close,
           'Close',
@@ -290,6 +297,30 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     ),
     child: _codeEditor(),
   );
+
+  /// Detaches the open document into a free OS window (its own process) that
+  /// the user can move anywhere on the desktop. The window edits and saves the
+  /// file itself, so no app state has to cross the process boundary.
+  Future<void> _openDocumentWindow(GraphNode node) async {
+    final path = node.props['path'];
+    if (path == null) return;
+    try {
+      final window = await DesktopMultiWindow.createWindow(
+        jsonEncode({'path': path, 'title': node.label}),
+      );
+      window
+        ..setFrame(const Offset(140, 140) & const Size(780, 640))
+        ..setTitle(node.label)
+        ..show();
+      if (mounted) setState(() => _selectedFile = null);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open a document window: $e')),
+        );
+      }
+    }
+  }
 
   Widget _constellation() {
     final graph = ref.watch(projectGraphProvider(project.path));
@@ -341,22 +372,6 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           initialSize: const Size(420, 420),
           onDock: () => setState(() => _floating.remove(_pGit)),
           child: SingleChildScrollView(child: _GitSection(path: project.path)),
-        ),
-      );
-    }
-    if (_selectedFile != null && _floating.contains(_pCode)) {
-      panels.add(
-        FloatingPanel(
-          title: _selectedFile!.label,
-          icon: Icons.description_outlined,
-          initialOffset: offsetFor(),
-          initialSize: const Size(560, 460),
-          onDock: () => setState(() => _floating.remove(_pCode)),
-          onClose: () => setState(() {
-            _floating.remove(_pCode);
-            _selectedFile = null;
-          }),
-          child: _codeEditor(),
         ),
       );
     }
