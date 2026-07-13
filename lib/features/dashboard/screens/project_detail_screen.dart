@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/platform/shell_service.dart';
 import '../../ai_assistant/controllers/ai_chat_controller.dart';
+import '../../ai_assistant/models/agent_mode.dart';
 import '../../ai_assistant/knowledge/knowledge_graph.dart';
 import '../../ai_assistant/knowledge/knowledge_graph_view.dart';
 import '../../ai_assistant/widgets/chat/ai_chat_panel.dart';
@@ -116,6 +117,21 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   void _stop() => ref.read(projectRunProvider(project.path).notifier).stop();
 
+  /// Sends the console log to the assistant to diagnose and fix the error.
+  /// Forces Agent mode (so the fix is actually applied) and hands the task to
+  /// the project-scoped chat.
+  void _resolveWithAi() {
+    final run = ref.read(projectRunProvider(project.path));
+    if (run.output.trim().isEmpty) return;
+    final prompt = buildConsoleResolvePrompt(
+      run.output,
+      exitCode: run.exitCode,
+    );
+    ref.read(agentModeProvider.notifier).state = AgentMode.agent;
+    ref.read(aiChatControllerProvider.notifier).sendAgentTask(prompt);
+    setState(() => _consoleOpen = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final run = ref.watch(projectRunProvider(project.path));
@@ -151,6 +167,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     onClear: () => ref
                         .read(projectRunProvider(project.path).notifier)
                         .clear(),
+                    onResolve: run.output.isEmpty ? null : _resolveWithAi,
                     child: _ConsoleLog(path: project.path),
                   ),
                 ],
@@ -970,6 +987,9 @@ class _ConsoleDock extends StatelessWidget {
   /// Called with the vertical drag delta while resizing (up = negative dy);
   /// the parent turns it into a new [height].
   final ValueChanged<double>? onResize;
+
+  /// Sends the console log to the assistant to diagnose + fix the error.
+  final VoidCallback? onResolve;
   final Widget child;
 
   const _ConsoleDock({
@@ -983,6 +1003,7 @@ class _ConsoleDock extends StatelessWidget {
     required this.child,
     this.exitCode,
     this.onResize,
+    this.onResolve,
   });
 
   Color get _statusColor {
@@ -1087,13 +1108,25 @@ class _ConsoleDock extends StatelessWidget {
                       HudTheme.danger,
                       onStop,
                     )
-                  else if (hasOutput)
+                  else if (hasOutput) ...[
+                    if (onResolve != null)
+                      _barAction(
+                        Icons.auto_fix_high,
+                        exitCode != null && exitCode != 0
+                            ? 'Resolve error with AI'
+                            : 'Analyze with AI',
+                        exitCode != null && exitCode != 0
+                            ? HudTheme.danger
+                            : HudTheme.cyanGlow,
+                        onResolve!,
+                      ),
                     _barAction(
                       Icons.clear_all,
                       'Clear',
                       Colors.white54,
                       onClear,
                     ),
+                  ],
                   const SizedBox(width: 4),
                   Icon(
                     open ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,

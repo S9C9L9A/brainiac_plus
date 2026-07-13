@@ -52,12 +52,18 @@ class AgentToolExecutor {
   /// Probes machine state for the `status` tool; null disables it.
   final StatusProbe? _status;
 
+  /// Plan mode: file writes and commands are simulated, not applied — the
+  /// executor reports what it *would* do so the assistant can propose changes
+  /// without touching the project. Reads/fetches/searches stay live.
+  final bool readOnly;
+
   AgentToolExecutor({
     required this.workspaceRoot,
     required CommandRunner runCommand,
     UrlFetcher? fetchUrl,
     WebSearcher? webSearch,
     StatusProbe? statusProbe,
+    this.readOnly = false,
     this.commandTimeout = const Duration(seconds: 120),
     this.lockedFiles = defaultLockedFiles,
   }) : _run = runCommand,
@@ -133,6 +139,11 @@ class AgentToolExecutor {
       );
     }
 
+    // Plan mode: report the intended change without touching disk.
+    if (readOnly) {
+      return ToolResult(call: call, ok: true, output: 'PLAN: would write $rel');
+    }
+
     try {
       await target.parent.create(recursive: true);
       await target.writeAsString(call.content ?? '');
@@ -154,6 +165,15 @@ class AgentToolExecutor {
         call: call,
         ok: false,
         output: 'Blocked destructive command (${check.reason}): $command',
+      );
+    }
+
+    // Plan mode: report the intended command without running it.
+    if (readOnly) {
+      return ToolResult(
+        call: call,
+        ok: true,
+        output: 'PLAN: would run `$command`',
       );
     }
 

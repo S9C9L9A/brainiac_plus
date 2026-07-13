@@ -39,4 +39,26 @@ void main() {
       expect(s.failed, isFalse);
     });
   });
+
+  group('buildConsoleResolvePrompt', () {
+    test('frames the log as a fix request and includes the exit code', () {
+      final p = buildConsoleResolvePrompt(
+        'pubspec.yaml has no lower-bound SDK constraint\n'
+        'Process exited with code: 65',
+        exitCode: 65,
+      );
+      expect(p, contains('exit code 65'));
+      expect(p, contains('read_file'));
+      expect(p, contains('write_file'));
+      expect(p, contains('pubspec.yaml has no lower-bound'));
+    });
+
+    test('caps a very large log to the tail', () {
+      final huge = List.generate(2000, (i) => 'line $i').join('\n');
+      final p = buildConsoleResolvePrompt(huge);
+      expect(p.length, lessThan(4500));
+      expect(p, contains('truncated'));
+      expect(p, contains('line 1999')); // the tail is kept
+    });
+  });
 }

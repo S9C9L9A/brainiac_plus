@@ -152,6 +152,31 @@ void main() {
     expect(last, isNot(contains('Task complete')));
   });
 
+  test('plan mode reports proposed changes, not writes', () async {
+    // A read-only (plan) executor simulates the write → the controller should
+    // say "Plan ready", not "Done — wrote", and nothing hits disk.
+    var step = 0;
+    final planRunner = AgenticRunner(
+      chat: (_) async => step++ == 0
+          ? 'Proposing.\n```tool\n{"tool":"write_file","path":"lib/x.dart","content":"class X {}"}\n```'
+          : 'Done.\n```tool\n{"tool":"done","summary":"planned"}\n```',
+      executor: AgentToolExecutor(
+        workspaceRoot: workspace.path,
+        runCommand: (_) async => '',
+        readOnly: true,
+      ),
+      planMode: true,
+    );
+    final controller = buildController(planRunner);
+
+    await controller.sendAgentTask('fix the bug');
+
+    final last = controller.state.messages.last.content;
+    expect(last, contains('Plan ready'));
+    expect(last, contains('lib/x.dart'));
+    expect(File('${workspace.path}/lib/x.dart').existsSync(), isFalse);
+  });
+
   test('writing a file reports what was written', () async {
     final controller = buildController(
       scriptedRunner([

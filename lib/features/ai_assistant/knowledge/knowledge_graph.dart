@@ -1,5 +1,5 @@
 /// Kinds of entities the knowledge graph tracks.
-enum NodeType { task, file, command, agent, project, note, unknown }
+enum NodeType { task, file, config, command, agent, project, note, unknown }
 
 /// Kinds of relations between entities.
 enum EdgeRelation { wrote, ran, produced, relatedTo, partOf, unknown }

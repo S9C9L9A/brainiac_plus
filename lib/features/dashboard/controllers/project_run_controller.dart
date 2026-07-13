@@ -33,6 +33,24 @@ class ProjectRunState {
   bool get failed => (exitCode ?? 0) != 0;
 }
 
+/// Builds the prompt sent to the assistant by the console's "Resolve with AI"
+/// button: the last run's output (capped to the tail so a huge log doesn't
+/// blow the context), framed as a fix request. Pure + testable.
+String buildConsoleResolvePrompt(String output, {int? exitCode}) {
+  const maxChars = 4000;
+  final trimmed = output.trim();
+  final tail = trimmed.length > maxChars
+      ? '…[earlier output truncated]\n${trimmed.substring(trimmed.length - maxChars)}'
+      : trimmed;
+  final code = exitCode != null && exitCode != 0
+      ? ' (exit code $exitCode)'
+      : '';
+  return 'The last command run in this project failed$code. Diagnose the error '
+      'from this console log and FIX it: use read_file to inspect the relevant '
+      'file, then write_file the corrected version. Explain the fix briefly.\n\n'
+      'Console log:\n```\n$tail\n```';
+}
+
 /// Runs a project's launch command and streams its output into state, so the
 /// project screen can show a live console. Owns a [ShellService]; stop() kills
 /// the running process (e.g. a `flutter run` session).

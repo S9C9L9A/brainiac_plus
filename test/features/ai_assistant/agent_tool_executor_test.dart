@@ -82,6 +82,28 @@ void main() {
     });
 
     test(
+      'plan mode (readOnly) simulates the write without touching disk',
+      () async {
+        final planner = AgentToolExecutor(
+          workspaceRoot: workspace.path,
+          runCommand: (_) async => '',
+          readOnly: true,
+        );
+        final result = await planner.execute(
+          const AgentToolCall(
+            tool: ToolType.writeFile,
+            path: 'lib/new.dart',
+            content: 'class N {}',
+          ),
+        );
+        expect(result.ok, isTrue);
+        expect(result.output, startsWith('PLAN: would write'));
+        // Nothing was actually written.
+        expect(File('${workspace.path}/lib/new.dart').existsSync(), isFalse);
+      },
+    );
+
+    test(
       'an empty locked set allows editing main.dart (project-scoped)',
       () async {
         final scoped = AgentToolExecutor(
@@ -116,6 +138,27 @@ void main() {
   });
 
   group('run', () {
+    test(
+      'plan mode (readOnly) simulates the command without running it',
+      () async {
+        final ran = <String>[];
+        final planner = AgentToolExecutor(
+          workspaceRoot: workspace.path,
+          runCommand: (cmd) async {
+            ran.add(cmd);
+            return 'ran';
+          },
+          readOnly: true,
+        );
+        final result = await planner.execute(
+          const AgentToolCall(tool: ToolType.run, command: 'flutter test'),
+        );
+        expect(result.ok, isTrue);
+        expect(result.output, startsWith('PLAN: would run'));
+        expect(ran, isEmpty); // never executed
+      },
+    );
+
     test('executes a safe command and returns its output', () async {
       final result = await executor.execute(
         const AgentToolCall(tool: ToolType.run, command: 'dart --version'),

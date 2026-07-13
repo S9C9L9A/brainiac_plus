@@ -53,13 +53,25 @@ class AgenticRunner {
   /// knows the codebase before the user's first message.
   final String? projectContext;
 
+  /// Plan mode: the assistant proposes changes but the executor simulates every
+  /// write/run, so nothing is applied. The prompt is told to plan, not act.
+  final bool planMode;
+
   AgenticRunner({
     required this.chat,
     required this.executor,
     ToolCallParser? parser,
     this.maxIterations = 12,
     this.projectContext,
+    this.planMode = false,
   }) : parser = parser ?? ToolCallParser();
+
+  /// Prepended to the system prompt in plan mode.
+  static const _planPreamble =
+      'PLAN MODE — do NOT change anything. Investigate with read_file, then '
+      'explain the fix and exactly which files you would edit and how. Any '
+      'write_file or run you emit is SIMULATED, not applied. End with a short '
+      'plan summary, then done.\n\n';
 
   /// Base tool protocol, shared by both modes.
   static const _toolProtocol = '''
@@ -127,12 +139,13 @@ own new subfolder and write every file from scratch.''';
   }) async {
     // In project mode the workspace is an existing codebase, not an empty
     // sandbox — read files before changing them.
-    final system = projectContext == null
+    final base = projectContext == null
         ? systemPrompt
         : '$_toolProtocol\n\nYou are working INSIDE an existing project. Its '
               'files already exist — use read_file to inspect a file before '
               'you write_file to change it. Paths are relative to the project '
               'root.\n\nPROJECT CONTEXT:\n$projectContext';
+    final system = planMode ? '$_planPreamble$base' : base;
     final conversation = <AgentTurn>[
       AgentTurn('system', system),
       // Prior turns give the assistant memory of what it already did, so

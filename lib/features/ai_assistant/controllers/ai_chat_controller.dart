@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/ai_message.dart';
 import '../models/agent_task.dart';
 import '../models/agent_tool_call.dart';
+import '../models/agent_mode.dart';
 import '../../../core/services/ollama_service.dart';
 import '../../../core/services/gpu_metrics_service.dart';
 import '../../../core/services/inference_telemetry_service.dart';
@@ -69,6 +70,9 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
   final ollama = ref.watch(ollamaServiceProvider);
   final shell = ShellService();
   final activeProject = ref.watch(activeProjectProvider);
+  // Plan mode makes the executor simulate writes/commands and tells the model
+  // to propose rather than act — enforced here, not just in the UI.
+  final readOnly = ref.watch(agentModeProvider) == AgentMode.plan;
   // Scope to the selected project, else an isolated sandbox where test apps
   // stay contained and the real app's files are physically out of reach.
   final Directory sandbox;
@@ -102,12 +106,15 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
       webSearch: _webSearch,
       // Self-awareness: `status` reports live GPU / VRAM / inference speed.
       statusProbe: _systemStatus,
+      // Plan mode: writes/commands are simulated, not applied.
+      readOnly: readOnly,
       // Inside a user project, its own main.dart/pubspec are editable; the
       // BrainiacPlus locks only apply to the default sandbox.
       lockedFiles: activeProject != null
           ? const <String>{}
           : AgentToolExecutor.defaultLockedFiles,
     ),
+    planMode: readOnly,
     // Brief the assistant on the active project's files up front.
     projectContext: activeProject != null ? _projectBrief(activeProject) : null,
   );
@@ -404,14 +411,19 @@ class AiChatController extends StateNotifier<AiChatState> {
 
       // Did the run actually change anything, or did the model just talk and
       // then say "done"? Reporting "✅ complete" when no file was written is
-      // the misleading behavior the user hit — so be honest about it.
-      final changedFiles = <String>{};
+      // the misleading behavior the user hit — so be honest about it. In plan
+      // mode writes are simulated (output starts with "PLAN:"), so separate
+      // proposed changes from real ones.
+      final wroteFiles = <String>{};
+      final proposedFiles = <String>{};
       for (final step in result.steps) {
         for (final r in step.results) {
           if (r.ok &&
               r.call.tool == ToolType.writeFile &&
               r.call.path != null) {
-            changedFiles.add(r.call.path!);
+            (r.output.startsWith('PLAN:') ? proposedFiles : wroteFiles).add(
+              r.call.path!,
+            );
           }
         }
       }
@@ -421,10 +433,14 @@ class AiChatController extends StateNotifier<AiChatState> {
         status =
             '⚠️ **Stopped after ${result.iterations} steps** — the task may '
             'be unfinished.';
-      } else if (changedFiles.isNotEmpty) {
-        final files = changedFiles.join(', ');
+      } else if (proposedFiles.isNotEmpty) {
         status =
-            '✅ **Done** — wrote $files'
+            '📋 **Plan ready** — proposed changes to ${proposedFiles.join(', ')}'
+            ' (nothing was written; switch to Agent to apply).'
+            '${result.summary != null ? '\n\n${result.summary}' : ''}';
+      } else if (wroteFiles.isNotEmpty) {
+        status =
+            '✅ **Done** — wrote ${wroteFiles.join(', ')}'
             '${result.summary != null ? '\n\n${result.summary}' : ''}';
       } else {
         // Completed but touched no files: almost always the model described a

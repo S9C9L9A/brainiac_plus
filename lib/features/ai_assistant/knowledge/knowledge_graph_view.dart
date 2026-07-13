@@ -83,6 +83,8 @@ Color _nodeColor(NodeType type) {
       return HudTheme.cyanGlow;
     case NodeType.file:
       return const Color(0xFF4ADE80); // green
+    case NodeType.config:
+      return HudTheme.amber; // config/platform files stand out
     case NodeType.command:
       return HudTheme.amber;
     default:
@@ -98,6 +100,8 @@ IconData _nodeIcon(NodeType type) {
       return Icons.flutter_dash;
     case NodeType.file:
       return Icons.description_outlined;
+    case NodeType.config:
+      return Icons.settings_outlined;
     case NodeType.command:
       return Icons.terminal;
     default:

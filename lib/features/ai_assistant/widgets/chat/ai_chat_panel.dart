@@ -1,5 +1,6 @@
 import 'package:brainiac_plus/core/theme/app_icons.dart';
 import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controller.dart';
+import 'package:brainiac_plus/features/ai_assistant/models/agent_mode.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/chat_input_bar.dart';
 import 'package:brainiac_plus/features/ai_assistant/widgets/chat/message_bubble.dart';
 import 'package:brainiac_plus/features/ai_assistant/models/agent_task.dart';
@@ -27,10 +28,6 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
   final _scrollController = ScrollController();
   late final AnimationController _glowController;
   late final Animation<double> _glowAnimation;
-
-  /// Agent mode: the assistant executes the task (writes files, runs
-  /// commands) instead of only replying. On by default — it's the point.
-  bool _agentMode = true;
 
   @override
   void initState() {
@@ -185,7 +182,8 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             ChatInputBar(
               onSend: (composition) {
                 final text = composition.toPrompt();
-                if (_agentMode && chatController.agentEnabled) {
+                final mode = ref.read(agentModeProvider);
+                if (mode.executesTools && chatController.agentEnabled) {
                   chatController.sendAgentTask(text);
                 } else {
                   chatController.sendMessageStream(text);
@@ -278,7 +276,7 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
             error: (_, _) => _buildStatusPill('Offline', Colors.orange),
           ),
           const SizedBox(width: 10),
-          _buildAgentToggle(),
+          _buildModeSelector(),
           const SizedBox(width: 6),
           IconButton(
             onPressed: () {
@@ -326,40 +324,77 @@ class _AiChatPanelState extends ConsumerState<AiChatPanel>
     );
   }
 
-  /// Toggle between Agent (executes tasks) and Chat (talks only).
-  Widget _buildAgentToggle() {
-    final color = _agentMode ? Colors.purpleAccent : Colors.white54;
+  /// Three-way mode selector (Chat / Plan / Agent), Claude-Code style. The
+  /// selected mode shows its label; the others are compact icons. Backed by
+  /// [agentModeProvider] so it gates real execution, not just the UI.
+  Widget _buildModeSelector() {
+    final mode = ref.watch(agentModeProvider);
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final m in AgentMode.values) _modeChip(m, selected: m == mode),
+        ],
+      ),
+    );
+  }
+
+  Widget _modeChip(AgentMode m, {required bool selected}) {
+    final color = switch (m) {
+      AgentMode.chat => Colors.white70,
+      AgentMode.plan => Colors.amberAccent,
+      AgentMode.agent => Colors.purpleAccent,
+    };
+    final icon = switch (m) {
+      AgentMode.chat => Icons.chat_bubble_outline,
+      AgentMode.plan => Icons.map_outlined,
+      AgentMode.agent => Icons.bolt,
+    };
+    final tip = switch (m) {
+      AgentMode.chat => 'Chat: replies only, no changes',
+      AgentMode.plan => 'Plan: proposes changes but writes nothing',
+      AgentMode.agent => 'Agent: performs the task (writes files, runs)',
+    };
     return Tooltip(
-      message: _agentMode
-          ? 'Agent mode: the assistant performs the task'
-          : 'Chat mode: replies only',
+      message: tip,
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        onTap: () => setState(() => _agentMode = !_agentMode),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        onTap: () => ref.read(agentModeProvider.notifier).state = m,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: selected
+                ? color.withValues(alpha: 0.18)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: color.withValues(alpha: 0.5)),
+            border: Border.all(
+              color: selected
+                  ? color.withValues(alpha: 0.5)
+                  : Colors.transparent,
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                _agentMode ? Icons.bolt : Icons.chat_bubble_outline,
-                color: color,
-                size: 14,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                _agentMode ? 'Agent' : 'Chat',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+              Icon(icon, size: 13, color: selected ? color : Colors.white38),
+              if (selected) ...[
+                const SizedBox(width: 4),
+                Text(
+                  m.label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
