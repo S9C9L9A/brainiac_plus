@@ -75,7 +75,11 @@ final agentRunnerProvider = Provider<AgenticRunner>((ref) {
   if (activeProject != null && Directory(activeProject).existsSync()) {
     sandbox = Directory(activeProject);
   } else {
-    sandbox = Directory('${Directory.current.path}/agent_workspace');
+    // Absolute, home-anchored — must match the dashboard's scan root
+    // ($home/BrainiacPlus/agent_workspace in projects_provider.dart), else the
+    // AI writes new apps to a CWD-relative folder the dashboard never scans.
+    final home = Platform.environment['HOME'] ?? Directory.current.path;
+    sandbox = Directory('$home/BrainiacPlus/agent_workspace');
     sandbox.createSync(recursive: true);
   }
   return AgenticRunner(

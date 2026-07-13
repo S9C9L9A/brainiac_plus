@@ -10,8 +10,12 @@ import '../services/workspace_scanner.dart';
 /// tests.
 final workspaceScannerProvider = Provider<WorkspaceScanner>((ref) {
   final home = Platform.environment['HOME'] ?? Directory.current.path;
+  // Both roots are ABSOLUTE (anchored to $home). agent_workspace used to be
+  // '${Directory.current.path}/agent_workspace' — relative to the launch CWD —
+  // so it vanished whenever the dashboard was started from a folder other than
+  // ~/BrainiacPlus. Anchoring it to $home makes it resolve regardless of CWD.
   return WorkspaceScanner.roots([
-    '${Directory.current.path}/agent_workspace',
+    '$home/BrainiacPlus/agent_workspace',
     '$home/sviluppo',
   ]);
 });
