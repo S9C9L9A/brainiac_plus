@@ -457,7 +457,11 @@ class AiChatController extends StateNotifier<AiChatState> {
   AiMessage _stepMessage(AgentStep step) {
     final buf = StringBuffer();
     final prose = step.assistantText
+        // Closed tool blocks…
         .replaceAll(RegExp(r'```tool[\s\S]*?```'), '')
+        // …and an unclosed trailing one (a local model often forgets the
+        // closing fence), which otherwise leaks raw JSON into the chat.
+        .replaceAll(RegExp(r'```tool[\s\S]*$'), '')
         .trim();
     if (prose.isNotEmpty) buf.writeln(prose);
     for (final r in step.results) {

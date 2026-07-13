@@ -137,6 +137,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     open: _consoleOpen,
                     running: run.running,
                     hasOutput: run.output.isNotEmpty,
+                    exitCode: run.exitCode,
                     height: _consoleHeight,
                     onResize: (dy) => setState(() {
                       _consoleHeight = (_consoleHeight - dy).clamp(
@@ -185,7 +186,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     );
   }
 
-  /// The working area: assistant (primary) beside a resizable context rail.
+  /// The working area. On a wide screen: the assistant (primary), a context
+  /// rail (source map + git), and — when a file is open — the code editor as
+  /// its own third column on the right. Each divider is draggable.
   Widget _workspace(bool wide) {
     final chat = Padding(
       padding: EdgeInsets.fromLTRB(16, 4, wide && _railOpen ? 4 : 16, 8),
@@ -197,43 +200,65 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       return chat;
     }
 
-    // A draggable divider lets the user trade width between chat and context.
+    final context = Padding(
+      padding: EdgeInsets.fromLTRB(0, 4, _selectedFile != null ? 4 : 16, 8),
+      child: _dockedContext(includeCode: false),
+    );
+
+    // No file open → two columns: assistant | context.
+    if (_selectedFile == null) {
+      return ResizableSplit(
+        initialFraction: 0.62,
+        minFraction: 0.35,
+        maxFraction: 0.85,
+        first: chat,
+        second: context,
+      );
+    }
+
+    // File open → three columns: assistant | context | code.
+    final code = Padding(
+      padding: const EdgeInsets.fromLTRB(0, 4, 16, 8),
+      child: _codeCard(),
+    );
     return ResizableSplit(
-      initialFraction: 0.62,
-      minFraction: 0.35,
-      maxFraction: 0.85,
+      initialFraction: 0.4,
+      minFraction: 0.25,
+      maxFraction: 0.6,
       first: chat,
-      second: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 4, 16, 8),
-        child: _dockedContext(),
+      second: ResizableSplit(
+        initialFraction: 0.45,
+        minFraction: 0.25,
+        maxFraction: 0.7,
+        first: context,
+        second: code,
       ),
     );
   }
 
-  /// The docked context: source map, git history and (when a file is open) the
-  /// code panel, stacked with draggable dividers. Popped-out panels drop out of
-  /// this stack and reappear as floating windows.
-  Widget _dockedContext() {
-    // Source map + git share the lower part of the rail.
+  /// The context rail: source map over git history, with draggable dividers.
+  /// [includeCode] stacks the code editor here too (used on narrow screens,
+  /// where there's no room for a third column); on wide screens the code is its
+  /// own column, so pass false. Popped-out panels drop out and float.
+  Widget _dockedContext({bool includeCode = true}) {
     final side = <Widget>[];
     if (!_floating.contains(_pSourceMap)) side.add(_sourceMapCard());
     if (!_floating.contains(_pGit)) side.add(_gitCard());
-    final sideStack = side.isEmpty ? null : _verticalStack(side);
+    var stack = side.isEmpty ? null : _verticalStack(side);
 
-    // When a file is open, the code panel takes the top half — it's what the
-    // user is working on — with the source map / git below it.
-    if (_selectedFile != null) {
-      if (sideStack == null) return _codeCard();
-      return ResizableSplit(
+    if (includeCode && _selectedFile != null) {
+      if (stack == null) return _codeCard();
+      stack = ResizableSplit(
         axis: Axis.vertical,
         initialFraction: 0.5,
         minFraction: 0.25,
         maxFraction: 0.75,
         first: _codeCard(),
-        second: sideStack,
+        second: stack,
       );
     }
-    if (sideStack == null) {
+
+    if (stack == null) {
       return const Center(
         child: Text(
           'All panels are floating',
@@ -241,7 +266,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         ),
       );
     }
-    return sideStack;
+    return stack;
   }
 
   Widget _gitCard() => HudPanel(
@@ -773,10 +798,14 @@ class _CodeEditorState extends State<_CodeEditor> {
                   ),
                 ),
         ),
-        // Actions.
+        // Actions — a Wrap so they never overflow when the code column is
+        // dragged narrow; they flow onto a second line instead.
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
             children: [
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -787,7 +816,6 @@ class _CodeEditorState extends State<_CodeEditor> {
                 icon: const Icon(Icons.save_outlined, size: 16),
                 label: const Text('Save'),
               ),
-              const Spacer(),
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: HudTheme.cyanGlow,
@@ -932,6 +960,9 @@ class _ConsoleDock extends StatelessWidget {
   final bool running;
   final bool hasOutput;
   final double height;
+
+  /// Exit code of the last finished run (null while running / never run).
+  final int? exitCode;
   final VoidCallback onToggle;
   final VoidCallback onStop;
   final VoidCallback onClear;
@@ -950,8 +981,21 @@ class _ConsoleDock extends StatelessWidget {
     required this.onStop,
     required this.onClear,
     required this.child,
+    this.exitCode,
     this.onResize,
   });
+
+  Color get _statusColor {
+    if (running) return HudTheme.cyan;
+    if (exitCode == null) return Colors.white24;
+    return exitCode == 0 ? const Color(0xFF4ADE80) : HudTheme.danger;
+  }
+
+  String get _statusLabel {
+    if (running) return 'running';
+    if (exitCode == null) return 'idle';
+    return exitCode == 0 ? 'success' : 'exit $exitCode';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1013,7 +1057,7 @@ class _ConsoleDock extends StatelessWidget {
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: running ? HudTheme.cyan : Colors.white24,
+                      color: _statusColor,
                       boxShadow: running
                           ? [
                               BoxShadow(
@@ -1026,10 +1070,13 @@ class _ConsoleDock extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    running ? 'running' : 'idle',
+                    _statusLabel,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
+                      color: _statusColor.withValues(alpha: 0.9),
                       fontSize: 10,
+                      fontWeight: exitCode != null && exitCode != 0
+                          ? FontWeight.w700
+                          : FontWeight.normal,
                     ),
                   ),
                   const Spacer(),
@@ -1179,10 +1226,9 @@ class _ConsoleLogState extends ConsumerState<_ConsoleLog> {
             )
           : SingleChildScrollView(
               controller: _scroll,
-              child: SelectableText(
-                run.output,
+              child: SelectableText.rich(
+                TextSpan(children: _colorize(run.output)),
                 style: const TextStyle(
-                  color: Color(0xFFB6F0C4),
                   fontFamily: 'monospace',
                   fontSize: 12,
                   height: 1.4,
@@ -1190,6 +1236,36 @@ class _ConsoleLogState extends ConsumerState<_ConsoleLog> {
               ),
             ),
     );
+  }
+
+  /// Splits the console output into per-line spans coloured by severity:
+  /// errors red, warnings amber, everything else the calm terminal green — so
+  /// a failed build's error jumps out instead of hiding in a wall of text.
+  static List<TextSpan> _colorize(String output) {
+    const ok = Color(0xFFB6F0C4);
+    const err = Color(0xFFFB7185);
+    const warn = Color(0xFFFBBF24);
+    final spans = <TextSpan>[];
+    for (final line in output.split('\n')) {
+      final l = line.toLowerCase();
+      final color =
+          l.contains('error') ||
+              l.contains('exception') ||
+              l.contains('exited with code') ||
+              l.contains('failed') ||
+              l.contains('fatal')
+          ? err
+          : (l.contains('warning') || l.contains('you should'))
+          ? warn
+          : ok;
+      spans.add(
+        TextSpan(
+          text: '$line\n',
+          style: TextStyle(color: color),
+        ),
+      );
+    }
+    return spans;
   }
 }
 

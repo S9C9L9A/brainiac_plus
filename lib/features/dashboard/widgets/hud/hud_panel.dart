@@ -57,7 +57,10 @@ class HudPanel extends StatelessWidget {
               ),
               if (trailing != null) ...[
                 const SizedBox(width: 8),
-                Flexible(child: trailing!),
+                // Natural size (not Flexible): the title Expanded above yields
+                // and ellipsizes, while a small trailing (icon actions) keeps
+                // its full width instead of being squeezed into an overflow.
+                trailing!,
               ],
             ],
           ),

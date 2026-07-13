@@ -15,6 +15,22 @@ class ProjectRunState {
     output: output ?? this.output,
     running: running ?? this.running,
   );
+
+  /// The process exit code, parsed from the output the shell appends on exit
+  /// (`Process exited with code: N`). Null while running or if it hasn't
+  /// exited with a reported code.
+  int? get exitCode {
+    if (running) return null;
+    final m = RegExp(
+      r'Process exited with code:\s*(-?\d+)',
+    ).allMatches(output).lastOrNull;
+    if (m != null) return int.tryParse(m.group(1)!);
+    // A finished run with output but no explicit code exited cleanly (0).
+    return output.trim().isEmpty ? null : 0;
+  }
+
+  /// True when the last run ended in a non-zero exit.
+  bool get failed => (exitCode ?? 0) != 0;
 }
 
 /// Runs a project's launch command and streams its output into state, so the
