@@ -3,16 +3,38 @@ import 'package:system_info2/system_info2.dart';
 import 'gpu_detection_service.dart';
 import 'package:flutter/foundation.dart';
 
+/// The subset of `/proc/meminfo` we use, in kB.
+class MemInfo {
+  final int totalKb;
+  final int availableKb;
+  final int swapTotalKb;
+  final int swapFreeKb;
+  const MemInfo({
+    required this.totalKb,
+    required this.availableKb,
+    required this.swapTotalKb,
+    required this.swapFreeKb,
+  });
+}
+
 /// Classe unificata per metriche di sistema in tempo reale
 class RealtimeSystemMetrics {
   // CPU
   final double cpuUsagePercent;
+
+  /// Load averages over 1 / 5 / 15 minutes (Linux). Empty off Linux.
+  final List<double> loadAverages;
 
   // Memory
   final int totalMemoryMB;
   final int usedMemoryMB;
   final int freeMemoryMB;
   final double memoryUsagePercent;
+
+  // Swap
+  final int swapTotalMB;
+  final int swapUsedMB;
+  final double swapUsagePercent;
 
   // Disk
   final int totalDiskGB;
@@ -32,10 +54,14 @@ class RealtimeSystemMetrics {
 
   RealtimeSystemMetrics({
     required this.cpuUsagePercent,
+    this.loadAverages = const [],
     required this.totalMemoryMB,
     required this.usedMemoryMB,
     required this.freeMemoryMB,
     required this.memoryUsagePercent,
+    this.swapTotalMB = 0,
+    this.swapUsedMB = 0,
+    this.swapUsagePercent = 0.0,
     required this.totalDiskGB,
     required this.usedDiskGB,
     required this.freeDiskGB,
@@ -68,10 +94,9 @@ class RealtimeSystemMetrics {
     );
   }
 
-  /// Get available memory for models
-  int get availableForModelsMB {
-    return (usedMemoryMB * 0.7).toInt();
-  }
+  /// Memory that could realistically be handed to a local model: the currently
+  /// free/available memory, minus a safety headroom.
+  int get availableForModelsMB => (freeMemoryMB * 0.8).toInt();
 
   /// Device tier based on resources
   String get deviceTier {
@@ -120,16 +145,21 @@ class SystemMetricsService {
   Future<RealtimeSystemMetrics> loadMetrics() async {
     try {
       final cpuUsage = await _getCpuUsage();
+      final loadAvg = _getLoadAverages();
       final memoryMetrics = _getMemoryMetrics();
       final diskMetrics = await _getDiskMetrics();
       final hardwareInfo = await _getHardwareInfo();
 
       return RealtimeSystemMetrics(
         cpuUsagePercent: cpuUsage,
+        loadAverages: loadAvg,
         totalMemoryMB: memoryMetrics['total'] ?? 0,
         usedMemoryMB: memoryMetrics['used'] ?? 0,
         freeMemoryMB: memoryMetrics['free'] ?? 0,
         memoryUsagePercent: memoryMetrics['usage'] ?? 0.0,
+        swapTotalMB: memoryMetrics['swapTotal'] ?? 0,
+        swapUsedMB: memoryMetrics['swapUsed'] ?? 0,
+        swapUsagePercent: (memoryMetrics['swapUsage'] ?? 0.0).toDouble(),
         totalDiskGB: diskMetrics['total'] ?? 0,
         usedDiskGB: diskMetrics['used'] ?? 0,
         freeDiskGB: diskMetrics['free'] ?? 0,
@@ -212,8 +242,69 @@ class SystemMetricsService {
 
   /// === MEMORY METRICS ===
 
+  /// Parses `/proc/meminfo` for the values that matter. Kept pure and static so
+  /// the (fiddly) accuracy logic is unit tested without touching the system.
+  static MemInfo parseMemInfo(String content) {
+    int kb(String key) {
+      final m = RegExp(
+        '^$key:\\s+(\\d+)\\s*kB',
+        multiLine: true,
+      ).firstMatch(content);
+      return m == null ? 0 : (int.tryParse(m.group(1)!) ?? 0);
+    }
+
+    return MemInfo(
+      totalKb: kb('MemTotal'),
+      availableKb: kb('MemAvailable'),
+      swapTotalKb: kb('SwapTotal'),
+      swapFreeKb: kb('SwapFree'),
+    );
+  }
+
+  /// Parses the three load averages from `/proc/loadavg`.
+  static List<double> parseLoadAvg(String content) {
+    final parts = content.trim().split(RegExp(r'\s+'));
+    double at(int i) => i < parts.length ? (double.tryParse(parts[i]) ?? 0) : 0;
+    return [at(0), at(1), at(2)];
+  }
+
   Map<String, dynamic> _getMemoryMetrics() {
     try {
+      // On Linux, MemAvailable (reclaimable cache included) is the honest
+      // "free" figure — MemFree alone makes RAM look ~2-3x more used than it
+      // is, because Linux fills unused RAM with disk cache.
+      if (_isLinux) {
+        final file = File('/proc/meminfo');
+        if (file.existsSync()) {
+          final info = parseMemInfo(file.readAsStringSync());
+          if (info.totalKb > 0) {
+            final totalMB = (info.totalKb / 1024).round();
+            final availKb = info.availableKb > 0
+                ? info.availableKb
+                : info.totalKb;
+            final freeMB = (availKb / 1024).round();
+            final usedMB = totalMB - freeMB;
+            final swapTotalMB = (info.swapTotalKb / 1024).round();
+            final swapUsedMB = ((info.swapTotalKb - info.swapFreeKb) / 1024)
+                .round();
+            return {
+              'usage': totalMB > 0
+                  ? (usedMB / totalMB * 100).clamp(0.0, 100.0)
+                  : 0.0,
+              'total': totalMB,
+              'used': usedMB,
+              'free': freeMB,
+              'swapTotal': swapTotalMB,
+              'swapUsed': swapUsedMB,
+              'swapUsage': swapTotalMB > 0
+                  ? (swapUsedMB / swapTotalMB * 100).clamp(0.0, 100.0)
+                  : 0.0,
+            };
+          }
+        }
+      }
+
+      // Fallback (non-Linux): SysInfo. MemFree only, less accurate.
       final totalPhysicalMemory = SysInfo.getTotalPhysicalMemory();
       final freePhysicalMemory = SysInfo.getFreePhysicalMemory();
 
@@ -229,6 +320,19 @@ class SystemMetricsService {
       _debugPrint('Error getting memory metrics: $e');
       return {'usage': 0.0, 'total': 0, 'used': 0, 'free': 0};
     }
+  }
+
+  /// Reads the system load averages (1/5/15 min); empty off Linux.
+  List<double> _getLoadAverages() {
+    try {
+      if (_isLinux || _isAndroid) {
+        final file = File('/proc/loadavg');
+        if (file.existsSync()) return parseLoadAvg(file.readAsStringSync());
+      }
+    } catch (e) {
+      _debugPrint('Error reading loadavg: $e');
+    }
+    return const [0, 0, 0];
   }
 
   /// === DISK METRICS ===

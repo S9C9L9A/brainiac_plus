@@ -19,6 +19,13 @@ class SystemMetrics {
   final int freeDiskGB;
   final DateTime lastUpdate;
 
+  /// Load averages over 1 / 5 / 15 minutes (Linux); empty elsewhere.
+  final List<double> loadAverages;
+
+  final int swapTotalMB;
+  final int swapUsedMB;
+  final double swapUsagePercent;
+
   const SystemMetrics({
     required this.cpuUsage,
     required this.memoryUsage,
@@ -30,6 +37,10 @@ class SystemMetrics {
     required this.usedDiskGB,
     required this.freeDiskGB,
     required this.lastUpdate,
+    this.loadAverages = const [],
+    this.swapTotalMB = 0,
+    this.swapUsedMB = 0,
+    this.swapUsagePercent = 0.0,
   });
 
   factory SystemMetrics.fromRealtime(RealtimeSystemMetrics realtime) {
@@ -44,6 +55,10 @@ class SystemMetrics {
       usedDiskGB: realtime.usedDiskGB,
       freeDiskGB: realtime.freeDiskGB,
       lastUpdate: realtime.lastUpdate,
+      loadAverages: realtime.loadAverages,
+      swapTotalMB: realtime.swapTotalMB,
+      swapUsedMB: realtime.swapUsedMB,
+      swapUsagePercent: realtime.swapUsagePercent,
     );
   }
 

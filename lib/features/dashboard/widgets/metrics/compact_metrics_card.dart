@@ -33,64 +33,105 @@ class CompactMetricsCard extends ConsumerWidget {
           width: 1,
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // CPU
-          Expanded(
-            child: _MetricItem(
-              icon: AppIcons.cpu,
-              label: 'CPU',
-              value: '${metrics.cpuUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(metrics.cpuUsage),
-              onTap: () {
-                Navigator.pushNamed(context, '/cpu-detail');
-              },
-            ),
-          ),
-
-          _buildDivider(),
-
-          // RAM
-          Expanded(
-            child: _MetricItem(
-              icon: AppIcons.ram,
-              label: 'RAM',
-              value: '${metrics.memoryUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(metrics.memoryUsage),
-              onTap: () {
-                Navigator.pushNamed(context, '/ram-detail');
-              },
-            ),
-          ),
-
-          _buildDivider(),
-
-          // Disk
-          Expanded(
-            child: _MetricItem(
-              icon: AppIcons.disk,
-              label: 'Disk',
-              value: '${metrics.diskUsage.toStringAsFixed(1)}%',
-              color: _getMetricColor(metrics.diskUsage),
-              onTap: () {
-                Navigator.pushNamed(context, '/disk-detail');
-              },
-            ),
-          ),
-
-          // GPU (only when an amdgpu card is detected)
-          if (gpu != null) ...[
-            _buildDivider(),
-            Expanded(
-              child: _MetricItem(
-                icon: AppIcons.gpu,
-                label: 'GPU',
-                value: gpu.busyPercent != null ? '${gpu.busyPercent}%' : '—',
-                color: _getMetricColor((gpu.busyPercent ?? 0).toDouble()),
-                onTap: () => _showGpuDetails(context, gpu),
+          Row(
+            children: [
+              // CPU
+              Expanded(
+                child: _MetricItem(
+                  icon: AppIcons.cpu,
+                  label: 'CPU',
+                  value: '${metrics.cpuUsage.toStringAsFixed(1)}%',
+                  color: _getMetricColor(metrics.cpuUsage),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/cpu-detail');
+                  },
+                ),
               ),
+
+              _buildDivider(),
+
+              // RAM
+              Expanded(
+                child: _MetricItem(
+                  icon: AppIcons.ram,
+                  label: 'RAM',
+                  value: '${metrics.memoryUsage.toStringAsFixed(1)}%',
+                  color: _getMetricColor(metrics.memoryUsage),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/ram-detail');
+                  },
+                ),
+              ),
+
+              _buildDivider(),
+
+              // Disk
+              Expanded(
+                child: _MetricItem(
+                  icon: AppIcons.disk,
+                  label: 'Disk',
+                  value: '${metrics.diskUsage.toStringAsFixed(1)}%',
+                  color: _getMetricColor(metrics.diskUsage),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/disk-detail');
+                  },
+                ),
+              ),
+
+              // GPU (only when an amdgpu card is detected)
+              if (gpu != null) ...[
+                _buildDivider(),
+                Expanded(
+                  child: _MetricItem(
+                    icon: AppIcons.gpu,
+                    label: 'GPU',
+                    value: gpu.busyPercent != null
+                        ? '${gpu.busyPercent}%'
+                        : '—',
+                    color: _getMetricColor((gpu.busyPercent ?? 0).toDouble()),
+                    onTap: () => _showGpuDetails(context, gpu),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (metrics.loadAverages.isNotEmpty) _buildFootnote(metrics),
+        ],
+      ),
+    );
+  }
+
+  /// A slim footnote under the metrics: system load average, and swap when any
+  /// is in use — small "at a glance" signals for the machine's real pressure.
+  Widget _buildFootnote(SystemMetrics metrics) {
+    final load = metrics.loadAverages
+        .map((v) => v.toStringAsFixed(2))
+        .join('  ');
+    final swap = metrics.swapUsedMB > 0
+        ? '   ·   swap ${metrics.swapUsagePercent.toStringAsFixed(0)}%'
+        : '';
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.speed,
+            size: 12,
+            color: Colors.white.withValues(alpha: 0.4),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'load  $load$swap',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 11,
+              fontFamily: 'monospace',
             ),
-          ],
+          ),
         ],
       ),
     );
