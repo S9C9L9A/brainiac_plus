@@ -5,6 +5,7 @@ import 'package:brainiac_plus/features/ai_assistant/controllers/ai_chat_controll
 import 'package:brainiac_plus/features/dashboard/controllers/project_detail_provider.dart';
 import 'package:brainiac_plus/features/dashboard/screens/project_detail_screen.dart';
 import 'package:brainiac_plus/features/dashboard/services/workspace_scanner.dart';
+import 'package:brainiac_plus/features/dashboard/widgets/panels/floating_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -222,6 +223,41 @@ void main() {
     expect(find.text('void main() {}'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Save'), findsOneWidget);
     expect(find.text('Edit with AI'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('popping out the source map floats it, then it re-docks', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final project = WorkspaceProject(
+      name: 'demo',
+      path: proj.path,
+      hasLib: true,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _fakeGit,
+        child: MaterialApp(home: ProjectDetailScreen(project: project)),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(FloatingPanel), findsNothing);
+
+    // Pop the source map out into a floating window.
+    await tester.tap(find.byTooltip('Pop out').first);
+    await tester.pump();
+    expect(find.byType(FloatingPanel), findsOneWidget);
+
+    // Dock it back.
+    await tester.tap(find.byTooltip('Dock'));
+    await tester.pump();
+    expect(find.byType(FloatingPanel), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
   });

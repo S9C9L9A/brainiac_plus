@@ -16,6 +16,8 @@ import '../services/workspace_scanner.dart';
 import '../widgets/hud/hud_background.dart';
 import '../widgets/hud/hud_panel.dart';
 import '../widgets/hud/hud_theme.dart';
+import '../widgets/panels/floating_panel.dart';
+import '../widgets/panels/resizable_split.dart';
 
 /// One-page project workspace: the source-map constellation and git history
 /// on top, with a collapsible run console docked at the bottom. A target
@@ -52,8 +54,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   /// Narrow screens: whether the context overlay drawer is open.
   bool _drawerOpen = false;
 
-  /// The file node currently previewed in the side panel, if any.
+  /// The file node currently open in the code panel, if any.
   GraphNode? _selectedFile;
+
+  /// Ids of panels the user has popped out into floating windows.
+  final Set<String> _floating = {};
+
+  static const _pSourceMap = 'sourcemap';
+  static const _pCode = 'code';
 
   WorkspaceProject get project => widget.project;
 
@@ -152,37 +160,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                         child: Container(
                           color: HudTheme.background,
                           padding: const EdgeInsets.all(12),
-                          child: _contextRail(),
+                          child: _dockedContext(),
                         ),
                       ),
                     ],
                   ),
                 ),
-              // Code preview/editor docks on the right when a node is tapped.
-              if (_selectedFile != null)
-                Positioned.fill(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() => _selectedFile = null),
-                          child: Container(color: Colors.black38),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 480,
-                        child: _CodeSidePanel(
-                          node: _selectedFile!,
-                          onClose: () => setState(() => _selectedFile = null),
-                          // The assistant is already on screen — just close the
-                          // preview; the file can be @mentioned in the chat.
-                          onEditWithAi: () =>
-                              setState(() => _selectedFile = null),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              // Panels the user popped out into floating windows.
+              ..._floatingPanels(),
             ],
           ),
         ),
@@ -190,10 +175,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     );
   }
 
-  /// The working area: assistant panel (primary) + optional context rail.
+  /// The working area: assistant (primary) beside a resizable context rail.
   Widget _workspace(bool wide) {
     final chat = Padding(
-      padding: EdgeInsets.fromLTRB(16, 4, wide && _railOpen ? 8 : 16, 8),
+      padding: EdgeInsets.fromLTRB(16, 4, wide && _railOpen ? 4 : 16, 8),
       child: const AiChatPanel(),
     );
 
@@ -202,22 +187,94 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       return chat;
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(child: chat),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 4, 16, 8),
-          child: SizedBox(width: 360, child: _contextRail()),
-        ),
-      ],
+    // A draggable divider lets the user trade width between chat and context.
+    return ResizableSplit(
+      initialFraction: 0.62,
+      minFraction: 0.35,
+      maxFraction: 0.85,
+      first: chat,
+      second: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 4, 16, 8),
+        child: _dockedContext(),
+      ),
     );
   }
 
-  /// Project context: the source-map constellation over the git history.
-  Widget _contextRail() {
+  /// The docked context: source map, git history and (when a file is open) the
+  /// code panel, stacked with draggable dividers. Popped-out panels drop out of
+  /// this stack and reappear as floating windows.
+  Widget _dockedContext() {
+    // Source map + git share the lower part of the rail.
+    final side = <Widget>[];
+    if (!_floating.contains(_pSourceMap)) side.add(_sourceMapCard());
+    side.add(
+      HudPanel(
+        title: 'GIT',
+        icon: Icons.commit,
+        expandChild: true,
+        child: SingleChildScrollView(child: _GitSection(path: project.path)),
+      ),
+    );
+    final sideStack = _verticalStack(side);
+
+    // When a file is open, the code panel takes the top half — it's what the
+    // user is working on — with the source map / git below it.
+    if (_selectedFile != null && !_floating.contains(_pCode)) {
+      return ResizableSplit(
+        axis: Axis.vertical,
+        initialFraction: 0.5,
+        minFraction: 0.25,
+        maxFraction: 0.75,
+        first: _codeCard(),
+        second: sideStack,
+      );
+    }
+    return sideStack;
+  }
+
+  /// Stacks panels vertically with a draggable divider between each pair.
+  Widget _verticalStack(List<Widget> panels) {
+    if (panels.length == 1) return panels.first;
+    return ResizableSplit(
+      axis: Axis.vertical,
+      initialFraction: 1 / panels.length,
+      minFraction: 0.15,
+      maxFraction: 0.85,
+      first: panels.first,
+      second: _verticalStack(panels.sublist(1)),
+    );
+  }
+
+  Widget _sourceMapCard() => HudPanel(
+    title: 'SOURCE MAP',
+    icon: Icons.hub_outlined,
+    expandChild: true,
+    trailing: _popOutButton(_pSourceMap),
+    child: _constellation(),
+  );
+
+  Widget _codeCard() => HudPanel(
+    title: _selectedFile?.label ?? 'CODE',
+    icon: Icons.description_outlined,
+    expandChild: true,
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _popOutButton(_pCode),
+        _iconAction(
+          Icons.close,
+          'Close',
+          Colors.white54,
+          () => setState(() => _selectedFile = null),
+        ),
+      ],
+    ),
+    child: _codeEditor(),
+  );
+
+  Widget _constellation() {
     final graph = ref.watch(projectGraphProvider(project.path));
-    final constellation = GraphConstellation(
+    return GraphConstellation(
       graph: graph,
       selectedNodeId: _selectedFile?.id,
       onNodeTap: (node) {
@@ -226,32 +283,76 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         }
       },
     );
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          flex: 3,
-          child: HudPanel(
-            title: 'SOURCE MAP',
-            icon: Icons.hub_outlined,
-            trailing: Text(
-              'tap a file to open it',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35),
-                fontSize: 10,
-              ),
-            ),
-            expandChild: true,
-            child: constellation,
-          ),
+  Widget _codeEditor() {
+    final node = _selectedFile;
+    if (node == null) return const SizedBox.shrink();
+    return _CodeEditor(
+      key: ValueKey(node.id),
+      node: node,
+      onEditWithAi: () => setState(() => _selectedFile = null),
+    );
+  }
+
+  /// The floating windows for any popped-out panels.
+  List<Widget> _floatingPanels() {
+    final panels = <Widget>[];
+    var i = 0;
+    Offset offsetFor() => Offset(120.0 + i * 36, 90.0 + i++ * 36);
+
+    if (_floating.contains(_pSourceMap)) {
+      panels.add(
+        FloatingPanel(
+          title: 'SOURCE MAP',
+          icon: Icons.hub_outlined,
+          initialOffset: offsetFor(),
+          initialSize: const Size(460, 380),
+          onDock: () => setState(() => _floating.remove(_pSourceMap)),
+          child: _constellation(),
         ),
-        const SizedBox(height: 12),
-        Expanded(
-          flex: 2,
-          child: SingleChildScrollView(child: _GitSection(path: project.path)),
+      );
+    }
+    if (_selectedFile != null && _floating.contains(_pCode)) {
+      panels.add(
+        FloatingPanel(
+          title: _selectedFile!.label,
+          icon: Icons.description_outlined,
+          initialOffset: offsetFor(),
+          initialSize: const Size(560, 460),
+          onDock: () => setState(() => _floating.remove(_pCode)),
+          onClose: () => setState(() {
+            _floating.remove(_pCode);
+            _selectedFile = null;
+          }),
+          child: _codeEditor(),
         ),
-      ],
+      );
+    }
+    return panels;
+  }
+
+  Widget _popOutButton(String id) => _iconAction(
+    Icons.open_in_new,
+    'Pop out',
+    HudTheme.cyan.withValues(alpha: 0.8),
+    () => setState(() => _floating.add(id)),
+  );
+
+  Widget _iconAction(
+    IconData icon,
+    String tooltip,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return IconButton(
+      icon: Icon(icon, size: 15),
+      tooltip: tooltip,
+      color: color,
+      onPressed: onTap,
+      splashRadius: 14,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
     );
   }
 
@@ -412,24 +513,24 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 }
 
-/// Side panel that previews a file's code, allows manual editing + save, and
-/// offers to hand the file to the assistant for AI editing.
-class _CodeSidePanel extends StatefulWidget {
+/// The code panel's body: previews a file, allows manual editing + save, and
+/// can hand the file to the assistant. Frame-less — it lives inside a docked
+/// [HudPanel] or a [FloatingPanel], which supply the title bar and close.
+class _CodeEditor extends StatefulWidget {
   final GraphNode node;
-  final VoidCallback onClose;
   final VoidCallback onEditWithAi;
 
-  const _CodeSidePanel({
+  const _CodeEditor({
+    super.key,
     required this.node,
-    required this.onClose,
     required this.onEditWithAi,
   });
 
   @override
-  State<_CodeSidePanel> createState() => _CodeSidePanelState();
+  State<_CodeEditor> createState() => _CodeEditorState();
 }
 
-class _CodeSidePanelState extends State<_CodeSidePanel> {
+class _CodeEditorState extends State<_CodeEditor> {
   final _controller = TextEditingController();
   String? _error;
   bool _dirty = false;
@@ -443,7 +544,7 @@ class _CodeSidePanelState extends State<_CodeSidePanel> {
   }
 
   @override
-  void didUpdateWidget(_CodeSidePanel old) {
+  void didUpdateWidget(_CodeEditor old) {
     super.didUpdateWidget(old);
     if (old.node.id != widget.node.id) {
       _dirty = false;
@@ -484,145 +585,103 @@ class _CodeSidePanelState extends State<_CodeSidePanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A121F),
-        border: Border(
-          left: BorderSide(color: HudTheme.cyan.withValues(alpha: 0.25)),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title bar.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.description_outlined,
-                  color: Color(0xFF4ADE80),
-                  size: 18,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _path,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: HudTheme.cyan.withValues(alpha: 0.5),
+                  fontFamily: 'monospace',
+                  fontSize: 10,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.node.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                if (_dirty)
-                  Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: HudTheme.amber,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white54,
-                    size: 18,
-                  ),
-                  onPressed: widget.onClose,
-                  splashRadius: 16,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              _path,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: HudTheme.cyan.withValues(alpha: 0.5),
-                fontFamily: 'monospace',
-                fontSize: 10,
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _error != null
-                ? Center(
-                    child: Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                      ),
-                    ),
-                  )
-                : Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      onChanged: (_) {
-                        if (!_dirty) setState(() => _dirty = true);
-                      },
-                      expands: true,
-                      maxLines: null,
-                      minLines: null,
-                      textAlignVertical: TextAlignVertical.top,
-                      style: const TextStyle(
-                        color: Color(0xFFCDE7FF),
-                        fontFamily: 'monospace',
-                        fontSize: 12,
-                        height: 1.45,
-                      ),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-          ),
-          // Actions.
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _dirty ? HudTheme.cyan : Colors.white24,
-                    foregroundColor: HudTheme.background,
-                  ),
-                  onPressed: (_dirty && _error == null) ? _save : null,
-                  icon: const Icon(Icons.save_outlined, size: 16),
-                  label: const Text('Save'),
+            if (_dirty)
+              Container(
+                margin: const EdgeInsets.only(left: 6),
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: HudTheme.amber,
+                  shape: BoxShape.circle,
                 ),
-                const Spacer(),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: HudTheme.cyanGlow,
-                    side: BorderSide(
-                      color: HudTheme.cyan.withValues(alpha: 0.5),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: _error != null
+              ? Center(
+                  child: Text(
+                    _error!,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 12,
                     ),
                   ),
-                  onPressed: widget.onEditWithAi,
-                  icon: const Icon(Icons.auto_awesome, size: 16),
-                  label: const Text('Edit with AI'),
+                )
+              : Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: (_) {
+                      if (!_dirty) setState(() => _dirty = true);
+                    },
+                    expands: true,
+                    maxLines: null,
+                    minLines: null,
+                    textAlignVertical: TextAlignVertical.top,
+                    style: const TextStyle(
+                      color: Color(0xFFCDE7FF),
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      height: 1.45,
+                    ),
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.all(12),
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+        ),
+        // Actions.
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _dirty ? HudTheme.cyan : Colors.white24,
+                  foregroundColor: HudTheme.background,
+                ),
+                onPressed: (_dirty && _error == null) ? _save : null,
+                icon: const Icon(Icons.save_outlined, size: 16),
+                label: const Text('Save'),
+              ),
+              const Spacer(),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: HudTheme.cyanGlow,
+                  side: BorderSide(color: HudTheme.cyan.withValues(alpha: 0.5)),
+                ),
+                onPressed: widget.onEditWithAi,
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text('Edit with AI'),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
