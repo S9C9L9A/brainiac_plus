@@ -39,6 +39,8 @@ class SuggestedActionsBar extends StatelessWidget {
   void _execute(BuildContext context, AgentAction action) {
     switch (_executor.kindOf(action)) {
       case AgentActionKind.navigation:
+        // The route system (RouteGenerator) wraps back-less tab screens with a
+        // titled bar + back button, so the user is never stranded.
         Navigator.pushNamed(
           context,
           _executor.routeFor(action)!,

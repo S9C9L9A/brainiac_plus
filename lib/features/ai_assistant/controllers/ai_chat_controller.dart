@@ -402,9 +402,39 @@ class AiChatController extends StateNotifier<AiChatState> {
       // Persist what the agent did into the shared knowledge graph.
       onAgentRun?.call(taskId, content, result.steps);
 
-      final status = result.completed
-          ? '✅ **Task complete**${result.summary != null ? ' — ${result.summary}' : ''}'
-          : '⚠️ **Stopped after ${result.iterations} steps** — the task may be unfinished.';
+      // Did the run actually change anything, or did the model just talk and
+      // then say "done"? Reporting "✅ complete" when no file was written is
+      // the misleading behavior the user hit — so be honest about it.
+      final changedFiles = <String>{};
+      for (final step in result.steps) {
+        for (final r in step.results) {
+          if (r.ok &&
+              r.call.tool == ToolType.writeFile &&
+              r.call.path != null) {
+            changedFiles.add(r.call.path!);
+          }
+        }
+      }
+
+      final String status;
+      if (!result.completed) {
+        status =
+            '⚠️ **Stopped after ${result.iterations} steps** — the task may '
+            'be unfinished.';
+      } else if (changedFiles.isNotEmpty) {
+        final files = changedFiles.join(', ');
+        status =
+            '✅ **Done** — wrote $files'
+            '${result.summary != null ? '\n\n${result.summary}' : ''}';
+      } else {
+        // Completed but touched no files: almost always the model described a
+        // change instead of using write_file. Tell the user plainly.
+        status =
+            'ℹ️ **Finished without changing any files.** The assistant likely '
+            'described the change instead of writing it. Try being explicit — '
+            'e.g. "edit `lib/main.dart`: <what to change>" — or rephrase the '
+            'request.';
+      }
       state = state.copyWith(
         messages: [
           ...state.messages,

@@ -9,6 +9,25 @@ import '../features/dashboard/models/social_media_service.dart';
 class RouteGenerator {
   RouteGenerator._();
 
+  /// Tab screens that live inside the dashboard and have custom headers with
+  /// no back button. When one is *pushed* as a standalone route (e.g. from a
+  /// chat suggested-action), it must gain a way back — otherwise the user is
+  /// stranded. We wrap these with a titled bar + back button. Detail screens
+  /// (cpu/ram/disk/gpu) already provide their own back, so they're excluded.
+  static const _needsBackWrap = <String, String>{
+    AppRoutes.fileManager: 'File Manager',
+    AppRoutes.terminal: 'Terminal',
+    AppRoutes.packages: 'Packages',
+    AppRoutes.automation: 'Automation',
+    AppRoutes.settings: 'Settings',
+    AppRoutes.settingsAI: 'AI Settings',
+    AppRoutes.aiChat: 'Assistant',
+  };
+
+  /// Title to show on the wrapping back-bar for [name], or null when the route
+  /// isn't a back-less tab (so it renders unwrapped). Exposed for tests.
+  static String? backWrapTitle(String? name) => _needsBackWrap[name];
+
   /// Generate route with parameters support
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -18,9 +37,14 @@ class RouteGenerator {
 
     // Check if route exists in base routes
     if (routes.containsKey(settings.name)) {
+      final builder = routes[settings.name]!;
+      final wrapTitle = backWrapTitle(settings.name);
       return MaterialPageRoute(
-        builder: routes[settings.name]!,
         settings: settings,
+        builder: wrapTitle == null
+            ? builder
+            : (context) =>
+                  _BackScaffold(title: wrapTitle, child: builder(context)),
       );
     }
 
@@ -242,4 +266,27 @@ class AutomationEditArguments {
   final String automationId;
 
   const AutomationEditArguments({required this.automationId});
+}
+
+/// Wraps a back-less tab screen in a titled bar with a back button so a pushed
+/// route always has a way home.
+class _BackScaffold extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _BackScaffold({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: Text(title),
+        backgroundColor: const Color(0xFF0A121F),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: child,
+    );
+  }
 }

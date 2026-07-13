@@ -136,6 +136,36 @@ void main() {
     },
   );
 
+  test('completing without writing any file is reported honestly', () async {
+    // The model just says "done" without a write_file — the misleading case
+    // where the UI used to claim "Task complete".
+    final controller = buildController(
+      scriptedRunner([
+        'I have updated the file.\n```tool\n{"tool":"done","summary":"done"}\n```',
+      ]),
+    );
+
+    await controller.sendAgentTask('fix the bug in main.dart');
+
+    final last = controller.state.messages.last.content;
+    expect(last, contains('without changing any files'));
+    expect(last, isNot(contains('Task complete')));
+  });
+
+  test('writing a file reports what was written', () async {
+    final controller = buildController(
+      scriptedRunner([
+        'Editing.\n```tool\n{"tool":"write_file","path":"lib/x.dart","content":"class X {}"}\n```',
+        'Done.\n```tool\n{"tool":"done","summary":"changed X"}\n```',
+      ]),
+    );
+
+    await controller.sendAgentTask('add class X');
+
+    final last = controller.state.messages.last.content;
+    expect(last, contains('wrote lib/x.dart'));
+  });
+
   test('a blocked pipeline request never reaches the agent loop', () async {
     var chatCalls = 0;
     final runner = AgenticRunner(
