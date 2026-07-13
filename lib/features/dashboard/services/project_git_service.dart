@@ -80,4 +80,57 @@ class ProjectGitService {
     }
     return changes;
   }
+
+  Future<bool> hasRemote() async {
+    final out = await _run('git -C "$path" remote 2>/dev/null');
+    return out.trim().isNotEmpty;
+  }
+
+  /// Initializes a git repository in the project folder, so a plain folder
+  /// becomes trackable. Returns the command's output.
+  Future<String> init() async {
+    final out = await _run('git -C "$path" init 2>&1');
+    return out.trim();
+  }
+
+  /// Syncs the project: stage everything, commit (only if there's something to
+  /// commit), then — when a remote is configured — pull --rebase and push.
+  /// Returns a human-readable transcript of what ran. Every step is best-effort
+  /// and its output is captured, so a failing push still reports why.
+  Future<String> sync({required String message}) async {
+    if (!await isGitRepo()) {
+      return 'Not a git repository. Initialize git first, then sync.';
+    }
+    final buf = StringBuffer();
+
+    Future<void> step(String sub) async {
+      buf.writeln('\$ git $sub');
+      final out = await _run('git -C "$path" $sub 2>&1');
+      final trimmed = out.trim();
+      if (trimmed.isNotEmpty) buf.writeln(trimmed);
+    }
+
+    await step('add -A');
+
+    final staged = await _run(
+      'git -C "$path" diff --cached --name-only 2>/dev/null',
+    );
+    if (staged.trim().isEmpty) {
+      buf.writeln('(nothing to commit)');
+    } else {
+      await step('commit -m ${_quote(message)}');
+    }
+
+    if (await hasRemote()) {
+      await step('pull --rebase');
+      await step('push');
+    } else {
+      buf.writeln('(no remote configured — skipped pull/push)');
+    }
+
+    return buf.toString().trim();
+  }
+
+  /// Wraps [s] in single quotes for the shell, escaping embedded single quotes.
+  static String _quote(String s) => "'${s.replaceAll("'", r"'\''")}'";
 }

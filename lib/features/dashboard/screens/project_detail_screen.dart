@@ -248,9 +248,82 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     title: 'GIT',
     icon: Icons.commit,
     expandChild: true,
-    trailing: _popOutButton(_pGit),
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [_gitSyncButton(), _popOutButton(_pGit)],
+    ),
     child: SingleChildScrollView(child: _GitSection(path: project.path)),
   );
+
+  /// Sync when the folder is a git repo, Init when it isn't yet.
+  Widget _gitSyncButton() {
+    final isRepo = ref.watch(projectIsGitRepoProvider(project.path));
+    return isRepo.maybeWhen(
+      data: (repo) => repo
+          ? _iconAction(
+              Icons.sync,
+              'Sync (commit · pull · push)',
+              HudTheme.cyanGlow,
+              _syncGit,
+            )
+          : _iconAction(
+              Icons.add_box_outlined,
+              'Initialize git',
+              HudTheme.amber,
+              _initGit,
+            ),
+      orElse: () => const SizedBox(width: 28),
+    );
+  }
+
+  void _refreshGit() {
+    ref.invalidate(projectCommitsProvider(project.path));
+    ref.invalidate(projectChangesProvider(project.path));
+    ref.invalidate(projectIsGitRepoProvider(project.path));
+  }
+
+  Future<void> _initGit() async {
+    final out = await ref.read(projectGitServiceProvider(project.path)).init();
+    if (!mounted) return;
+    _refreshGit();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(out.isEmpty ? 'Initialized git repository' : out)),
+    );
+  }
+
+  Future<void> _syncGit() async {
+    final message = await showDialog<String>(
+      context: context,
+      builder: (_) => const _CommitMessageDialog(),
+    );
+    if (message == null || !mounted) return; // cancelled
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    String result;
+    try {
+      result = await ref
+          .read(projectGitServiceProvider(project.path))
+          .sync(
+            message: message.trim().isEmpty
+                ? 'sync: update from BrainiacPlus'
+                : message.trim(),
+          );
+    } catch (e) {
+      result = 'Sync failed: $e';
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss the progress spinner
+    _refreshGit();
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _GitOutputDialog(title: 'Sync result', output: result),
+    );
+  }
 
   /// Stacks panels vertically with a draggable divider between each pair.
   Widget _verticalStack(List<Widget> panels) {
@@ -726,6 +799,108 @@ class _CodeEditorState extends State<_CodeEditor> {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Prompts for a commit message before a git sync.
+class _CommitMessageDialog extends StatefulWidget {
+  const _CommitMessageDialog();
+
+  @override
+  State<_CommitMessageDialog> createState() => _CommitMessageDialogState();
+}
+
+class _CommitMessageDialogState extends State<_CommitMessageDialog> {
+  final _controller = TextEditingController(
+    text: 'sync: update from BrainiacPlus',
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: HudTheme.panel,
+      title: const Text('Sync project', style: TextStyle(color: Colors.white)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Stage all changes, commit, then pull & push (if a remote is set).',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Commit message',
+              labelStyle: TextStyle(color: Colors.white54),
+            ),
+            onSubmitted: (v) => Navigator.pop(context, v),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: HudTheme.cyan,
+            foregroundColor: HudTheme.background,
+          ),
+          onPressed: () => Navigator.pop(context, _controller.text),
+          icon: const Icon(Icons.sync, size: 16),
+          label: const Text('Sync'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shows the transcript of a git operation in a scrollable monospace box.
+class _GitOutputDialog extends StatelessWidget {
+  final String title;
+  final String output;
+  const _GitOutputDialog({required this.title, required this.output});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: HudTheme.panel,
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: SelectableText(
+            output.isEmpty ? '(no output)' : output,
+            style: const TextStyle(
+              color: Color(0xFFB6F0C4),
+              fontFamily: 'monospace',
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
         ),
       ],
     );

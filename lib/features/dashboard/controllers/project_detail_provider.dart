@@ -21,7 +21,7 @@ final projectCommandRunnerProvider = Provider<CommandRunner>((ref) {
   return ShellService().executeSync;
 });
 
-final _gitServiceProvider = Provider.family<ProjectGitService, String>((
+final projectGitServiceProvider = Provider.family<ProjectGitService, String>((
   ref,
   path,
 ) {
@@ -36,7 +36,7 @@ final projectCommitsProvider = FutureProvider.family<List<GitCommit>, String>((
   ref,
   path,
 ) {
-  return ref.watch(_gitServiceProvider(path)).recentCommits(limit: 8);
+  return ref.watch(projectGitServiceProvider(path)).recentCommits(limit: 8);
 });
 
 /// Uncommitted changes for a project directory.
@@ -44,5 +44,13 @@ final projectChangesProvider = FutureProvider.family<List<GitChange>, String>((
   ref,
   path,
 ) {
-  return ref.watch(_gitServiceProvider(path)).changedFiles();
+  return ref.watch(projectGitServiceProvider(path)).changedFiles();
+});
+
+/// Whether a project folder is a git repository (drives Sync vs Init).
+final projectIsGitRepoProvider = FutureProvider.family<bool, String>((
+  ref,
+  path,
+) {
+  return ref.watch(projectGitServiceProvider(path)).isGitRepo();
 });

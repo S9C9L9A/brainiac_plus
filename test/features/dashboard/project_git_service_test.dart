@@ -70,4 +70,106 @@ void main() {
       expect(await service({}).isGitRepo(), isFalse);
     });
   });
+
+  group('init', () {
+    test('runs git init and returns its output', () async {
+      final cmds = <String>[];
+      final s = ProjectGitService(
+        '/proj',
+        runCommand: (cmd) async {
+          cmds.add(cmd);
+          return 'Initialized empty Git repository';
+        },
+      );
+      final out = await s.init();
+      expect(cmds.single, contains('init'));
+      expect(out, contains('Initialized'));
+    });
+  });
+
+  group('sync', () {
+    ProjectGitService recording(
+      List<String> sink, {
+      required bool repo,
+      required String staged,
+      required String remote,
+    }) {
+      return ProjectGitService(
+        '/proj',
+        runCommand: (cmd) async {
+          sink.add(cmd);
+          if (cmd.contains('is-inside-work-tree')) return repo ? 'true' : '';
+          if (cmd.contains('diff --cached')) return staged;
+          if (cmd.contains('remote')) return remote;
+          return '';
+        },
+      );
+    }
+
+    test(
+      'stages, commits, pulls and pushes for a repo with a remote',
+      () async {
+        final cmds = <String>[];
+        await recording(
+          cmds,
+          repo: true,
+          staged: 'lib/main.dart',
+          remote: 'origin',
+        ).sync(message: 'my sync');
+
+        expect(cmds.any((c) => c.contains('add -A')), isTrue);
+        expect(cmds.any((c) => c.contains("commit -m 'my sync'")), isTrue);
+        expect(cmds.any((c) => c.contains('pull --rebase')), isTrue);
+        expect(cmds.any((c) => c.contains('push')), isTrue);
+      },
+    );
+
+    test('skips the commit when nothing is staged', () async {
+      final cmds = <String>[];
+      final out = await recording(
+        cmds,
+        repo: true,
+        staged: '',
+        remote: 'origin',
+      ).sync(message: 'x');
+
+      expect(cmds.any((c) => c.contains('commit -m')), isFalse);
+      expect(out, contains('nothing to commit'));
+    });
+
+    test('skips pull/push when there is no remote', () async {
+      final cmds = <String>[];
+      final out = await recording(
+        cmds,
+        repo: true,
+        staged: 'a',
+        remote: '',
+      ).sync(message: 'x');
+
+      expect(cmds.any((c) => c.contains('push')), isFalse);
+      expect(out, contains('no remote'));
+    });
+
+    test('refuses to sync a non-git folder', () async {
+      final cmds = <String>[];
+      final out = await recording(
+        cmds,
+        repo: false,
+        staged: '',
+        remote: '',
+      ).sync(message: 'x');
+      expect(out, contains('Not a git repository'));
+    });
+
+    test('quotes a commit message that contains a single quote', () async {
+      final cmds = <String>[];
+      await recording(
+        cmds,
+        repo: true,
+        staged: 'a',
+        remote: '',
+      ).sync(message: "it's a fix");
+      expect(cmds.any((c) => c.contains("commit -m 'it'")), isTrue);
+    });
+  });
 }
